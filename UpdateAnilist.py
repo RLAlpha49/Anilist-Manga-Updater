@@ -1,4 +1,4 @@
-from getFromSite import Get_Manga_Names
+from getFromFile import Get_Manga_Names
 from GetID import Get_Manga_ID
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -55,7 +55,7 @@ for manga_name in manga_names:
         except Exception as e:
             print("Element not found:", e)
 
-edge_driver.quit()
+#edge_driver.quit()
 
 # Print the dictionary containing manga names and associated IDs
 print("Manga Names and Associated IDs:")
