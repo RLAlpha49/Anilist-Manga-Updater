@@ -1,6 +1,7 @@
 import pandas as pd
 
 df = pd.read_csv('kenmei-export.csv')
+manga_names_chapters = {}
 
 def Get_Manga_Names():
     # Iterate through each row in the DataFrame
@@ -9,12 +10,15 @@ def Get_Manga_Names():
         title = row['title']
         last_chapter_read = row['last_chapter_read']
         try:
-            # Print the extracted information
-            print(f"Title: {title}, Last Chapter Read: {int(last_chapter_read)}")
+            manga_names_chapters[title] = int(last_chapter_read)
         except ValueError:
             print(f"Title: {title}, Has no Last Chapter Read")
         except AttributeError:
             print(f"Title: {title}, Has no Last Chapter Read")
-    return ["That Time I Got Reincarnated as a Slime", "Drama Writer Who Reads Spoilers", "The S-Classes That I Raised", "I'm Being Raised by Villains", "Reborn as the Enemy Prince","Isekai Tenishita Node Cheat wo Ikashite Mahou Kenshi Yaru Koto ni Suru"]
+    return manga_names_chapters
 
-Get_Manga_Names()
+manga_with_last_chapter = Get_Manga_Names()
+
+# Loop through the dictionary and print each entry
+for title, last_chapter_read in manga_with_last_chapter.items():
+    print(f"Title: {title}, Last Chapter Read: {last_chapter_read}")

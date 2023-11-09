@@ -1,75 +1,103 @@
 import pymoe
+import time
+from WriteToFile import Write_Multiple_IDs, Write_Not_Found
 
-def Get_Manga_ID(name):
-    manga = pymoe.manga.search.anilist.manga(name)
-    id_list = []  # Initialize a list to store the IDs
-    id_name_map = {}  # Map to store names associated with IDs
-    index = 0  # Initialize the index variable
-    
-    #print(manga)
+no_manga_found = []
 
-    while index < len(manga):
-        manga_item = manga[index]
-        title = manga_item['title']
+def Get_Manga_ID(name, max_retries=3, delay=15):
+    global no_manga_found
+    retry_count = 0
 
-        # Check if the manga item has an English title
-        if 'english' in title and title['english']:
-            english_title = title['english']
-            if name.lower() in english_title.lower():
-                id = manga_item['id']
+    while retry_count < max_retries:
+        try:
+            manga = pymoe.manga.search.anilist.manga(name)
+            id_list = []
+            index = 0
 
-                # Check if the name is already associated with an ID
-                if name in id_name_map:
-                    print(f"ID {id} is already associated with '{name}'")
-                else:
-                    id_list.append(id)  # Add the ID to the list
-                    id_name_map[name] = id  # Associate the name with the ID
+            #print(manga)
+
+            while index < len(manga):
+                manga_item = manga[index]
+                title = manga_item['title']
+
+                if 'english' in title and title['english']:
+                    english_title = title['english']
+                    if name.lower() in english_title.lower():
+                        id = manga_item['id']
+                        id_list.append(id)
+                        romaji_title = title['romaji']
+                        url = manga_item['siteUrl']
+                        print(f"ID: {id}")
+                        print(f"Romaji Title: {romaji_title}")
+                        print(f"English Title: {english_title}")
+                        print(f"Anilist URL: {url}")
+
+                elif 'romaji' in title and title['romaji']:
                     romaji_title = title['romaji']
-                    url = manga_item['siteUrl']
-                    print(f"ID: {id}")
-                    print(f"Romaji Title: {romaji_title}")
-                    print(f"English Title: {english_title}")
-                    print(f"Anilist URL: {url}")
+                    if name.lower() in romaji_title.lower():
+                        id = manga_item['id']
+                        id_list.append(id)
+                        url = manga_item['siteUrl']
+                        print(f"ID: {id}")
+                        print(f"Romaji Title: {romaji_title}")
+                        print(f"Anilist URL: {url}")
 
-        # If the English title is not present, check the Romaji title
-        if 'romaji' in title and title['romaji']:
-            romaji_title = title['romaji']
-            if name.lower() in romaji_title.lower():
-                id = manga_item['id']
+                if 'synonyms' in manga_item:
+                    synonyms = manga_item['synonyms']
+                    if any(name.lower() in synonym.lower() for synonym in synonyms):
+                        id = manga_item['id']
+                        id_list.append(id)
+                        romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
+                        english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
+                        print(f"ID: {id}")
+                        print(f"Romaji Title: {romaji_title}")
+                        print(f"English Title: {english_title}")
+                        print(f"Anilist URL: {manga_item['siteUrl']}")
 
-                # Check if the name is already associated with an ID
-                if name in id_name_map:
-                    print(f"ID {id} is already associated with '{name}'")
-                else:
-                    id_list.append(id)  # Add the ID to the list
-                    id_name_map[name] = id  # Associate the name with the ID
-                    url = manga_item['siteUrl']
-                    print(f"ID: {id}")
-                    print(f"Romaji Title: {romaji_title}")
-                    print(f"Anilist URL: {url}")
-        
-        # If neither English nor Romaji titles match, check synonyms
-        if 'synonyms' in manga_item:
-            synonyms = manga_item['synonyms']
-            if any(name.lower() in synonym.lower() for synonym in synonyms):
-                id = manga_item['id']
+                index += 1
 
-                # Check if the name is already associated with an ID
-                if name in id_name_map:
-                    print(f"ID {id} is already associated with '{name}'")
-                else:
-                    id_list.append(id)
-                    id_name_map[name] = id  # Associate the name with the ID
-                    romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
-                    english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
-                    print(f"ID: {id}")
-                    print(f"Romaji Title: {romaji_title}")
-                    print(f"English Title: {english_title}")
-                    print(f"Anilist URL: {manga_item['siteUrl']}")
+            if not id_list:
+                print(f"No manga found for '{name}'.")
+                no_manga_found.append(name)
 
-        index += 1
+            return id_list
 
-    if not id_list:
-        print(f"No manga found for '{name}'.")
+        except pymoe.errors.serverError as e:
+            # Check if the error is "Too Many Requests"
+            if "Too Many Requests" in str(e):
+                print(f"Too Many Requests. Retrying in {delay} seconds...")
+                time.sleep(delay)
+                retry_count += 1
+            else:
+                print(f"An unexpected server error occurred: {e}")
+                break
 
-    return id_list  # Return the list of IDs
+    print(f"Failed to get manga ID for '{name}' after {max_retries} retries.")
+    return []
+
+def Clean_Manga_IDs(manga_names_ids):
+    cleaned_manga_names_ids = {}
+    multiple_id_manga_names = {}
+
+    # Iterate through manga names and their IDs
+    for manga_name, id_list in manga_names_ids.items():
+        # Remove duplicates within the same manga name
+        unique_ids = list(set(id_list))
+
+        # Check if there are multiple unique IDs
+        if len(unique_ids) > 1:
+            multiple_id_manga_names[manga_name] = unique_ids
+        else:
+            # If only one ID, add it directly to the cleaned dictionary
+            cleaned_manga_names_ids[manga_name] = unique_ids
+    
+    print("\nDuplicate Manga Names and IDs:")
+    print(multiple_id_manga_names)
+    Write_Multiple_IDs(multiple_id_manga_names)
+    return cleaned_manga_names_ids
+
+def get_no_manga_found():
+    Write_Not_Found(no_manga_found)
+    for manga in no_manga_found:
+        print(f"{manga}: Not Found")
+    return
