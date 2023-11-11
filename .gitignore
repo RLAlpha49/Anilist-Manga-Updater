@@ -7,3 +7,5 @@ __pycache__/getFromFile.cpython-312.pyc
 __pycache__/WriteToFile.cpython-312.pyc
 multiple_manga_ids.txt
 not_found_manga_names.txt
+__pycache__/Config.cpython-312.pyc
+config.json

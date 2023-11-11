@@ -1,28 +1,36 @@
 import requests
 import webbrowser
 import os
+from Config import Get_Config, Set_Access_Token, load_config
 
+Get_Config()
 # Fill in your application details
 client_id = os.environ.get('ANILIST_CLIENT_ID') # Taken from environment variable on Windows
 client_secret = os.environ.get('ANILIST_CLIENT_SECRET') # Taken from environment variable on Windows
 redirect_uri = 'https://anilist.co/api/v2/oauth/pin'
 authorization_url = 'https://anilist.co/api/v2/oauth/authorize'
 
-def Get_Authentication_Code():  
-    auth_params = {
-        'client_id': client_id,
-        'redirect_uri': redirect_uri,
-        'response_type': 'code'
-        # Add any other optional parameters as needed
-    }
-    
-    webbrowser.open(f'{authorization_url}?{"&".join([f"{key}={value}" for key, value in auth_params.items()])}')
-    
-    # Wait for the user to authorize and get the code from the URL
+def Get_Authentication_Code(): 
     while True:
-        # Get the current URL from the user
-        authorization_code = input("\nEnter the Access Token: ")
-        return authorization_code
+        auth_params = {
+            'client_id': client_id,
+            'redirect_uri': redirect_uri,
+            'response_type': 'code'
+            # Add any other optional parameters as needed
+        }
+        
+        webbrowser.open(f'{authorization_url}?{"&".join([f"{key}={value}" for key, value in auth_params.items()])}')
+        
+        # Wait for the user to authorize and get the code from the URL
+        while True:
+            try:
+                if os.environ.get('ACCESS_TOKEN') is None:
+                    Set_Access_Token()
+                # Get the current URL from the user
+                authorization_code = os.environ.get('ACCESS_TOKEN')
+                return authorization_code
+            except KeyError:
+                Set_Access_Token()
 
 def Get_Access_Token():
     authorization_code = Get_Authentication_Code()

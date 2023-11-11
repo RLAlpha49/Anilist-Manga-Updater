@@ -34,7 +34,6 @@ def Update_Manga(manga_name, manga_id, last_chapter_read):
         
         second_variables = {
             'mediaId': manga_id,
-            'status': 'CURRENT',
             'progress': last_chapter_read
         }
     else:
