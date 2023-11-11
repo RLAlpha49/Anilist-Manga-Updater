@@ -8,7 +8,7 @@ client_secret = os.environ.get('ANILIST_CLIENT_SECRET') # Taken from environment
 redirect_uri = 'https://anilist.co/api/v2/oauth/pin'
 authorization_url = 'https://anilist.co/api/v2/oauth/authorize'
 
-def get_authentication_code():  
+def Get_Authentication_Code():  
     auth_params = {
         'client_id': client_id,
         'redirect_uri': redirect_uri,
@@ -21,11 +21,11 @@ def get_authentication_code():
     # Wait for the user to authorize and get the code from the URL
     while True:
         # Get the current URL from the user
-        authorization_code = input("Enter the Access Token: ")
+        authorization_code = input("\nEnter the Access Token: ")
         return authorization_code
 
-def get_access_token():
-    authorization_code = get_authentication_code()
+def Get_Access_Token():
+    authorization_code = Get_Authentication_Code()
     
     url = 'https://anilist.co/api/v2/oauth/token'
     headers = {
@@ -45,7 +45,6 @@ def get_access_token():
 
     if response.status_code == 200:
         access_token = response.json().get('access_token')
-        print(access_token)
         return access_token
     else:
         print(f"Failed to obtain access token. Status code: {response.status_code}")

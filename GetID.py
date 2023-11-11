@@ -1,6 +1,6 @@
+from WriteToFile import Write_Multiple_IDs, Write_Not_Found
 import pymoe
 import time
-from WriteToFile import Write_Multiple_IDs, Write_Not_Found
 
 no_manga_found = []
 
@@ -27,7 +27,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
                         id_list.append(id)
                         romaji_title = title['romaji']
                         url = manga_item['siteUrl']
-                        print(f"ID: {id}")
+                        print(f"\nID: {id}")
                         print(f"Romaji Title: {romaji_title}")
                         print(f"English Title: {english_title}")
                         print(f"Anilist URL: {url}")
@@ -38,7 +38,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
                         id = manga_item['id']
                         id_list.append(id)
                         url = manga_item['siteUrl']
-                        print(f"ID: {id}")
+                        print(f"\nID: {id}")
                         print(f"Romaji Title: {romaji_title}")
                         print(f"Anilist URL: {url}")
 
@@ -49,7 +49,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
                         id_list.append(id)
                         romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
                         english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
-                        print(f"ID: {id}")
+                        print(f"\nID: {id}")
                         print(f"Romaji Title: {romaji_title}")
                         print(f"English Title: {english_title}")
                         print(f"Anilist URL: {manga_item['siteUrl']}")
@@ -57,7 +57,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
                 index += 1
 
             if not id_list:
-                print(f"No manga found for '{name}'.")
+                print(f"\nNo manga found for '{name}'.")
                 no_manga_found.append(name)
 
             return id_list
@@ -96,7 +96,7 @@ def Clean_Manga_IDs(manga_names_ids):
     Write_Multiple_IDs(multiple_id_manga_names)
     return cleaned_manga_names_ids
 
-def get_no_manga_found():
+def Get_No_Manga_Found():
     Write_Not_Found(no_manga_found)
     for manga in no_manga_found:
         print(f"{manga}: Not Found")
