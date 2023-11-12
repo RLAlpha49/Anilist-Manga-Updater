@@ -31,11 +31,7 @@ Download the latest release and run the .exe file given.
 Currently i use this script to update my manga list from my [Kenmei](https://www.kenmei.co) account.
 I plan to later to grab manga lists from certain manga websites. If you have any you would like me to look into please let me know.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- CONTACT -->
 ## Contact
 
 Discord - alpha49
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
