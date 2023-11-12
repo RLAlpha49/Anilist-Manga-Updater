@@ -18,6 +18,7 @@ Download the latest release and run the .exe file given.
 1. You will need to set up an API in anilist connected to your account. (In Settings under the developer tab)
     - Name the new client whatever you would like, personally I chose "MangaUpdater"
     - Set the redirect URL to "https://anilist.co/api/v2/oauth/pin"
+    - A benefit to each person making their own api client is that as long as none of the authentication information is shared, you are the sole person that has access to the account with that authentication
 2. When running the program it will ask you for the following client id and secret values generated from the api client. (They are saved to the config.json file)
     - DO NOT share the ID or Secret values, it is possible for someone to get full access to your account.
 3. The script will have you authenticate your account everytime you run it.
