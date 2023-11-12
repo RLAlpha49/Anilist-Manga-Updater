@@ -44,6 +44,7 @@ for manga_name, manga_info_list in manga_names_ids.items():
         manga_id, last_chapter_read = manga_info
         print(f"Manga: {manga_name}, Manga ID: {manga_id}, Last Chapter Read: {last_chapter_read}")
         Update_Manga(manga_name, manga_id, last_chapter_read)
+        time.sleep(0.3)
 
 chapters_updated = Get_Chapters_Updated()
 print(f"\nTotal chapters updated: {chapters_updated}")
