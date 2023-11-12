@@ -29,7 +29,7 @@ Download the latest release and run the .exe file given.
 ## Usage
 
 Currently i use this script to update my manga list from my [Kenmei](https://www.kenmei.co) account.
-I plan to later to grab manga lists from certain manga websites. If you have any you would like me to look into please let me know.
+I plan later to grab manga lists from certain manga websites. If you have any you would like me to look into please let me know.
 
 <!-- CONTACT -->
 ## Contact
