@@ -12,6 +12,8 @@
 
 Download the latest release and run the .exe file given. 
 
+P.S. Due to compiling python files using pyinstaller, certain anti-virus programs give a false positive. You may need to exclude the exe file in your anti-virus.
+
 ### Prerequisites
 
 #### Getting list from [Kenmei](https://www.kenmei.co)
