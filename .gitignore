@@ -1,11 +1,7 @@
-__pycache__/GetID.cpython-312.pyc
-__pycache__/getFromSite.cpython-312.pyc
 kenmei-export.csv
-__pycache__/AccessAPI.cpython-312.pyc
-__pycache__/GetAccessToken.cpython-312.pyc
-__pycache__/getFromFile.cpython-312.pyc
-__pycache__/WriteToFile.cpython-312.pyc
 multiple_manga_ids.txt
 not_found_manga_names.txt
-__pycache__/Config.cpython-312.pyc
 config.json
+/dist
+/Pictures
+/__pycache__
