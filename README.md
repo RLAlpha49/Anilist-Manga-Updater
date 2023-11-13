@@ -47,4 +47,4 @@ The script outputs 2 different txt files when finished.
 <!-- CONTACT -->
 ## Contact
 
-Discord - alpha49
+[Discord - alpha49](https://discordid.netlify.app/?id=251479989378220044)
