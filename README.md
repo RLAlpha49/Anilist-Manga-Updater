@@ -1,4 +1,11 @@
-# Anilist-Manga-Updater
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+   
+![Anilist-Manga-Updater-Logo](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/6babb26b-1db7-4e0c-90b9-ac4c6297d689)
+
+<h1 align="center">Anilist-Manga-Updater</h3>
+</div>
 
 <!-- GETTING STARTED -->
 ## Getting Started
