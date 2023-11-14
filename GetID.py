@@ -5,7 +5,7 @@ import time
 # List to store names of manga not found
 no_manga_found = []
 
-def Get_Manga_ID(name, max_retries=3, delay=15):
+def Get_Manga_ID(name, max_retries=5, delay=15):
     global no_manga_found
     retry_count = 0
 
@@ -71,7 +71,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
         except pymoe.errors.serverError as e:
             # Check if the error is "Too Many Requests"
             if "Too Many Requests" in str(e):
-                print(f"Too Many Requests. Retrying in {delay} seconds...")
+                print(f"Too Many Requests For Pymoe. Retrying in {delay} seconds...")
                 time.sleep(delay)
                 retry_count += 1
             else:

@@ -8,10 +8,12 @@ def Write_Multiple_IDs(multiple_id_manga_names):
         multiple_file.write("Duplicate Manga Names and IDs:\n")
         # Iterate over the dictionary of manga names and IDs
         for manga_name, ids in multiple_id_manga_names.items():
+            # Extract the actual IDs from the tuples
+            actual_ids = [id_tuple[0] for id_tuple in ids]
             # Write the manga name and its corresponding IDs
-            multiple_file.write(f"{manga_name}: {', '.join(map(str, ids))}\n")
+            multiple_file.write(f"{manga_name} ID's: {', '.join(map(str, actual_ids))}\n")
             # For each ID, write the corresponding Anilist URL
-            for manga_id in ids:
+            for manga_id in actual_ids:
                 multiple_file.write(f"Anilist URL: https://anilist.co/manga/{manga_id}\n")
 
 def Write_Not_Found(not_found_manga_names):

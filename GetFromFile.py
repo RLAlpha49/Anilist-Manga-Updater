@@ -9,13 +9,14 @@ manga_names_chapters = {}
 def Get_Manga_Names():
     # Iterate through each row in the DataFrame
     for index, row in df.iterrows():
-        # Extract the title and last_chapter_read from each row
+        # Extract the title, last_chapter_read and status from each row
         title = row['title']
         last_chapter_read = row['last_chapter_read']
+        status = row['status']
 
         # Try to add the title and last chapter read to the dictionary
         try:
-            manga_names_chapters[title] = int(last_chapter_read)
+            manga_names_chapters[title] = {'last_chapter_read': int(last_chapter_read), 'status': status}
         except ValueError:
             # If the last chapter read is not a number, print an error message
             print(f"Title: {title}, Has no Last Chapter Read")
