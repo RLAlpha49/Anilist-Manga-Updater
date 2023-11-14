@@ -41,9 +41,10 @@ You could also run the files yourself. Just download the zip file of the source 
 Currently I use this script to update my manga list from my [Kenmei](https://www.kenmei.co) account.
 I plan later to grab manga lists from certain manga websites. If you have any you would like me to look into please let me know.
 
-The script outputs 2 different txt files when finished.
+The script outputs 3 different txt files when finished.
    - One which has manga that was found to have multiple different id's associated with it. (Usally due to the name being found as a direct match in english or romaji and others which has matches in synonyms) This file also gives the anilist links to the manga so that they can be individually checked.
    - The second one is manga that was found to not have any english, romaji, or synonym name matches. (Most times this is due to translations of titles being different from the input sources and anilist) You can then search these names seperalty on anilist to see if you can get any results.
+   - The third is in a sub directory which keeps track of how many chapters are updated each time you run the program.
 
 <!-- CONTACT -->
 ## Contact
