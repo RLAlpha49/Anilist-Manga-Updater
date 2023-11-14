@@ -13,6 +13,7 @@
 Download the latest release and run the .exe file given. 
 
 P.S. Due to compiling python files using pyinstaller, certain anti-virus programs give a false positive. You may need to exclude the exe file in your anti-virus.
+You could also run the files yourself. Just download the zip file of the source code, extract it, make sure you have all the python packages installed and run the main.py file.
 
 ### Prerequisites
 
