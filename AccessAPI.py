@@ -11,17 +11,18 @@ headers = {
 
 chapters_updated = 0
 
-def Update_Manga(manga_name, manga_id, last_chapter_read):
+def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool):
     global chapters_updated
     chapter_anilist = Get_Progress(manga_id)
     
     if last_chapter_read > chapter_anilist or chapter_anilist is None:
         query = '''
-        mutation ($mediaId: Int, $status: MediaListStatus, $progress: Int) {
-            SaveMediaListEntry (mediaId: $mediaId, status: $status, progress: $progress) {
+        mutation ($mediaId: Int, $status: MediaListStatus, $progress: Int, $private: Boolean) {
+            SaveMediaListEntry (mediaId: $mediaId, status: $status, progress: $progress, private: $private) {
                 id
                 status
                 progress
+                private
             }
         }
         '''
@@ -29,7 +30,8 @@ def Update_Manga(manga_name, manga_id, last_chapter_read):
         first_variables = {
             'mediaId': manga_id,
             'status': 'CURRENT',
-            'progress': (chapter_anilist + 1)
+            'progress': (chapter_anilist + 1),
+            'private' :private_bool
         }
         
         second_variables = {

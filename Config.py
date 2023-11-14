@@ -43,5 +43,5 @@ def Set_Environment_Variables(config):
     os.environ['ANILIST_CLIENT_SECRET'] = config.get('ANILIST_CLIENT_SECRET', '')
 
 def Set_Access_Token():
-    token = input("Enter your access token: ")
+    token = input("\nEnter your access token: ")
     os.environ['ACCESS_TOKEN'] = token

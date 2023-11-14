@@ -19,6 +19,9 @@ def Get_Manga_Names():
 
 manga_with_last_chapter = Get_Manga_Names()
 
+print("Manga found in CSV:")
 # Loop through the dictionary and print each entry
 for title, last_chapter_read in manga_with_last_chapter.items():
     print(f"Title: {title}, Last Chapter Read: {last_chapter_read}")
+
+print("")
