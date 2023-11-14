@@ -2,24 +2,27 @@ from WriteToFile import Write_Multiple_IDs, Write_Not_Found
 import pymoe
 import time
 
+# List to store names of manga not found
 no_manga_found = []
 
 def Get_Manga_ID(name, max_retries=3, delay=15):
     global no_manga_found
     retry_count = 0
 
+    # Retry the operation for a maximum number of times
     while retry_count < max_retries:
         try:
+            # Search for the manga on AniList
             manga = pymoe.manga.search.anilist.manga(name)
             id_list = []
             index = 0
 
-            #print(manga)
-
+            # Iterate over the search results
             while index < len(manga):
                 manga_item = manga[index]
                 title = manga_item['title']
 
+                # If the manga has an English title and it matches the search name, add its ID to the list
                 if 'english' in title and title['english']:
                     english_title = title['english']
                     if name.lower() in english_title.lower():
@@ -32,6 +35,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
                         print(f"English Title: {english_title}")
                         print(f"Anilist URL: {url}")
 
+                # If the manga has a Romaji title and it matches the search name, add its ID to the list
                 elif 'romaji' in title and title['romaji']:
                     romaji_title = title['romaji']
                     if name.lower() in romaji_title.lower():
@@ -42,6 +46,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
                         print(f"Romaji Title: {romaji_title}")
                         print(f"Anilist URL: {url}")
 
+                # If the manga has synonyms and any of them match the search name, add its ID to the list
                 if 'synonyms' in manga_item:
                     synonyms = manga_item['synonyms']
                     if any(name.lower() in synonym.lower() for synonym in synonyms):
@@ -56,6 +61,7 @@ def Get_Manga_ID(name, max_retries=3, delay=15):
 
                 index += 1
 
+            # If no IDs were found, add the manga name to the list of not found manga
             if not id_list:
                 print(f"\nNo manga found for '{name}'.")
                 no_manga_found.append(name)

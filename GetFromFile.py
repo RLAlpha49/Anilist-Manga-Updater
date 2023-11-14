@@ -1,6 +1,9 @@
 import pandas as pd
 
+# Read the CSV file into a DataFrame
 df = pd.read_csv('kenmei-export.csv')
+
+# Initialize an empty dictionary to store the manga names and chapters
 manga_names_chapters = {}
 
 def Get_Manga_Names():
@@ -9,14 +12,21 @@ def Get_Manga_Names():
         # Extract the title and last_chapter_read from each row
         title = row['title']
         last_chapter_read = row['last_chapter_read']
+
+        # Try to add the title and last chapter read to the dictionary
         try:
             manga_names_chapters[title] = int(last_chapter_read)
         except ValueError:
+            # If the last chapter read is not a number, print an error message
             print(f"Title: {title}, Has no Last Chapter Read")
         except AttributeError:
+            # If the last chapter read is missing, print an error message
             print(f"Title: {title}, Has no Last Chapter Read")
+
+    # Return the dictionary of manga names and chapters
     return manga_names_chapters
 
+# Get the dictionary of manga names and chapters
 manga_with_last_chapter = Get_Manga_Names()
 
 print("Manga found in CSV:")
