@@ -2,7 +2,7 @@
 <br />
 <div align="center">
    
-![Anilist-Manga-Updater-Logo](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/6babb26b-1db7-4e0c-90b9-ac4c6297d689)
+![Anilist-Manga-Updater-Logo2](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/80dad30b-982d-4bbe-a66c-72f351757701)
 
 <h1 align="center">Anilist-Manga-Updater</h3>
 </div>
