@@ -5,79 +5,82 @@ import time
 # List to store names of manga not found
 no_manga_found = []
 
+# Function to check the title and add the ID to the list
+def Check_Title_And_Add_ID(title, name, manga_item, id_list):
+    # If the name is in the title
+    if name.lower() in title.lower():
+        # Get the ID of the manga item
+        id = manga_item['id']
+        # Add the ID to the list
+        id_list.append(id)
+        # Get the romaji and English titles, if they exist
+        romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
+        english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
+        # Print the ID, titles, and URL of the manga item
+        print(f"\nID: {id}")
+        print(f"Romaji Title: {romaji_title}")
+        print(f"English Title: {english_title}")
+        print(f"Anilist URL: {manga_item['siteUrl']}")
+
+# Function to get the ID of a manga
 def Get_Manga_ID(name, max_retries=5, delay=15):
+    # Declare no_manga_found as a global variable
     global no_manga_found
+    # Initialize the retry count
     retry_count = 0
 
-    # Retry the operation for a maximum number of times
+    # Try to get the manga ID until the maximum number of retries is reached
     while retry_count < max_retries:
         try:
-            # Search for the manga on AniList
+            # Search for the manga using the AniList API
             manga = pymoe.manga.search.anilist.manga(name)
+            # Initialize the list of IDs and the index
             id_list = []
             index = 0
 
-            # Iterate over the search results
+            # Loop through the manga items
             while index < len(manga):
+                # Get the current manga item and its title
                 manga_item = manga[index]
                 title = manga_item['title']
 
-                # If the manga has an English title and it matches the search name, add its ID to the list
+                # If the manga item has an English title, check it and add the ID to the list
                 if 'english' in title and title['english']:
-                    english_title = title['english']
-                    if name.lower() in english_title.lower():
-                        id = manga_item['id']
-                        id_list.append(id)
-                        romaji_title = title['romaji']
-                        url = manga_item['siteUrl']
-                        print(f"\nID: {id}")
-                        print(f"Romaji Title: {romaji_title}")
-                        print(f"English Title: {english_title}")
-                        print(f"Anilist URL: {url}")
+                    Check_Title_And_Add_ID(title['english'], name, manga_item, id_list)
 
-                # If the manga has a Romaji title and it matches the search name, add its ID to the list
+                # If the manga item has a romaji title, check it and add the ID to the list
                 if 'romaji' in title and title['romaji']:
-                    romaji_title = title['romaji']
-                    if name.lower() in romaji_title.lower():
-                        id = manga_item['id']
-                        id_list.append(id)
-                        url = manga_item['siteUrl']
-                        print(f"\nID: {id}")
-                        print(f"Romaji Title: {romaji_title}")
-                        print(f"Anilist URL: {url}")
+                    Check_Title_And_Add_ID(title['romaji'], name, manga_item, id_list)
 
-                # If the manga has synonyms and any of them match the search name, add its ID to the list
+                # If the manga item has synonyms, check them and add the ID to the list
                 if 'synonyms' in manga_item:
-                    synonyms = manga_item['synonyms']
-                    if any(name.lower() in synonym.lower() for synonym in synonyms):
-                        id = manga_item['id']
-                        id_list.append(id)
-                        romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
-                        english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
-                        print(f"\nID: {id}")
-                        print(f"Romaji Title: {romaji_title}")
-                        print(f"English Title: {english_title}")
-                        print(f"Anilist URL: {manga_item['siteUrl']}")
+                    for synonym in manga_item['synonyms']:
+                        Check_Title_And_Add_ID(synonym, name, manga_item, id_list)
 
+                # Increment the index
                 index += 1
 
-            # If no IDs were found, add the manga name to the list of not found manga
+            # If no IDs were found, print a message and add the name to the list of not found manga
             if not id_list:
                 print(f"\nNo manga found for '{name}'.")
                 no_manga_found.append(name)
 
+            # Return the list of IDs
             return id_list
 
+        # If a server error occurs
         except pymoe.errors.serverError as e:
-            # Check if the error is "Too Many Requests"
+            # If the error is due to too many requests, wait and retry
             if "Too Many Requests" in str(e):
                 print(f"Too Many Requests For Pymoe. Retrying in {delay} seconds...")
                 time.sleep(delay)
                 retry_count += 1
             else:
+                # If the error is unexpected, print a message and break the loop
                 print(f"An unexpected server error occurred: {e}")
                 break
 
+    # If the maximum number of retries is reached, print a message and return an empty list
     print(f"Failed to get manga ID for '{name}' after {max_retries} retries.")
     return []
 

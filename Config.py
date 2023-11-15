@@ -37,23 +37,22 @@ def Get_Config():
     config = load_config(config_path)
 
     if config:
-        # If the configuration dictionary is loaded successfully, set the environment variables
+        # If the configuration dictionary is loaded successfully, print a message
         print("Configuration file found.")
-        Set_Environment_Variables(config)
-        print("Environment variables set.")
     else:
         # If the configuration dictionary is not loaded successfully, create a new one
         print("\nConfiguration file not found. Let's create one.")
-        new_config = create_config()
-        save_config(new_config, config_path)
+        config = create_config()
+        save_config(config, config_path)
         print("Configuration file created and saved.")
-        Set_Environment_Variables(new_config)
-        print("Environment variables set.")
+
+    Set_Environment_Variables(config)
+    print("Environment variables set.")
 
 def Set_Environment_Variables(config):
     # Set the environment variables with the values from the configuration dictionary
-    os.environ['ANILIST_CLIENT_ID'] = config.get('ANILIST_CLIENT_ID', '')
-    os.environ['ANILIST_CLIENT_SECRET'] = config.get('ANILIST_CLIENT_SECRET', '')
+    for key, value in config.items():
+        os.environ[key] = value
 
 def Set_Access_Token():
     # Prompt the user to enter their access token

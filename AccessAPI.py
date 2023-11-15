@@ -57,7 +57,6 @@ def api_request(query, variables=None):
         return response.json()
     # If the request was not successful, print an error message and return None
     else:
-        print(response.json())
         print(f"Failed to retrieve data. Status code: {response.status_code}")
         return None
 
