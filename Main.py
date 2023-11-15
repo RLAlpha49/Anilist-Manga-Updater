@@ -81,7 +81,6 @@ for manga_name, ids in manga_names_ids.items():
 
 print("\nNot Found Manga:")
 Get_No_Manga_Found()
-print("")
 
 # Calculate and print the time taken
 manga_data_time_taken = print_time_taken(manga_data_start_time, "get Manga data")
