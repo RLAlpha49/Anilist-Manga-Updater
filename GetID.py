@@ -36,7 +36,7 @@ def Get_Manga_ID(name, max_retries=5, delay=15):
                         print(f"Anilist URL: {url}")
 
                 # If the manga has a Romaji title and it matches the search name, add its ID to the list
-                elif 'romaji' in title and title['romaji']:
+                if 'romaji' in title and title['romaji']:
                     romaji_title = title['romaji']
                     if name.lower() in romaji_title.lower():
                         id = manga_item['id']
