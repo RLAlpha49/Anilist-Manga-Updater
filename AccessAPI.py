@@ -63,6 +63,9 @@ def api_request(query, variables=None):
 # Function to update the progress of a manga
 def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, last_read_at, months): 
     global chapters_updated
+    
+    manga_status = Get_Status(manga_id)
+    
     if status != 'plan_to_read':
         # Get the current progress of the manga
         chapter_anilist = Get_Progress(manga_id)
@@ -131,6 +134,31 @@ def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, 
             'mediaId': manga_id,
             'status': status,
             'progress': last_chapter_read
+        }
+    # If status is not the same as status on Anilist and chapters are the same, just change status
+    elif status is not manga_status:
+        # Define the mutation query to update the progress and status of the manga
+        query = '''
+        mutation ($mediaId: Int, $status: MediaListStatus, $private: Boolean) {
+            SaveMediaListEntry (mediaId: $mediaId, status: $status, private: $private) {
+                id
+                status
+                private
+            }
+        }
+        '''
+        
+        # Define the variables for the first API request
+        first_variables = {
+            'mediaId': manga_id,
+            'status': status,
+            'private' :private_bool
+        }
+        
+        # Define the variables for the second API request
+        second_variables = {
+            'mediaId': manga_id,
+            'status': status
         }
     # If the last chapter read is not greater than the current progress
     else:
@@ -219,11 +247,6 @@ def Get_Format(id):
         Media (id: $id) {
             id
             format
-            title {
-            romaji
-            english
-            native
-            }
         }
     }
     '''
@@ -239,6 +262,33 @@ def Get_Format(id):
         format_value = data.get('data', {}).get('Media', {}).get('format')
         # Return the format value, or None if the format value is None
         return format_value if format_value else None
+    # If the request was not successful
+    else:
+        # Return None
+        return None
+    
+def Get_Status(id):
+    # Define the query to get the format of the manga
+    query = '''
+    query ($id: Int) {
+        Media (id: $id) {
+            id
+            status
+        }
+    }
+    '''
+    # Define the variables for the query
+    variables = {
+        'id': id
+    }
+    # Send the API request
+    data = api_request(query, variables)
+    # If the request was successful
+    if data:
+        # Get the format value from the response
+        status_value = data.get('data', {}).get('Media', {}).get('status')
+        # Return the format value, or None if the format value is None
+        return status_value if status_value else None
     # If the request was not successful
     else:
         # Return None
