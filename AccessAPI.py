@@ -1,18 +1,29 @@
-from GetAccessToken import Get_Access_Token
 from datetime import datetime, timedelta
+from Config import load_config
 import requests
 import time
+import os
 
-# Get the access token
-access_token = Get_Access_Token()
+def Set_Access_Token(app):
+    global headers
+    config = load_config('config.json')
+    try:
+        if config['ACCESS_TOKEN'] is not None:
+            # Get the access token
+            access_token = config['ACCESS_TOKEN']
+            
+            # Define the headers for the API request
+            headers = {
+                'Authorization': f'Bearer {access_token}'
+            }
+        else:
+            app.update_terminal("No access token found.")
+    except TypeError:
+        app.update_terminal("No config file found")
+        return
 
 # Define the API endpoint
 url = 'https://graphql.anilist.co'
-
-# Define the headers for the API request
-headers = {
-    'Authorization': f'Bearer {access_token}'
-}
 
 # Initialize the counter for the number of chapters updated
 chapters_updated = 0
@@ -27,7 +38,7 @@ status_mapping = {
     }
 
 # Function to handle API requests
-def api_request(query, variables=None):
+def api_request(query, app, variables=None):
     # Send a POST request to the API endpoint
     response = requests.post(url, json={'query': query, 'variables': variables}, headers=headers)
     
@@ -39,46 +50,50 @@ def api_request(query, variables=None):
     if response.status_code == 429:
         wait_time = rate_limit_reset - int(time.time())
         if wait_time < 0:
-            print(f"Reset time: {wait_time} Seconds\nRate limit reset time is in the past.")
+            app.update_terminal(f"Reset time: {wait_time} Seconds\nRate limit reset time is in the past.")
             wait_time = 50
-            print(f"Waiting for {wait_time} seconds.")
+            app.update_terminal(f"Waiting for {wait_time} seconds.")
             time.sleep(wait_time)
         else:
-            print(f"Rate limit hit. Waiting for {wait_time} seconds.")
+            app.update_terminal(f"Rate limit hit. Waiting for {wait_time} seconds.")
             time.sleep(wait_time)
-        return api_request(query, variables)
+        return api_request(query, app, variables)
 
     # If the rate limit is close to being hit, print a warning
     elif rate_limit_remaining < 10:
-        print(f"Warning: Only {rate_limit_remaining} requests remaining until rate limit reset.")
+        app.update_terminal(f"Warning: Only {rate_limit_remaining} requests remaining until rate limit reset.")
 
     # If the request was successful, return the JSON response
     if response.status_code == 200:
         return response.json()
     # If the request was not successful, print an error message and return None
     else:
-        print(f"Failed to retrieve data. Status code: {response.status_code}")
+        app.update_terminal(f"Failed to retrieve data. Status code: {response.status_code}")
         return None
 
 # Function to update the progress of a manga
-def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, last_read_at, months): 
+def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, last_read_at, months, app): 
     global chapters_updated
     
-    manga_status = Get_Status(manga_id)
+    if private_bool == 'Yes':
+        private_bool = True
+    elif private_bool == 'No':
+        private_bool = False
+    
+    manga_status = Get_Status(manga_id, app)
     
     if status != 'plan_to_read':
         # Get the current progress of the manga
-        chapter_anilist = Get_Progress(manga_id)
+        chapter_anilist = Get_Progress(manga_id, app)
         # Convert last_read_at to datetime object
         last_read_at = datetime.strptime(last_read_at, '%Y-%m-%d %H:%M:%S UTC')
         # Check if last_read_at is more than # months ago
-        if datetime.now() - last_read_at >= timedelta(days=(30 * months)):
+        if datetime.now() - last_read_at >= timedelta(days=(30 * int(months))):
             status = 'PAUSED'
         else:
             status = status_mapping.get(status.lower(), status)
     else:
         status = status_mapping.get(status.lower(), status)
-        print(status)
     
     if status == 'PLANNING':
         last_chapter_read = 0
@@ -163,29 +178,29 @@ def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, 
     # If the last chapter read is not greater than the current progress
     else:
         # Print a message indicating that the manga is already set to the last chapter read
-        print(f"Manga: {manga_name}({manga_id}) is already set to last chapter read.")
+        app.update_terminal(f"Manga: {manga_name}({manga_id}) is already set to last chapter read.")
         return
     
     # Send the first API request to update the status and progress of the manga
-    response1 = api_request(query, first_variables)
+    response1 = api_request(query, app, first_variables)
     # Send the second API request to update the progress of the manga
-    response2 = api_request(query, second_variables)
+    response2 = api_request(query, app, second_variables)
 
     # If both API requests were successful
     if response1 and response2:
         # Print a success message
-        print(f"Manga: {manga_name}({manga_id}) Has been set to chapter {last_chapter_read} from {chapter_anilist}")
+        app.update_terminal(f"Manga: {manga_name}({manga_id}) Has been set to chapter {last_chapter_read} from {chapter_anilist}")
         # Update the counter for the number of chapters updated
         chapters_updated += (last_chapter_read - chapter_anilist)
     # If either API request was not successful
     else:
         # Print an error message
-        print(f"Failed to alter data.")
+        app.update_terminal(f"Failed to alter data.")
 
 # Function to get the current progress from Anilist
-def Get_Progress(id):
+def Get_Progress(id, app):
     # Get the user ID
-    userId = Get_User()
+    userId = Get_User(app)
     # Define the query to get the current progress
     query = '''
     query ($mediaId: Int, $userId: Int) {
@@ -203,7 +218,7 @@ def Get_Progress(id):
         'userId': userId
     }
     # Send the API request
-    data = api_request(query, variables)
+    data = api_request(query, app, variables)
     # If the request was successful
     if data:
         # Get the progress value from the response
@@ -216,7 +231,7 @@ def Get_Progress(id):
         return 0
 
 # Function to get the user ID
-def Get_User():
+def Get_User(app):
     # Define the query to get the user ID
     query = '''
     query {
@@ -227,7 +242,7 @@ def Get_User():
     }
     '''
     # Send the API request
-    data = api_request(query)
+    data = api_request(query, app)
     # If the request was successful
     if data:
         # Get the user ID from the response
@@ -240,7 +255,7 @@ def Get_User():
         return None
 
 # Function to get the format of the manga
-def Get_Format(id):
+def Get_Format(id, app):
     # Define the query to get the format of the manga
     query = '''
     query ($id: Int) {
@@ -255,7 +270,7 @@ def Get_Format(id):
         'id': id
     }
     # Send the API request
-    data = api_request(query, variables)
+    data = api_request(query, app, variables)
     # If the request was successful
     if data:
         # Get the format value from the response
@@ -267,7 +282,7 @@ def Get_Format(id):
         # Return None
         return None
     
-def Get_Status(id):
+def Get_Status(id, app):
     # Define the query to get the format of the manga
     query = '''
     query ($id: Int) {
@@ -282,7 +297,7 @@ def Get_Status(id):
         'id': id
     }
     # Send the API request
-    data = api_request(query, variables)
+    data = api_request(query, app, variables)
     # If the request was successful
     if data:
         # Get the format value from the response
@@ -293,6 +308,28 @@ def Get_Status(id):
     else:
         # Return None
         return None
+    
+def needs_refresh(app):
+    # Define a simple query
+    query = '''
+    query {
+        Viewer {
+            id
+            name
+        }
+    }
+    '''
+
+    # Send a POST request to the API endpoint
+    response = requests.post(url, json={'query': query}, headers=headers)
+
+    # If the status code is 401 (Unauthorized), the access token is invalid
+    if response.status_code == 401 or response.status_code == 400:
+        app.update_terminal("Error: Invalid Access Token")
+        return True
+
+    # If the status code is not 401, the access token is valid
+    return False
 
 # Function to get the number of chapters updated
 def Get_Chapters_Updated():

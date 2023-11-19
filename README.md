@@ -13,7 +13,7 @@
 Download the latest release and run the .exe file given. 
 
 P.S. Due to compiling Python files using pyinstaller, certain anti-virus programs give a false positive. You may need to exclude the exe file in your anti-virus.\
-You could also run the files yourself. Just download the zip file of the source code, extract it, make sure you have all the Python packages installed, and run the main.py file.
+You could also run the files yourself. Just download the zip file of the source code, extract it, make sure you have all the Python packages installed, and run the GUI.py file.
 
 ### Prerequisites
 
@@ -21,7 +21,9 @@ You could also run the files yourself. Just download the zip file of the source 
 1. In settings under the dashboard you can export your list as a .csv file.
    ![Screenshot 2023-11-12 000629](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/07e7da8e-8e6c-44c7-85a8-4117fab05afb)
 
-3. Place this file in the same directory as the script.
+2. Import this file into the program with the browse button
+    - There is a second button for a "Previous" export file. This is for if you have already run the program before import the previous export file as the file you used last time and your current one as the one you want to run now. This will find the difference between the 2 and only update what was different.
+       - This speeds up the program a lot however, you need to have run the program once before to do this.
 
 ### Installation
 
@@ -31,7 +33,7 @@ You could also run the files yourself. Just download the zip file of the source 
     - A benefit to each person making their API client is that as long as none of the authentication information is shared, you are the sole person who has access to the account with that authentication
 2. When running the program it will ask you for the following client ID and secret values generated from the API client. (They are saved to the config.json file)
     - DO NOT share the ID or Secret values, someone can get full access to your account.
-3. The script will have you authenticate your account every time you run it.
+3. The script may need you to reauthenticate if the token is invalid.
 
 ![Screenshot 2023-11-15 165937](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/4b69cf6f-a98c-4dbc-ad03-bab83c9a8d35)
 
