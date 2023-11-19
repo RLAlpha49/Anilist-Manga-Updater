@@ -1,22 +1,24 @@
+# Import necessary modules and functions
 from WriteToFile import Write_Multiple_IDs, Write_Not_Found
 import pymoe
 import time
 
-# List to store names of manga not found
+# Initialize an empty list to store names of manga that are not found
 no_manga_found = []
 
-# Function to check the title and add the ID to the list
+# Define a function to check if the given name is in the title of the manga item and add the ID of the manga item to the list if it is
 def Check_Title_And_Add_ID(title, name, manga_item, id_list, app):
-    # If the name is in the title
+    # Convert both the name and title to lowercase and check if the name is in the title
     if name.lower() in title.lower():
-        # Get the ID of the manga item
+        # If the name is in the title, get the ID of the manga item
         id = manga_item['id']
-        # Add the ID to the list
+        # Add the ID to the id_list
         id_list.append(id)
-        # Get the romaji and English titles, if they exist
+        # Check if the 'romaji' key is in the title of the manga item, and if it is, get the romaji title; otherwise, set it to None
         romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
+        # Check if the 'english' key is in the title of the manga item, and if it is, get the English title; otherwise, set it to None
         english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
-        # Print the ID, titles, and URL of the manga item
+        # Print the ID, romaji title, English title, and URL of the manga item
         app.update_terminal(f"\nID: {id}")
         app.update_terminal(f"Romaji Title: {romaji_title}")
         app.update_terminal(f"English Title: {english_title}")
@@ -84,7 +86,9 @@ def Get_Manga_ID(name, app, max_retries=5, delay=15):
     app.update_terminal(f"Failed to get manga ID for '{name}' after {max_retries} retries.")
     return []
 
+# Function to clean the manga IDs
 def Clean_Manga_IDs(manga_names_ids, app):
+    # Initialize dictionaries to store cleaned manga names and IDs, and manga names with multiple IDs
     cleaned_manga_names_ids = {}
     multiple_id_manga_names = {}
 
@@ -95,18 +99,25 @@ def Clean_Manga_IDs(manga_names_ids, app):
 
         # Check if there are multiple unique IDs
         if len(unique_ids) > 1:
+            # If there are multiple unique IDs, add the manga name and IDs to the multiple_id_manga_names dictionary
             multiple_id_manga_names[manga_name] = unique_ids
         else:
             # If only one ID, add it directly to the cleaned dictionary
             cleaned_manga_names_ids[manga_name] = unique_ids
     
+    # Print the manga names with multiple IDs
     app.update_terminal("\nDuplicate Manga Names and IDs:")
     app.update_terminal(multiple_id_manga_names)
+    # Write the manga names with multiple IDs to a file
     Write_Multiple_IDs(multiple_id_manga_names)
+    # Return the cleaned manga names and IDs
     return cleaned_manga_names_ids
 
+# Function to get the manga not found
 def Get_No_Manga_Found(app):
+    # Write the manga not found to a file
     Write_Not_Found(no_manga_found)
+    # Print the manga not found
     for manga in no_manga_found:
         app.update_terminal(f"{manga}: Not Found")
     return
