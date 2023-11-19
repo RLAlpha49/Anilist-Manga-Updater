@@ -39,9 +39,13 @@ You could also run the files yourself. Just download the zip file of the source 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+![Screenshot 2023-11-19 160554](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/e382cdef-8007-4f2a-a248-403d9ca423b5)
+| `GUI.py` GUI At Startup
 
 Currently, I use this script to update my manga list from my [Kenmei](https://www.kenmei.co) account.
 I plan later to grab manga lists from certain manga websites. If you have any you would like me to look into please let me know.
+
+Most buttons and objects have tooltips connected which explains the functionality and other information regarding them.
 
 The script outputs 3 different text files when finished.
    - One which has manga that was found to have multiple different IDs associated with it. (usually due to the name being found as a direct match in English or Romaji and others which has matches in synonyms)
