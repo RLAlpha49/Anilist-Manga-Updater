@@ -43,7 +43,8 @@ Most buttons and objects when hovered have tooltips connected which explains the
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-![Screenshot 2023-11-19 160554](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/e382cdef-8007-4f2a-a248-403d9ca423b5)
+![Capture](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/281085c9-a46d-4bc6-a6f2-c922d0315ac1)
+
 | `GUI.py` GUI At Startup
 
 Currently, I use this script to update my manga list from my [Kenmei](https://www.kenmei.co) account.
