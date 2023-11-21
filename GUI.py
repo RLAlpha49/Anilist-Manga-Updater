@@ -142,11 +142,22 @@ class App(customtkinter.CTk):
         self.previous_browse_button_tooltip = CTkToolTip.CTkToolTip(self.previous_browse_button, "Opens a file dialog to select the previous Kenmei export file. (Optional))")
         self.file_path_textbox_tooltip = CTkToolTip.CTkToolTip(self.file_path_textbox, "Displays the path of the Kenmei export file.")
         self.browse_button_tooltip = CTkToolTip.CTkToolTip(self.browse_button, "Opens a file dialog to select the Kenmei export file.")
-        
-    def on_close(self):
-        # Exit the application
-        sys.exit(0)
+    
+    def update_terminal(self, text: str):
+        # Check if the scrollbar is at the bottom
+        at_bottom = self.terminal.yview()[1] == 1.0
 
+        # Enable the terminal and insert the text
+        self.terminal.configure(state="normal")
+        self.terminal.insert("end", f"\n{text}")
+
+        # If the scrollbar was at the bottom before inserting, scroll to the end
+        if at_bottom:
+            self.terminal.see("end")
+
+        # Disable the terminal
+        self.terminal.configure(state="disabled")
+    
     def browse_file(self, entry_widget, is_previous):
         # Store the current text of the entry widget
         current_text = entry_widget.get()
@@ -305,21 +316,10 @@ class App(customtkinter.CTk):
                 # If the user cancels the dialog, show an error message and update the terminal
                 messagebox.showerror("Error", "Canceled")
                 self.update_terminal("Canceled")
-
-    def update_terminal(self, text: str):
-        # Check if the scrollbar is at the bottom
-        at_bottom = self.terminal.yview()[1] == 1.0
-
-        # Enable the terminal and insert the text
-        self.terminal.configure(state="normal")
-        self.terminal.insert("end", f"\n{text}")
-
-        # If the scrollbar was at the bottom before inserting, scroll to the end
-        if at_bottom:
-            self.terminal.see("end")
-
-        # Disable the terminal
-        self.terminal.configure(state="disabled")
+        
+    def on_close(self):
+        # Exit the application
+        sys.exit(0)
 
 if __name__ == "__main__":
     # Create an instance of the App class and start the main loop

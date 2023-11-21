@@ -6,23 +6,7 @@ import time
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []
 
-# Define a function to check if the given name is in the title of the manga item and add the ID of the manga item to the list if it is
-def Check_Title_And_Add_ID(title, name, manga_item, id_list, app):
-    # Convert both the name and title to lowercase and check if the name is in the title
-    if name.lower() in title.lower():
-        # If the name is in the title, get the ID of the manga item
-        id = manga_item['id']
-        # Add the ID to the id_list
-        id_list.append(id)
-        # Check if the 'romaji' key is in the title of the manga item, and if it is, get the romaji title; otherwise, set it to None
-        romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
-        # Check if the 'english' key is in the title of the manga item, and if it is, get the English title; otherwise, set it to None
-        english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
-        # Print the ID, romaji title, English title, and URL of the manga item
-        app.update_terminal(f"\nID: {id}")
-        app.update_terminal(f"Romaji Title: {romaji_title}")
-        app.update_terminal(f"English Title: {english_title}")
-        app.update_terminal(f"Anilist URL: {manga_item['siteUrl']}")
+
 
 # Function to get the ID of a manga
 def Get_Manga_ID(name, app, max_retries=5, delay=15):
@@ -85,6 +69,24 @@ def Get_Manga_ID(name, app, max_retries=5, delay=15):
     # If the maximum number of retries is reached, print a message and return an empty list
     app.update_terminal(f"Failed to get manga ID for '{name}' after {max_retries} retries.")
     return []
+
+# Define a function to check if the given name is in the title of the manga item and add the ID of the manga item to the list if it is
+def Check_Title_And_Add_ID(title, name, manga_item, id_list, app):
+    # Convert both the name and title to lowercase and check if the name is in the title
+    if name.lower() in title.lower():
+        # If the name is in the title, get the ID of the manga item
+        id = manga_item['id']
+        # Add the ID to the id_list
+        id_list.append(id)
+        # Check if the 'romaji' key is in the title of the manga item, and if it is, get the romaji title; otherwise, set it to None
+        romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
+        # Check if the 'english' key is in the title of the manga item, and if it is, get the English title; otherwise, set it to None
+        english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
+        # Print the ID, romaji title, English title, and URL of the manga item
+        app.update_terminal(f"\nID: {id}")
+        app.update_terminal(f"Romaji Title: {romaji_title}")
+        app.update_terminal(f"English Title: {english_title}")
+        app.update_terminal(f"Anilist URL: {manga_item['siteUrl']}")
 
 # Function to clean the manga IDs
 def Clean_Manga_IDs(manga_names_ids, app):

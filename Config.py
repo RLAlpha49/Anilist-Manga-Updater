@@ -20,19 +20,6 @@ def save_config(config, file_path):
         # Write the configuration dictionary to the file in JSON format
         json.dump(config, file, indent=4)
 
-# Function to load the configuration dictionary from a file
-def load_config(file_path):
-    try:
-        # Open the configuration file in read mode
-        with open(file_path, 'r') as file:
-            # Load the configuration dictionary from the file
-            config = json.load(file)
-        # Return the configuration dictionary
-        return config
-    except FileNotFoundError:
-        # If the configuration file is not found, return None
-        return None
-
 # Function to get the configuration dictionary
 def Get_Config(app):
     # Load the configuration dictionary from the file
@@ -48,6 +35,19 @@ def Get_Config(app):
     else:
         # If the configuration dictionary is not loaded successfully, print a message
         app.update_terminal("\nConfiguration file not found. Please use buttons on the left side to set the Client, Secret ID's, as well as the Private value and number of Months")
+
+# Function to load the configuration dictionary from a file
+def load_config(file_path):
+    try:
+        # Open the configuration file in read mode
+        with open(file_path, 'r') as file:
+            # Load the configuration dictionary from the file
+            config = json.load(file)
+        # Return the configuration dictionary
+        return config
+    except FileNotFoundError:
+        # If the configuration file is not found, return None
+        return None
 
 # Function to set the environment variables
 def Set_Environment_Variables(config):

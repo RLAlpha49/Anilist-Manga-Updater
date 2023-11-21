@@ -1,6 +1,13 @@
 import os
 import datetime
 
+# Function to write not found manga names to a file
+def Write_Not_Found(not_found_manga_names):
+    # Open the file in write mode
+    with open('not_found_manga_names.txt', 'w', encoding='utf-8') as not_found_file:
+        # Write the not found manga names to the file
+        not_found_file.write("Manga Names with No IDs Found:\n" + "\n".join(not_found_manga_names))
+
 # Function to write multiple IDs to a file
 def Write_Multiple_IDs(multiple_id_manga_names):
     # Open the file in write mode
@@ -15,15 +22,9 @@ def Write_Multiple_IDs(multiple_id_manga_names):
             lines.append(f"{manga_name} ID's: {', '.join(map(str, actual_ids))}\n")
             # Add a line for each AniList URL
             lines.extend([f"Anilist URL: https://anilist.co/manga/{manga_id}\n" for manga_id in actual_ids])
+            lines.append("\n")
         # Write the lines to the file
         multiple_file.writelines(lines)
-
-# Function to write not found manga names to a file
-def Write_Not_Found(not_found_manga_names):
-    # Open the file in write mode
-    with open('not_found_manga_names.txt', 'w', encoding='utf-8') as not_found_file:
-        # Write the not found manga names to the file
-        not_found_file.write("Manga Names with No IDs Found:\n" + "\n".join(not_found_manga_names))
 
 # Function to write the number of chapters updated to a file
 def Write_Chapters_Updated(chapters_updated):

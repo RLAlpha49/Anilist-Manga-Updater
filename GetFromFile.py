@@ -4,6 +4,19 @@ import pandas as pd
 # Initialize an empty dictionary to store the manga names and chapters
 manga_names_chapters = {}
 
+# Function to print the manga found in the CSV file
+def Manga_Found_In_CSV(app):
+    # Get the manga with the last chapter from the CSV file
+    manga_with_last_chapter = Get_Manga_Names(app)
+    
+    try:
+        # Print the manga found in the CSV file
+        app.update_terminal("Manga found in CSV:")
+        for title, details in manga_with_last_chapter.items():
+            app.update_terminal(f"Title: {title}, Last Chapter Read: {details.get('last_chapter_read')}, Last Read At: {details.get('last_read_at')}")
+    except AttributeError:
+        return None
+
 # Function to get manga names from a file
 def Get_Manga_Names(app):
     # Get the difference between the current and previous file
@@ -31,19 +44,6 @@ def Get_Manga_Names(app):
 
     # Return the manga_names_chapters dictionary
     return manga_names_chapters
-
-# Function to print the manga found in the CSV file
-def Manga_Found_In_CSV(app):
-    # Get the manga with the last chapter from the CSV file
-    manga_with_last_chapter = Get_Manga_Names(app)
-    
-    try:
-        # Print the manga found in the CSV file
-        app.update_terminal("Manga found in CSV:")
-        for title, details in manga_with_last_chapter.items():
-            app.update_terminal(f"Title: {title}, Last Chapter Read: {details.get('last_chapter_read')}, Last Read At: {details.get('last_read_at')}")
-    except AttributeError:
-        return None
 
 # Function to get the difference between the current and previous file
 def Get_File_Diff(app):

@@ -4,7 +4,6 @@ from GetID import Get_Manga_ID, Clean_Manga_IDs, Get_No_Manga_Found
 from AccessAPI import Get_Format, Update_Manga, Get_Chapters_Updated, Set_Access_Token, needs_refresh
 from WriteToFile import Write_Chapters_Updated
 from Config import Get_Config, load_config
-import os
 import time
 
 # Define constants for API call delay and update delay
@@ -124,6 +123,7 @@ class Program:
 
         # Calculate and print the time taken
         manga_data_time_taken = self.print_time_taken(manga_data_start_time, "get Manga data")
+        self.app.update_terminal("")
 
         # Record the start time
         manga_update_start_time = time.time()
