@@ -6,8 +6,6 @@ import time
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []
 
-
-
 # Function to get the ID of a manga
 def Get_Manga_ID(name, app, max_retries=5, delay=15):
     # Declare no_manga_found as a global variable

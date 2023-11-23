@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
 from Config import load_config
+from datetime import datetime, timedelta
 import requests
 import time
 
@@ -209,8 +209,11 @@ def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, 
         # Convert last_read_at to datetime object
         last_read_at = datetime.strptime(last_read_at, '%Y-%m-%d %H:%M:%S UTC')
         # Check if last_read_at is more than # months ago
-        if datetime.now() - last_read_at >= timedelta(days=(30 * int(months))):
-            status = 'PAUSED'
+        if int(months) != 0: 
+            if datetime.now() - last_read_at >= timedelta(days=(30 * int(months))):
+                status = 'PAUSED'
+            else:
+                status = status_mapping.get(status.lower(), status)
         else:
             status = status_mapping.get(status.lower(), status)
     else:
