@@ -84,7 +84,7 @@ def api_request(query, app, variables=None):
         return api_request(query, app, variables)
 
     # If the rate limit is close to being hit, print a warning
-    elif rate_limit_remaining < 10:
+    elif rate_limit_remaining < 5:
         app.update_terminal(f"\nWarning: Only {rate_limit_remaining} requests remaining until rate limit reset.")
 
     # If the request was successful, return the JSON response
@@ -263,11 +263,9 @@ def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, 
 
     # Iterate over the variable dictionaries in the list
     for variables in variables_list:
-        print(variables)
         previous_mediaId = variables.get('mediaId')
         # Send the API request to update the status and progress of the manga
         response = api_request(query, app, variables)
-        print(response)
         # If the API request was successful
         if response:
             if last_chapter_read > chapter_anilist or chapter_anilist is None:

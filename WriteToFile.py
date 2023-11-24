@@ -18,10 +18,14 @@ def Write_Not_Found(not_found_manga_names):
         os.makedirs(directory)
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     with open(f'{directory}/not_found_{timestamp}.txt', 'w', encoding='utf-8') as not_found_file:
-        if not_found_manga_names == []:
-            not_found_file.write("Manga Names with No IDs Found:\n" + "No Manga Not Found")
+        if not not_found_manga_names:
+            not_found_file.write("Manga Names with No IDs Found:\nNo Manga Not Found")
         else:
-            not_found_file.write("Manga Names with No IDs Found:\n" + "\n".join(not_found_manga_names))
+            not_found_file.write("Manga Names with No IDs Found:\n")
+            for name, last_chapter_read in not_found_manga_names:
+                search_link = f"https://anilist.co/search/manga?search={name.replace(' ', '%20')}"
+                not_found_file.write(f"{name} - Last Chapter Read: {last_chapter_read}, Search Link: {search_link}\n")
+
     manage_files(directory, 'not_found')
 
 # Function to write multiple IDs to a file
@@ -31,12 +35,13 @@ def Write_Multiple_IDs(multiple_id_manga_names):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     with open(f'{directory}/multiple_ids_{timestamp}.txt', 'w', encoding='utf-8') as multiple_file:
         lines = ["Duplicate Manga Names and IDs:\n"]
-        if multiple_id_manga_names == {}:
+        if not multiple_id_manga_names:
             lines.append("No Manga Names with Multiple IDs Found\n")
         else:
             for manga_name, ids in multiple_id_manga_names.items():
                 actual_ids = [id_tuple[0] for id_tuple in ids]
-                lines.append(f"{manga_name} ID's: {', '.join(map(str, actual_ids))}\n")
+                last_chapter_read = ids[0][1] if len(ids[0]) > 1 else "Unknown"
+                lines.append(f"{manga_name} ID's: {', '.join(map(str, actual_ids))}, Last Chapter Read: {last_chapter_read}\n")
                 lines.extend([f"Anilist URL: https://anilist.co/manga/{manga_id}\n" for manga_id in actual_ids])
                 lines.append("\n")
         multiple_file.writelines(lines)

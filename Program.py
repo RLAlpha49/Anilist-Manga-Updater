@@ -88,8 +88,11 @@ class Program:
             status = manga_info['status'] 
 
             # Get the manga IDs regardless of the status
-            manga_ids = Get_Manga_ID(manga_name, app)
-            self.app.update_terminal(f"List of IDs for {manga_name} : {manga_ids}")
+            if status != 'plan_to_read':
+                last_chapter_read = manga_info['last_chapter_read']
+                manga_ids = Get_Manga_ID(manga_name, last_chapter_read, app)
+            else:
+                manga_ids = Get_Manga_ID(manga_name, None, app)
 
             # Iterate through the list of manga IDs
             for manga_id in manga_ids:
@@ -116,9 +119,11 @@ class Program:
         # Print the dictionary containing manga names and associated IDs
         self.app.update_terminal("\nManga Names With Associated IDs & Chapters Read:")
         for manga_name, ids in manga_names_ids.items():
-            self.app.update_terminal(f"{manga_name}: {ids}")
+            for id_info in ids:
+                manga_id, last_chapter_read, status, last_read_at = id_info
+                self.app.update_terminal(f"{manga_name}, ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}")
+        self.app.update_terminal("\n\n")
 
-        self.app.update_terminal("\nNot Found Manga:")
         Get_No_Manga_Found(app)
 
         # Calculate and print the time taken

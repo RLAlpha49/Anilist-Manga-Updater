@@ -2,89 +2,81 @@
 from WriteToFile import Write_Multiple_IDs, Write_Not_Found
 import pymoe
 import time
+import string
 
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []
 
-# Function to get the ID of a manga
-def Get_Manga_ID(name, app, max_retries=5, delay=15):
-    # Declare no_manga_found as a global variable
+def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
     global no_manga_found
-    # Initialize the retry count
     retry_count = 0
 
-    # Try to get the manga ID until the maximum number of retries is reached
     while retry_count < max_retries:
         try:
-            # Search for the manga using the AniList API
             manga = pymoe.manga.search.anilist.manga(name)
-            # Initialize the list of IDs and the index
-            id_list = []
-            index = 0
+            matches = []
 
-            # Loop through the manga items
-            while index < len(manga):
-                # Get the current manga item and its title
-                manga_item = manga[index]
-                title = manga_item['title']
+            try:
+                for manga_item in manga:
+                    title = manga_item['title']
+                    match = False
+                    if 'english' in title and title['english']:
+                        match = match or Check_Title_Match(title['english'], name)
+                    if 'romaji' in title and title['romaji']:
+                        match = match or Check_Title_Match(title['romaji'], name)
+                    if 'synonyms' in manga_item:
+                        for synonym in manga_item['synonyms']:
+                            match = match or Check_Title_Match(synonym, name)
+                    if match:
+                        matches.append((match, manga_item))
+            except IndexError:
+                app.update_terminal(f"\nNo search results found for '{name}'.")
+                no_manga_found.append((name, last_chapter_read))
+                return []
 
-                # If the manga item has an English title, check it and add the ID to the list
-                if 'english' in title and title['english']:
-                    Check_Title_And_Add_ID(title['english'], name, manga_item, id_list, app)
+            matches.sort(key=lambda x: x[0], reverse=True)  # Sort matches in descending order of match
+            id_list = [manga_item['id'] for match, manga_item in matches if match]
 
-                # If the manga item has a romaji title, check it and add the ID to the list
-                if 'romaji' in title and title['romaji']:
-                    Check_Title_And_Add_ID(title['romaji'], name, manga_item, id_list, app)
+            # Print the details of the manga that matches the search
+            if id_list:
+                app.update_terminal(f"\nList of IDs for {name} : {id_list}")
+                romaji_title = matches[0][1]['title']['romaji']
+                english_title = matches[0][1]['title']['english']
+                app.update_terminal(f"Romaji Title: {romaji_title}")
+                app.update_terminal(f"English Title: {english_title}")
+                for match, manga_item in matches:
+                    if match:
+                        app.update_terminal(f"Anilist URL: {manga_item['siteUrl']}")
 
-                # If the manga item has synonyms, check them and add the ID to the list
-                if 'synonyms' in manga_item:
-                    for synonym in manga_item['synonyms']:
-                        Check_Title_And_Add_ID(synonym, name, manga_item, id_list, app)
-
-                # Increment the index
-                index += 1
-
-            # If no IDs were found, print a message and add the name to the list of not found manga
             if not id_list:
                 app.update_terminal(f"\nNo manga found for '{name}'.")
-                no_manga_found.append(name)
+                no_manga_found.append((name, last_chapter_read))
 
-            # Return the list of IDs
             return id_list
 
-        # If a server error occurs
         except pymoe.errors.serverError as e:
-            # If the error is due to too many requests, wait and retry
             if "Too Many Requests" in str(e):
                 app.update_terminal(f"Too Many Requests For Pymoe. Retrying in {delay} seconds...")
                 time.sleep(delay)
                 retry_count += 1
             else:
-                # If the error is unexpected, print a message and break the loop
                 app.update_terminal(f"An unexpected server error occurred: {e}")
                 break
 
-    # If the maximum number of retries is reached, print a message and return an empty list
     app.update_terminal(f"Failed to get manga ID for '{name}' after {max_retries} retries.")
     return []
 
-# Define a function to check if the given name is in the title of the manga item and add the ID of the manga item to the list if it is
-def Check_Title_And_Add_ID(title, name, manga_item, id_list, app):
-    # Convert both the name and title to lowercase and check if the name is in the title
-    if name.lower() in title.lower():
-        # If the name is in the title, get the ID of the manga item
-        id = manga_item['id']
-        # Add the ID to the id_list
-        id_list.append(id)
-        # Check if the 'romaji' key is in the title of the manga item, and if it is, get the romaji title; otherwise, set it to None
-        romaji_title = manga_item['title']['romaji'] if 'romaji' in manga_item['title'] else None
-        # Check if the 'english' key is in the title of the manga item, and if it is, get the English title; otherwise, set it to None
-        english_title = manga_item['title']['english'] if 'english' in manga_item['title'] else None
-        # Print the ID, romaji title, English title, and URL of the manga item
-        app.update_terminal(f"\nID: {id}")
-        app.update_terminal(f"Romaji Title: {romaji_title}")
-        app.update_terminal(f"English Title: {english_title}")
-        app.update_terminal(f"Anilist URL: {manga_item['siteUrl']}")
+def Check_Title_Match(title, name):
+    # Remove punctuation from the title and the search name
+    title = title.translate(str.maketrans('', '', string.punctuation))
+    name = name.translate(str.maketrans('', '', string.punctuation))
+
+    # Split the title and the search name into words
+    title_words = set(title.lower().split())
+    name_words = set(name.lower().split())
+
+    # Check if all words in the search name are in the title
+    return name_words.issubset(title_words)
 
 # Function to clean the manga IDs
 def Clean_Manga_IDs(manga_names_ids, app):
@@ -107,10 +99,15 @@ def Clean_Manga_IDs(manga_names_ids, app):
     
     # Print the manga names with multiple IDs
     app.update_terminal("\nDuplicate Manga Names and IDs:")
-    if multiple_id_manga_names == {}:
-        app.update_terminal("No Manga Names with Multiple IDs Found")
+    if not multiple_id_manga_names:
+        app.update_terminal("No Manga Names with Multiple IDs Found\n")
     else:
-        app.update_terminal(multiple_id_manga_names)
+        for manga_name, ids in multiple_id_manga_names.items():
+            app.update_terminal(f"\n{manga_name}")
+            for id_info in ids:
+                manga_id, last_chapter_read, status, last_read_at = id_info
+                app.update_terminal(f"ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}")
+        app.update_terminal("\n")
     # Write the manga names with multiple IDs to a file
     Write_Multiple_IDs(multiple_id_manga_names)
     # Return the cleaned manga names and IDs
@@ -121,9 +118,11 @@ def Get_No_Manga_Found(app):
     # Write the manga not found to a file
     Write_Not_Found(no_manga_found)
     # Print the manga not found
-    if no_manga_found == []:
-        app.update_terminal("No Manga Not Found")
+    app.update_terminal("\nNot Found Manga:")
+    if not no_manga_found:
+        app.update_terminal("No Manga Not Found\n")
     else:
         for manga in no_manga_found:
-            app.update_terminal(f"{manga}: Not Found")
-        return
+            name, last_chapter_read = manga
+            app.update_terminal(f"{name}, Last Chapter Read: {last_chapter_read}, Status: Not Found")
+        app.update_terminal("\n")
