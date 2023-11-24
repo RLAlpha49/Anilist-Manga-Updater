@@ -7,6 +7,7 @@ import os
 import sys
 import threading
 import time
+import platform
 from PIL import Image
 # Import custom functions
 from Config import create_config, save_config, Get_Config, load_config
@@ -14,8 +15,11 @@ from GetAccessToken import Get_Access_Token
 from AccessAPI import Set_Access_Token
 
 # Set the appearance mode and color theme for the custom tkinter library
-customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
-customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+if platform.system() == "Linux":
+    customtkinter.set_appearance_mode("Dark")
+else:
+    customtkinter.set_appearance_mode("System")
+customtkinter.set_default_color_theme("blue")
 
 # Define the path for the configuration file
 config_path = 'config.json'
@@ -154,6 +158,9 @@ class App(customtkinter.CTk):
         # If the scrollbar was at the bottom before inserting, scroll to the end
         if at_bottom:
             self.terminal.see("end")
+
+        # Force Tkinter to update the GUI
+        self.terminal.update_idletasks()
 
         # Disable the terminal
         self.terminal.configure(state="disabled")

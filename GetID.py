@@ -107,7 +107,10 @@ def Clean_Manga_IDs(manga_names_ids, app):
     
     # Print the manga names with multiple IDs
     app.update_terminal("\nDuplicate Manga Names and IDs:")
-    app.update_terminal(multiple_id_manga_names)
+    if multiple_id_manga_names == {}:
+        app.update_terminal("No Manga Names with Multiple IDs Found")
+    else:
+        app.update_terminal(multiple_id_manga_names)
     # Write the manga names with multiple IDs to a file
     Write_Multiple_IDs(multiple_id_manga_names)
     # Return the cleaned manga names and IDs
@@ -118,6 +121,9 @@ def Get_No_Manga_Found(app):
     # Write the manga not found to a file
     Write_Not_Found(no_manga_found)
     # Print the manga not found
-    for manga in no_manga_found:
-        app.update_terminal(f"{manga}: Not Found")
-    return
+    if no_manga_found == []:
+        app.update_terminal("No Manga Not Found")
+    else:
+        for manga in no_manga_found:
+            app.update_terminal(f"{manga}: Not Found")
+        return
