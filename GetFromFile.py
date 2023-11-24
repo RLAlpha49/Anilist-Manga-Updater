@@ -62,7 +62,7 @@ def Get_File_Diff(app):
 
     if has_previous_file:
         # If there is a previous file, get the difference between the current and previous file
-        df_diff = pd.merge(df, df_previous, how='outer', indicator=True)
+        df_diff = pd.merge(df, df_previous, how='outer', indicator=True, on=['title', 'status', 'last_chapter_read', 'last_read_at'])
         df_diff = df_diff[df_diff['_merge'] == 'left_only']
         return df_diff
     return df
