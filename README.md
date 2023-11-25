@@ -43,7 +43,8 @@ Most buttons and objects when hovered have tooltips connected which explains the
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-![Capture](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/281085c9-a46d-4bc6-a6f2-c922d0315ac1)
+![Capture](https://github.com/RLAlpha49/Anilist-Manga-Updater/assets/75044176/7f5273fb-a305-4ac9-8251-e61b26bebe97)
+
 
 | `GUI.py` GUI At Startup
 
