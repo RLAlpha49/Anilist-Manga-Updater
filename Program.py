@@ -21,14 +21,22 @@ class Program:
     # Initialize the Program class
     def __init__(self, app):
         self.app = app
+
+        total_steps = 10  # Total number of steps in your program
+        current_step = 0  # Current step number
+        
+        # Update progress and status
+        current_step += 0.5
+        app.update_progress_and_status('Setting access token & Loading configuration...', current_step / total_steps)
+        
         # Set the access token
         Set_Access_Token(app)
         # Check if the access token needs to be refreshed
         refresh = needs_refresh(app)
         if refresh == True:
-            self.app.update_terminal("Access Token needs to be refreshed")
+            app.update_terminal("Access Token needs to be refreshed")
             return
-
+        
         # Load the configuration from the config.json file
         config = load_config('config.json')
         if config is None:
@@ -66,23 +74,42 @@ class Program:
             # If not all values are set, return
             if not all_values_set:
                 return
+            
+        # Update progress and status
+        current_step += 0.5
+        app.update_progress_and_status('Checking file path...', current_step / total_steps)
         
         # Check if the file path is set
         if app.file_path == '':
             app.update_terminal("Error: Please browse for a kenmei export file. (Previous is Optional)")
             return
         
+        # Update progress and status
+        current_step += 0.5
+        app.update_progress_and_status('Getting manga from CSV...', current_step / total_steps)
+        
         # Get the manga found in the CSV file
         Manga_Found_In_CSV(app)
         # Record the start time
         manga_data_start_time = time.time()
+        
+        # Update progress and status
+        current_step += 0.5
+        app.update_progress_and_status('Getting manga IDs...', current_step / total_steps)
 
         # Call the function and get the list of IDs & Names
         manga_names_ids = {}
         manga_names = Get_Manga_Names(app)
+        
+        # Before the loop, record the start time and initialize a list to store the times
+        start_time = time.time()
+        times = []
 
         # Iterate through the manga_names dictionary
         for manga_name, manga_info in manga_names.items():
+            # Record the time before finding the ID
+            time_before = time.time()
+    
             # Sleep for 0.4 seconds to reduce hitting the API rate limit
             time.sleep(API_CALL_DELAY)
             status = manga_info['status'] 
@@ -112,10 +139,33 @@ class Program:
                         last_chapter_read = manga_info['last_chapter_read']
                         last_read_at = manga_info['last_read_at']
                         manga_names_ids[manga_name].append((manga_id, last_chapter_read, manga_info['status'], last_read_at))
+            
+            # Record the time after finding the ID and append the difference to the list
+            time_after = time.time()
+            times.append(time_after - time_before)
 
+            # Calculate the average time per ID and the estimated total time
+            average_time = sum(times) / len(times)
+            estimated_total_time = average_time * len(manga_names)
+
+            # Calculate the progress for this step
+            step_progress = (time_after - start_time) / estimated_total_time
+
+            # Adjust the progress to be between 20% and 50%
+            progress = 0.2 + step_progress * 0.3
+
+            app.update_progress_and_status(f'Getting ID for {manga_name}...', progress)
+        
+        # After the loop, the progress should be around 50%
+        app.update_progress_and_status('Finished getting IDs!')
+
+        # Update progress and status
+        current_step += 3.5
+        app.update_progress_and_status('Cleaning manga IDs...', current_step / total_steps)
+        
         # Clean the manga_names_ids dictionary
         manga_names_ids = Clean_Manga_IDs(manga_names_ids, app)
-
+        
         # Print the dictionary containing manga names and associated IDs
         self.app.update_terminal("\nManga Names With Associated IDs & Chapters Read:")
         for manga_name, ids in manga_names_ids.items():
@@ -123,7 +173,8 @@ class Program:
                 manga_id, last_chapter_read, status, last_read_at = id_info
                 self.app.update_terminal(f"{manga_name}, ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}")
         self.app.update_terminal("\n\n")
-
+        
+        app.update_progress_and_status('Writing no manga found file...', (current_step + (0.5/3) * 2) / total_steps)
         Get_No_Manga_Found(app)
 
         # Calculate and print the time taken
@@ -133,6 +184,14 @@ class Program:
         # Record the start time
         manga_update_start_time = time.time()
 
+        # Update progress and status
+        current_step += 0.5
+        app.update_progress_and_status('Updating manga...', current_step / total_steps)
+        
+        # Before the loop, initialize a counter for the number of manga updated
+        manga_updated = 0
+        total_manga = sum(len(info_list) for info_list in manga_names_ids.values())
+        
         # Iterate over entries in the cleaned manga_names_ids dictionary
         for manga_name, manga_info_list in manga_names_ids.items():
             # For each manga, there is a list of information (manga_info_list)
@@ -145,12 +204,39 @@ class Program:
                 Update_Manga(manga_name, manga_id, last_chapter_read, private, status, last_read_at, months, app)
                 # Sleep for 0.3 seconds to reduce hitting the API rate limit
                 time.sleep(UPDATE_DELAY)
+                
+                # After updating the manga, increment the counter
+                manga_updated += 1
 
+                # Calculate the progress for this step
+                step_progress = manga_updated / total_manga
+
+                # Adjust the progress to be between 60% and 90%
+                progress = 0.6 + step_progress * 0.3
+
+                app.update_progress_and_status(f'Updating {manga_name}...', progress)
+        
+        current_step += 3
+        # After the loop, the progress should be exactly 90%
+        app.update_progress_and_status('Finished updating manga!', current_step / total_steps)
+
+        # Update progress and status
+        current_step += 0.5
+        app.update_progress_and_status('Writing chapters updated...', current_step / total_steps)
+        
         # Get the number of chapters updated
         chapters_updated = Get_Chapters_Updated()
         self.app.update_terminal(f"\nTotal chapters updated: {chapters_updated}")
         #Write the number of chapters updated to a file
         Write_Chapters_Updated(chapters_updated)
+        
+        time.sleep(0.3)
+        
+        # Script has finished, update progress and status
+        current_step += 0.5
+        app.update_progress_and_status('Script Finished...', current_step / total_steps)
+        
+        time.sleep(0.3)
 
         # Calculate and print the time taken
         manga_update_time_taken = self.print_time_taken(manga_update_start_time, "update Manga data")

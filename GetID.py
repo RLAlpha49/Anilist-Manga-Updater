@@ -8,18 +8,25 @@ import string
 no_manga_found = []
 
 def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
+    # Declare global variable
     global no_manga_found
+    # Initialize retry count
     retry_count = 0
 
+    # Retry loop
     while retry_count < max_retries:
         try:
+            # Search for the manga
             manga = pymoe.manga.search.anilist.manga(name)
+            # Initialize matches list
             matches = []
 
             try:
+                # Loop through each manga item
                 for manga_item in manga:
                     title = manga_item['title']
                     match = False
+                    # Check if the title matches the search name
                     if 'english' in title and title['english']:
                         match = match or Check_Title_Match(title['english'], name)
                     if 'romaji' in title and title['romaji']:
@@ -27,17 +34,21 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
                     if 'synonyms' in manga_item:
                         for synonym in manga_item['synonyms']:
                             match = match or Check_Title_Match(synonym, name)
+                    # If match, append to matches list
                     if match:
                         matches.append((match, manga_item))
             except IndexError:
+                # If no search results found, update terminal and append to not found list
                 app.update_terminal(f"\nNo search results found for '{name}'.")
                 no_manga_found.append((name, last_chapter_read))
                 return []
 
-            matches.sort(key=lambda x: x[0], reverse=True)  # Sort matches in descending order of match
+            # Sort matches in descending order of match
+            matches.sort(key=lambda x: x[0], reverse=True)
+            # Get list of IDs for matches
             id_list = [manga_item['id'] for match, manga_item in matches if match]
 
-            # Print the details of the manga that matches the search
+            # If IDs found, print details
             if id_list:
                 app.update_terminal(f"\nList of IDs for {name} : {id_list}")
                 romaji_title = matches[0][1]['title']['romaji']
@@ -48,13 +59,16 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
                     if match:
                         app.update_terminal(f"Anilist URL: {manga_item['siteUrl']}")
 
+            # If no IDs found, update terminal and append to not found list
             if not id_list:
                 app.update_terminal(f"\nNo manga found for '{name}'.")
                 no_manga_found.append((name, last_chapter_read))
 
+            # Return list of IDs
             return id_list
 
         except pymoe.errors.serverError as e:
+            # Handle server error
             if "Too Many Requests" in str(e):
                 app.update_terminal(f"Too Many Requests For Pymoe. Retrying in {delay} seconds...")
                 time.sleep(delay)
@@ -63,6 +77,7 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
                 app.update_terminal(f"An unexpected server error occurred: {e}")
                 break
 
+    # If retries exhausted, update terminal
     app.update_terminal(f"Failed to get manga ID for '{name}' after {max_retries} retries.")
     return []
 
@@ -109,6 +124,7 @@ def Clean_Manga_IDs(manga_names_ids, app):
                 app.update_terminal(f"ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}")
         app.update_terminal("\n")
     # Write the manga names with multiple IDs to a file
+    app.update_progress_and_status("Writing multiple ID's file...", ((5.5 + (0.5/3))/10))
     Write_Multiple_IDs(multiple_id_manga_names)
     # Return the cleaned manga names and IDs
     return cleaned_manga_names_ids

@@ -14,6 +14,11 @@ from Config import create_config, save_config, Get_Config, load_config
 from GetAccessToken import Get_Access_Token
 from AccessAPI import Set_Access_Token
 
+# Define a global variable for the progress
+global progress, progress_status
+progress = 0
+progress_status = "Waiting..."
+
 # Set the appearance mode and color theme for the custom tkinter library
 if platform.system() == "Linux":
     customtkinter.set_appearance_mode("Dark")
@@ -48,13 +53,16 @@ class AccessTokenThread(threading.Thread):
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
+        
+        global program_thread
+        program_thread = None
 
         # Load the application logo
         logo = customtkinter.CTkImage(light_image=Image.open(image1dir), size=(100,100))
         
         # Set the window title and size
         self.title("Anilist Manga Updater")
-        self.geometry(f"{1100}x{670}")
+        self.geometry(f"{1100}x{700}")
 
         # Configure the grid layout for the window
         self.grid_columnconfigure(1, weight=1)
@@ -63,7 +71,7 @@ class App(customtkinter.CTk):
 
         # Create a sidebar frame for the window
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
-        self.sidebar_frame.grid(row=0, column=0, rowspan=5, sticky="nsew")
+        self.sidebar_frame.grid(row=0, column=0, rowspan=9, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(7, weight=1)
         
         # Add the application logo and title to the sidebar
@@ -88,11 +96,11 @@ class App(customtkinter.CTk):
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=8, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"], command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 10))
+        self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 0))
 
         # Create a label and option menu for the UI scaling
         self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
-        self.scaling_label.grid(row=10, column=0, padx=20, pady=(10, 0))
+        self.scaling_label.grid(row=10, column=0, padx=20, pady=(5, 0))
         self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["80%", "90%", "100%", "110%", "120%"], command=self.change_scaling_event)
         self.scaling_optionemenu.grid(row=11, column=0, padx=20, pady=(10, 15))
 
@@ -103,18 +111,39 @@ class App(customtkinter.CTk):
         # Create a terminal textbox
         self.terminal = customtkinter.CTkTextbox(self, width=250)
         self.terminal.grid(row=0, column=1, columnspan=3, rowspan=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
+        
+        # Create time remaining label
+        self.time_remaining_label = customtkinter.CTkLabel(self, text="Estimated Time Remaining: NaN", anchor="w")
+        self.time_remaining_label.grid(row=3, column=1, padx=(20, 20), pady=(5, 5), sticky="nsew")
+        
+        # Create time taken label
+        self.time_taken_label = customtkinter.CTkLabel(self, text="Time Taken: 0:00:00", anchor="e")
+        self.time_taken_label.grid(row=3, column=3, padx=(20, 20), pady=(5, 5), sticky="nsew")
+        
+        # Create a progress bar
+        self.progress_bar = customtkinter.CTkProgressBar(self, width=200, height=20)
+        self.progress_bar.grid(row=4, column=1, columnspan=3, padx=(20, 20), sticky="nsew")
+        self.progress_bar.set(0)
+        
+        # Create a percent label under the progress bar
+        self.percent_label = customtkinter.CTkLabel(self, text="0%", anchor="center")
+        self.percent_label.grid(row=5, column=1, columnspan=3, padx=(20, 20), sticky="nsew")
+
+        # Create a status label under the progress bar
+        self.status_label = customtkinter.CTkLabel(self, text=f"Status: {progress_status}")
+        self.status_label.grid(row=6, column=1, columnspan=3, padx=(20, 20), sticky="nsew")
 
         # Create an entry field and browse button for the previous Kenmei export file path
         self.previous_file_path_textbox = customtkinter.CTkEntry(self, placeholder_text="Previous Kenmei Export File Path")
-        self.previous_file_path_textbox.grid(row=3, column=1, columnspan=2, padx=(20, 0), pady=(20, 15), sticky="nsew")
+        self.previous_file_path_textbox.grid(row=7, column=1, columnspan=2, padx=(20, 0), pady=(15, 15), sticky="nsew")
         self.previous_browse_button = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text="Browse", command=lambda: self.browse_file(self.previous_file_path_textbox, True))
-        self.previous_browse_button.grid(row=3, column=3, padx=(20, 20), pady=(20, 15), sticky="nsew")
+        self.previous_browse_button.grid(row=7, column=3, padx=(20, 20), pady=(15, 15), sticky="nsew")
 
         # Create an entry field and browse button for the Kenmei export file path
         self.file_path_textbox = customtkinter.CTkEntry(self, placeholder_text="Kenmei Export File Path")
-        self.file_path_textbox.grid(row=4, column=1, columnspan=2, padx=(20, 0), pady=(5, 15), sticky="nsew")
+        self.file_path_textbox.grid(row=8, column=1, columnspan=2, padx=(20, 0), pady=(5, 15), sticky="nsew")
         self.browse_button = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), text="Browse", command=lambda: self.browse_file(self.file_path_textbox, False))
-        self.browse_button.grid(row=4, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew")
+        self.browse_button.grid(row=8, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew")
 
         # Set default values for the appearance mode, UI scaling, and file path textboxes
         self.appearance_mode_optionemenu.set("Dark")
@@ -146,6 +175,34 @@ class App(customtkinter.CTk):
         self.previous_browse_button_tooltip = CTkToolTip.CTkToolTip(self.previous_browse_button, "Opens a file dialog to select the previous Kenmei export file. (Optional))")
         self.file_path_textbox_tooltip = CTkToolTip.CTkToolTip(self.file_path_textbox, "Displays the path of the Kenmei export file.")
         self.browse_button_tooltip = CTkToolTip.CTkToolTip(self.browse_button, "Opens a file dialog to select the Kenmei export file.")
+        self.progress_bar_tooltip = CTkToolTip.CTkToolTip(self.progress_bar, f"{round((progress * 100), 1)}%")
+    
+    def update_progress_bar(self):
+        if program_thread.is_alive():
+            # If the thread is running, update the progress and status
+            self.progress_bar.set(progress)
+            self.status_label.configure(text=f"Status: {progress_status}")
+            
+            # Update the time taken
+            time_taken = time.time() - self.start_time
+            minutes, seconds = divmod(time_taken, 60)
+            hours, minutes = divmod(minutes, 60)
+            self.time_taken_label.configure(text=f'Time Taken: {int(hours):01d}:{int(minutes):02d}:{int(seconds):02d}')
+            self.update_idletasks()
+        else:
+            # If the thread is not running, set progress to 0 and stop the function
+            return
+        self.after(100, self.update_progress_bar)  # Update every second
+    
+    def update_progress_and_status(self, status, program_progress=progress):
+        # Update the global variables that were updated in the Program.py file
+        global progress, progress_status
+        if program_progress != progress:
+            # If progress is different update objects associated with it
+            progress = program_progress
+            progress_status = status
+            self.percent_label.configure(text=f"{round((progress * 100), 1)}%")
+            self.progress_bar_tooltip.configure(message=f"{str(round((progress * 100), 1))}%")
     
     def update_terminal(self, text: str):
         # Check if the scrollbar is at the bottom
@@ -287,6 +344,13 @@ class App(customtkinter.CTk):
                 self.update_terminal("Canceled")
 
     def start_button_clicked(self):
+        global progress
+        global program_thread
+
+        # Check if the thread is already running
+        if program_thread is not None and program_thread.is_alive():
+            return
+
         # Import the Program class
         from Program import Program
         # Create a new thread for the program
@@ -294,6 +358,12 @@ class App(customtkinter.CTk):
         # Start the program thread
         program_thread.start()
         
+        self.start_time = time.time()
+        self.time_taken_label.configure(text=f"Time Taken: 0:00:00")
+        
+        self.update_progress_bar()
+        progress = 0
+
     def private_button_clicked(self):
         while True:
             # Open an input dialog for the private value
@@ -332,3 +402,4 @@ if __name__ == "__main__":
     # Create an instance of the App class and start the main loop
     app = App()
     app.mainloop()
+    
