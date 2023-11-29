@@ -7,8 +7,8 @@ from Config import Get_Config, load_config
 import time
 
 # Define constants for API call delay and update delay
-API_CALL_DELAY = 0.3
-UPDATE_DELAY = 0.3
+API_CALL_DELAY = 0.4
+UPDATE_DELAY = 0.4
 
 class Program:
     # Function to print the time taken for a task

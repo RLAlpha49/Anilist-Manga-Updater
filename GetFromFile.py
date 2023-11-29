@@ -15,7 +15,7 @@ alternative_titles_dict = {
    "Prince Hero" : "Skipping Title",
    "Gendai no Saikyou Heishi, Isekai Dungeon o Kouryaku Suru" : "Gendai no Saikyou Heishi, Isekai Dungeon wo Kouryaku Suru",
    'Ryuu Kusari no Ori: Kokoro no Naka no "Kokoro"' : 'Ryuusa no Ori: Kokoro no Naka no "Kokoro"',
-   "Sobiwaku Zero no Saikyou Kenshi Demo, Noroi no Soubi (kawaii) Nara 9999 ko Tsuke hodai" : "Sobiwaku Zero no Saikyou Kenshi: demo, Noroi no Sobi (Kawaii) nara 9999-ko Tsuke Hodai",
+   "Sobiwaku Zero no Saikyou Kenshi Demo, Noroi no Soubi (kawaii) Nara 9999 ko Tsuke hodai" : "The Strongest Swordsman Has Zero Equipment Slots, but He Can Equip up to 9999 Items if It’s (Cute) Cursed Equipment",
    "Tensei Ryoushu no Yuuryou Kaitaku: Zensei no Kioku o Ikashite White ni Tsutometara, Yuunou na Jinzai ga Atsumari Sugimashita" : "Tensei Ryoushu no Yuuryou Kaitaku: Zense no Kioku wo Ikashite White ni Tsutometara, Yuunou na Jinzai ga Atsumari Sugimashita",
    "Jigoku no Gouka de Yaka re Tsuzuketa Shounen. Saikyou no Honou Tsukai to Natte Fukkatsu Suru." : "Jigoku no Gouka de Yakare Tsuzuketa Shounen. Saikyou no Honou Tsuka to Natte Fukkatsu Suru",
    "Dungeon Athlete" : "Dungeon Athelete",
