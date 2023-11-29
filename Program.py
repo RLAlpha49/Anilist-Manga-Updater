@@ -38,6 +38,7 @@ class Program:
         refresh = needs_refresh(app)
         if refresh == True:
             app.update_terminal("Access Token needs to be refreshed")
+            app.update_progress_and_status('Token needs to be refreshed...', 0)
             return
         
         # Load the configuration from the config.json file
@@ -76,6 +77,7 @@ class Program:
 
             # If not all values are set, return
             if not all_values_set:
+                app.update_progress_and_status('Configuration needs to be set...', 0)
                 return
             
         # Update progress and status
@@ -152,13 +154,23 @@ class Program:
                         last_read_at = manga_info['last_read_at']
                         manga_names_ids[manga_name].append((manga_id, last_chapter_read, manga_info['status'], last_read_at))
             
-            # Record the time after finding the ID and append the difference to the list
+            # Record the time after finding the ID
             time_after = time.time()
-            times.append(time_after - time_before)
+            operation_time = time_after - time_before
+
+            # Append the operation time to the list
+            times.append(operation_time)
 
             # Calculate the average time per ID and the estimated total time
             average_time = sum(times) / len(times)
             estimated_total_time = average_time * len(manga_names)
+            
+            # Calculate the estimated time remaining
+            time_elapsed = time.time() - start_time
+            estimated_time_remaining = estimated_total_time - time_elapsed
+            
+            # Print the estimated time remaining
+            app.update_estimated_time_remaining(estimated_time_remaining)
 
             # Calculate the progress for this step
             step_progress = (time_after - start_time) / estimated_total_time

@@ -1,3 +1,4 @@
+#!/user/bin/env python
 # Import necessary modules
 import tkinter as tk
 from tkinter import messagebox, filedialog, simpledialog
@@ -8,6 +9,7 @@ import sys
 import threading
 import time
 import platform
+import datetime
 from PIL import Image
 # Import custom functions
 from Config import create_config, save_config, Get_Config, load_config
@@ -58,6 +60,7 @@ class App(customtkinter.CTk):
         
         global program_thread
         program_thread = None
+        self.after_id = None
 
         # Load the application logo
         logo = customtkinter.CTkImage(light_image=Image.open(image1dir), size=(100,100))
@@ -296,7 +299,24 @@ class App(customtkinter.CTk):
             # Show a message box to confirm that the alternative title has been added
             messagebox.showinfo("Add Alternative Title", f"The alternative title '{alternative_title}' has been added for '{original_title}'.")
             self.update_terminal(f"The alternative title '{alternative_title}' has been added for '{original_title}'.\n")
-        
+    
+    def update_estimated_time_remaining(self, estimated_time_remaining):
+        # Convert the estimated time remaining to hours, minutes, and seconds
+        time_remaining = str(datetime.timedelta(seconds=int(estimated_time_remaining)))
+
+        # Update the time remaining label
+        self.time_remaining_label.configure(text=f"Estimated Time Remaining: {time_remaining}")
+        self.update_idletasks()
+
+        # If there is still time remaining
+        if estimated_time_remaining > 0:
+            # If the function is already scheduled, cancel it
+            if self.after_id is not None:
+                self.after_cancel(self.after_id)
+
+            # Schedule this function to be called again after 1 second and store the ID
+            self.after_id = self.after(1000, self.update_estimated_time_remaining, estimated_time_remaining - 1)
+    
     def update_progress_bar(self):
         if program_thread.is_alive():
             # If the thread is running, update the progress and status

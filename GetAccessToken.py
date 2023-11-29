@@ -2,11 +2,14 @@
 import webbrowser
 import os
 import time
+import platform
 
 # Define the authorization URL for AniList OAuth
 authorization_url = 'https://anilist.co/api/v2/oauth/authorize'
 
 # Function to get the access token
+import platform
+
 def Get_Access_Token(thread, app):
     # Get the client ID from the environment variables
     client_id = os.environ.get('ANILIST_CLIENT_ID')
@@ -15,8 +18,15 @@ def Get_Access_Token(thread, app):
     if client_id is None:
         app.update_terminal("No client ID found. Please enter your AniList client ID with the 'Set API Values' button.")
     else:
-        # If the client ID is found, get the authentication code
-        return Get_Authentication_Code(client_id, thread)
+        if platform.system() == 'Linux':
+            app.update_terminal("Please open the following URL in your web browser and follow the instructions:")
+            print("Please open the following URL in your web browser and follow the instructions:")
+            app.update_terminal(f'{authorization_url}?client_id={client_id}&response_type=token')
+            print(f'{authorization_url}?client_id={client_id}&response_type=token')
+            auth_code = Get_Authentication_Code(client_id, thread)
+        elif platform.system() == 'Windows':
+            auth_code = Get_Authentication_Code(client_id, thread)
+        return auth_code
 
 # Function to get the authentication code
 def Get_Authentication_Code(client_id, thread): 
