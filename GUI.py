@@ -1,6 +1,6 @@
 # Import necessary modules
-from tkinter import messagebox
-from tkinter import filedialog
+import tkinter as tk
+from tkinter import messagebox, filedialog, simpledialog
 import customtkinter
 import CTkToolTip
 import os
@@ -11,6 +11,8 @@ import platform
 from PIL import Image
 # Import custom functions
 from Config import create_config, save_config, Get_Config, load_config
+from WriteToFile import Save_Alt_Titles_To_File, Get_Alt_Titles_From_File
+from GetFromFile import alternative_titles_dict
 from GetAccessToken import Get_Access_Token
 from AccessAPI import Set_Access_Token
 
@@ -91,6 +93,8 @@ class App(customtkinter.CTk):
         self.month_button.grid(row=5, column=0, padx=20, pady=5)
         self.private_button = customtkinter.CTkButton(self.sidebar_frame, command=self.private_button_clicked, text="Private Value")
         self.private_button.grid(row=6, column=0, padx=20, pady=5)
+        self.alt_titles_button = customtkinter.CTkButton(self.sidebar_frame, command=lambda: self.manage_alternative_titles(), text="Manage Alt Titles")
+        self.alt_titles_button.grid(row=7, column=0, padx=20, pady=5)
         
         # Create a label and option menu for the appearance mode
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
@@ -177,6 +181,120 @@ class App(customtkinter.CTk):
         self.browse_button_tooltip = CTkToolTip.CTkToolTip(self.browse_button, "Opens a file dialog to select the Kenmei export file.")
         self.progress_bar_tooltip = CTkToolTip.CTkToolTip(self.progress_bar, f"{round((progress * 100), 1)}%")
     
+    def manage_alternative_titles(self):
+        alt_titles_dict = Get_Alt_Titles_From_File(alternative_titles_dict)
+        # Create a new Tkinter window
+        root = tk.Tk()
+        # Hide the root window
+        root.withdraw()
+
+        # Display a numbered list of options in the terminal
+        options = ['add', 'edit', 'delete']
+        self.update_terminal("Manage Alternative Titles")
+        for i, option in enumerate(options, 1):
+            self.update_terminal(f"{i}. {option}")
+        self.update_terminal("")
+
+        # Ask the user to enter the number of the option they want to select
+        action_index = simpledialog.askinteger("Manage Alternative Titles", "Enter the number of the option you want to select:")
+        if action_index == 0:
+            messagebox.showerror("Error", "Index out of range")
+            self.update_terminal("Out of range\n")
+            return
+        try:
+            action = options[action_index - 1]
+        except TypeError:
+            messagebox.showerror("Error", "Canceled")
+            self.update_terminal("Canceled\n")
+            return
+        except IndexError:
+            messagebox.showerror("Error", "Index out of range")
+            self.update_terminal("\nIndex out of range\n")
+            return
+
+        if action in ['edit', 'delete']:
+            # Display a numbered list of the keys and values in the dictionary in the terminal
+            titles = list(alt_titles_dict.items())
+            self.update_terminal("\nSelect a title")
+            for i, (title, alt_title) in enumerate(titles, 1):
+                self.update_terminal(f"{i}. {title} ==> {alt_title}")
+
+            # Ask the user to enter the number of the key they want to select
+            title_index = simpledialog.askinteger("Select a title", "Enter the number of the title you want to select:")
+            if title_index == 0:
+                messagebox.showerror("Error", "Index out of range")
+                self.update_terminal("\nOut of range\n")
+                return
+            try:
+                original_title, _ = titles[title_index - 1]
+            except IndexError:
+                messagebox.showerror("Error", "Index out of range")
+                self.update_terminal("\nIndex out of range\n")
+                return
+            except TypeError:
+                messagebox.showerror("Error", "Canceled")
+                self.update_terminal("\nCanceled\n")
+                return
+
+            if action == 'edit':
+                # Ask the user for the new alternative title
+                new_alternative_title = simpledialog.askstring("Edit Alternative Title", "Enter the new alternative title:")
+                if new_alternative_title is None:
+                    # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
+                    messagebox.showerror("Error", "Canceled")
+                    self.update_terminal("\nCanceled\n")
+                    return
+                elif new_alternative_title == '':
+                    # If the user enters an empty string, show an error message and update the terminal
+                    messagebox.showerror("Error", "No Title Entered")
+                    self.update_terminal("\nNo Title Entered\n")
+                    return
+                # Update the alternative title in the dictionary
+                alt_titles_dict[original_title] = new_alternative_title
+                Save_Alt_Titles_To_File(alt_titles_dict)
+                # Show a message box to confirm that the alternative title has been updated
+                messagebox.showinfo("Edit Alternative Title", f"The alternative title for '{original_title}' has been updated to '{new_alternative_title}'.")
+                self.update_terminal(f"The alternative title for '{original_title}' has been updated to '{new_alternative_title}'.")
+            elif action == 'delete':
+                # Delete the alternative title from the dictionary
+                alt_titles_dict.pop(original_title, None)
+                Save_Alt_Titles_To_File(alt_titles_dict)
+                # Show a message box to confirm that the alternative title has been deleted
+                messagebox.showinfo("Delete Alternative Title", f"The alternative title for '{original_title}' has been deleted.")
+                self.update_terminal(f"The alternative title for '{original_title}' has been deleted.")
+        elif action == 'add':
+            # Ask the user for the original title and the alternative title
+            try:
+                original_title = simpledialog.askstring("Add Alternative Title", "Enter the original title:")
+            except TypeError:
+                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
+                messagebox.showerror("Error", "Canceled")
+                self.update_terminal("\nCanceled\n")
+                return
+            if original_title == "" or None:
+                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
+                messagebox.showerror("Error", "No Title Entered")
+                self.update_terminal("\nNo Title Entered\n")
+                return
+            try:
+                alternative_title = simpledialog.askstring("Add Alternative Title", "Enter the alternative title:")
+            except TypeError:
+                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
+                messagebox.showerror("Error", "Canceled")
+                self.update_terminal("\nCanceled\n")
+                return
+            if alternative_title == "" or None:
+                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
+                messagebox.showerror("Error", "No Title Entered")
+                self.update_terminal("\nNo Title Entered\n")
+                return
+            # Add the alternative title to the dictionary
+            alt_titles_dict[original_title] = alternative_title
+            Save_Alt_Titles_To_File(alt_titles_dict)
+            # Show a message box to confirm that the alternative title has been added
+            messagebox.showinfo("Add Alternative Title", f"The alternative title '{alternative_title}' has been added for '{original_title}'.")
+            self.update_terminal(f"The alternative title '{alternative_title}' has been added for '{original_title}'.")
+        
     def update_progress_bar(self):
         if program_thread.is_alive():
             # If the thread is running, update the progress and status

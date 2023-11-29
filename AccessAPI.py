@@ -75,7 +75,7 @@ def api_request(query, app, variables=None):
         wait_time = rate_limit_reset - int(time.time())
         if wait_time < 0:
             app.update_terminal(f"\nReset time: {wait_time} Seconds\nError: Rate limit reset time is in the past.")
-            wait_time = 50
+            wait_time = 65
             app.update_terminal(f"Waiting for {wait_time} seconds.\n")
             time.sleep(wait_time)
         else:

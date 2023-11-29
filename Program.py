@@ -1,5 +1,5 @@
 # Import necessary modules and functions
-from GetFromFile import Get_Manga_Names, Manga_Found_In_CSV
+from GetFromFile import Get_Manga_Names, Manga_Found_In_CSV, alternative_titles_dict
 from GetID import Get_Manga_ID, Clean_Manga_IDs, Get_No_Manga_Found
 from AccessAPI import Get_Format, Update_Manga, Get_Chapters_Updated, Set_Access_Token, needs_refresh
 from WriteToFile import Write_Chapters_Updated
@@ -99,7 +99,7 @@ class Program:
 
         # Call the function and get the list of IDs & Names
         manga_names_ids = {}
-        manga_names = Get_Manga_Names(app)
+        manga_names = Get_Manga_Names(app, alternative_titles_dict)
         
         # Before the loop, record the start time and initialize a list to store the times
         start_time = time.time()
