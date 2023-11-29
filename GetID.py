@@ -7,6 +7,10 @@ import string
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []
 
+def Set_No_Manga_Found():
+    global no_manga_found
+    no_manga_found = []
+
 def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
     # Declare global variable
     global no_manga_found
@@ -28,20 +32,27 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
                     match = False
                     # Check if the title matches the search name
                     if 'english' in title and title['english']:
-                        match = match or Check_Title_Match(title['english'], name)
+                        english_title = title['english'].replace('-', ' ')
+                        english_title = english_title.replace('\u2019', '\u0060')
+                        match = match or Check_Title_Match(english_title, name)
                     if 'romaji' in title and title['romaji']:
-                        match = match or Check_Title_Match(title['romaji'], name)
+                        romaji_title = title['romaji'].replace('-', ' ')
+                        romaji_title = romaji_title.replace('\u2019', '\u0060')
+                        match = match or Check_Title_Match(romaji_title, name)
                     if 'synonyms' in manga_item:
                         for synonym in manga_item['synonyms']:
+                            synonym = synonym.replace('-', ' ')
+                            synonym = synonym.replace('\u2019', '\u0060')
                             match = match or Check_Title_Match(synonym, name)
                     # If match, append to matches list
                     if match:
                         matches.append((match, manga_item))
             except IndexError:
-                # If no search results found, update terminal and append to not found list
-                app.update_terminal(f"\nNo search results found for '{name}'.")
-                no_manga_found.append((name, last_chapter_read))
-                return []
+                if matches is []:
+                    # If no search results found, update terminal and append to not found list
+                    app.update_terminal(f"\nNo search results found for '{name}'.")
+                    no_manga_found.append((name, last_chapter_read))
+                    return []
 
             # Sort matches in descending order of match
             matches.sort(key=lambda x: x[0], reverse=True)
@@ -89,7 +100,7 @@ def Check_Title_Match(title, name):
     # Split the title and the search name into words
     title_words = set(title.lower().split())
     name_words = set(name.lower().split())
-
+    
     # Check if all words in the search name are in the title
     return name_words.issubset(title_words)
 

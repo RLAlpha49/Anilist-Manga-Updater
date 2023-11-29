@@ -289,3 +289,7 @@ def Update_Manga(manga_name, manga_id, last_chapter_read, private_bool, status, 
 def Get_Chapters_Updated():
     # Return the global variable chapters_updated
     return chapters_updated
+
+def Set_Chapters_Updated():
+    global chapters_updated
+    chapters_updated = 0

@@ -1,7 +1,7 @@
 # Import necessary modules and functions
 from GetFromFile import Get_Manga_Names, Manga_Found_In_CSV, alternative_titles_dict
-from GetID import Get_Manga_ID, Clean_Manga_IDs, Get_No_Manga_Found
-from AccessAPI import Get_Format, Update_Manga, Get_Chapters_Updated, Set_Access_Token, needs_refresh
+from GetID import Get_Manga_ID, Clean_Manga_IDs, Get_No_Manga_Found, Set_No_Manga_Found
+from AccessAPI import Get_Format, Update_Manga, Get_Chapters_Updated, Set_Chapters_Updated, Set_Access_Token, needs_refresh
 from WriteToFile import Write_Chapters_Updated
 from Config import Get_Config, load_config
 import time
@@ -21,6 +21,9 @@ class Program:
     # Initialize the Program class
     def __init__(self, app):
         self.app = app
+        
+        Set_No_Manga_Found()
+        Set_Chapters_Updated()
 
         total_steps = 10  # Total number of steps in your program
         current_step = 0  # Current step number
@@ -107,8 +110,17 @@ class Program:
 
         # Iterate through the manga_names dictionary
         for manga_name, manga_info in manga_names.items():
+            try:
+                app.update_progress_and_status(f'Getting ID for {manga_name}...', progress)
+            except UnboundLocalError:
+                app.update_progress_and_status(f'Getting ID for {manga_name}...')
+            app.update_idletasks()
+            
             # Record the time before finding the ID
             time_before = time.time()
+            # Replace all occurrences of U+2019 with U+0060 in manga_name
+            manga_name = manga_name.replace('\u2019', '\u0060')
+            manga_name = manga_name.replace('-', ' ')
     
             # Sleep for 0.4 seconds to reduce hitting the API rate limit
             time.sleep(API_CALL_DELAY)
@@ -153,8 +165,6 @@ class Program:
 
             # Adjust the progress to be between 20% and 50%
             progress = 0.2 + step_progress * 0.3
-
-            app.update_progress_and_status(f'Getting ID for {manga_name}...', progress)
         
         # After the loop, the progress should be around 50%
         app.update_progress_and_status('Finished getting IDs!')
@@ -196,6 +206,10 @@ class Program:
         for manga_name, manga_info_list in manga_names_ids.items():
             # For each manga, there is a list of information (manga_info_list)
             for manga_info in manga_info_list:
+                try:
+                    app.update_progress_and_status(f'Updating {manga_name}...', progress)
+                except UnboundLocalError:
+                    app.update_progress_and_status(f'Updating {manga_name}...')
                 # Unpack the manga_info list into individual variables
                 manga_id, last_chapter_read, status, last_read_at = manga_info
                 # Print the manga information

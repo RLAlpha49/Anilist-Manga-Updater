@@ -24,6 +24,11 @@ def Get_Alt_Titles_From_File(alternative_titles_dict):
     # If the file does not exist, return an empty dictionary
     else:
         Save_Alt_Titles_To_File(alternative_titles_dict)
+        # Open the file to read
+        with open(f'{directory}/alternative_titles.json', 'r', encoding='utf-8') as alt_titles_file:
+            # Load the dictionary from the file
+            alternative_titles_dict = json.load(alt_titles_file)
+            return alternative_titles_dict
 
 # Function to manage files
 def manage_files(directory, file_type):

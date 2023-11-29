@@ -113,7 +113,7 @@ class App(customtkinter.CTk):
         self.exit_button.grid(row=12, column=0, padx=20, pady=(5, 15))
 
         # Create a terminal textbox
-        self.terminal = customtkinter.CTkTextbox(self, width=250)
+        self.terminal = customtkinter.CTkTextbox(self, width=250, wrap="word")
         self.terminal.grid(row=0, column=1, columnspan=3, rowspan=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
         
         # Create time remaining label
@@ -187,6 +187,8 @@ class App(customtkinter.CTk):
         root = tk.Tk()
         # Hide the root window
         root.withdraw()
+        # Make the root window always appear on top
+        root.attributes('-topmost', 1)
 
         # Display a numbered list of options in the terminal
         options = ['add', 'edit', 'delete']
@@ -261,7 +263,7 @@ class App(customtkinter.CTk):
                 Save_Alt_Titles_To_File(alt_titles_dict)
                 # Show a message box to confirm that the alternative title has been deleted
                 messagebox.showinfo("Delete Alternative Title", f"The alternative title for '{original_title}' has been deleted.")
-                self.update_terminal(f"The alternative title for '{original_title}' has been deleted.")
+                self.update_terminal(f"The alternative title for '{original_title}' has been deleted.\n")
         elif action == 'add':
             # Ask the user for the original title and the alternative title
             try:
@@ -271,7 +273,7 @@ class App(customtkinter.CTk):
                 messagebox.showerror("Error", "Canceled")
                 self.update_terminal("\nCanceled\n")
                 return
-            if original_title == "" or None:
+            if original_title == "" or "None":
                 # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
                 messagebox.showerror("Error", "No Title Entered")
                 self.update_terminal("\nNo Title Entered\n")
@@ -283,7 +285,7 @@ class App(customtkinter.CTk):
                 messagebox.showerror("Error", "Canceled")
                 self.update_terminal("\nCanceled\n")
                 return
-            if alternative_title == "" or None:
+            if alternative_title == "" or "None":
                 # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
                 messagebox.showerror("Error", "No Title Entered")
                 self.update_terminal("\nNo Title Entered\n")
@@ -293,7 +295,7 @@ class App(customtkinter.CTk):
             Save_Alt_Titles_To_File(alt_titles_dict)
             # Show a message box to confirm that the alternative title has been added
             messagebox.showinfo("Add Alternative Title", f"The alternative title '{alternative_title}' has been added for '{original_title}'.")
-            self.update_terminal(f"The alternative title '{alternative_title}' has been added for '{original_title}'.")
+            self.update_terminal(f"The alternative title '{alternative_title}' has been added for '{original_title}'.\n")
         
     def update_progress_bar(self):
         if program_thread.is_alive():
@@ -312,9 +314,11 @@ class App(customtkinter.CTk):
             return
         self.after(100, self.update_progress_bar)  # Update every second
     
-    def update_progress_and_status(self, status, program_progress=progress):
+    def update_progress_and_status(self, status, program_progress=None):
         # Update the global variables that were updated in the Program.py file
         global progress, progress_status
+        if program_progress is None:
+            program_progress = progress
         if program_progress != progress:
             # If progress is different update objects associated with it
             progress = program_progress
