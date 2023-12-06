@@ -8,8 +8,6 @@ import platform
 authorization_url = 'https://anilist.co/api/v2/oauth/authorize'
 
 # Function to get the access token
-import platform
-
 def Get_Access_Token(thread, app):
     # Get the client ID from the environment variables
     client_id = os.environ.get('ANILIST_CLIENT_ID')

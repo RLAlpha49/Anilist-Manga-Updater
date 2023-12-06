@@ -49,9 +49,13 @@ def needs_refresh(app):
         }
     }
     '''
-
-    # Send a POST request to the API endpoint
-    response = requests.post(url, json={'query': query}, headers=headers)
+    try:
+        # Send a POST request to the API endpoint
+        response = requests.post(url, json={'query': query}, headers=headers)
+    except:
+        app.update_terminal("Error: Cannot resolve graphql.anilist.co")
+        app.update_terminal("Possibly due to internet connection\n")
+        return
 
     # If the status code is 401 (Unauthorized), the access token is invalid
     if response.status_code == 401 or response.status_code == 400:
