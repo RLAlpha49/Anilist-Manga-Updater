@@ -7,9 +7,11 @@ import string
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []
 
+
 def Set_No_Manga_Found():
     global no_manga_found
     no_manga_found = []
+
 
 def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
     # Declare global variable
@@ -19,7 +21,7 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
 
     # Retry loop
     while retry_count < max_retries:
-        if name != 'Skipping Title':
+        if name != "Skipping Title":
             try:
                 # Search for the manga
                 try:
@@ -35,24 +37,24 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
                 try:
                     # Loop through each manga item
                     for manga_item in manga:
-                        title = manga_item['title']
+                        title = manga_item["title"]
                         match = False
                         # Check if the title matches the search name
-                        if 'english' in title and title['english']:
-                            english_title = title['english'].replace('-', ' ')
-                            english_title = english_title.replace('\u2019', '\u0060')
-                            english_title = english_title.replace('`', "'")
+                        if "english" in title and title["english"]:
+                            english_title = title["english"].replace("-", " ")
+                            english_title = english_title.replace("\u2019", "\u0060")
+                            english_title = english_title.replace("`", "'")
                             match = match or Check_Title_Match(english_title, name)
-                        if 'romaji' in title and title['romaji']:
-                            romaji_title = title['romaji'].replace('-', ' ')
-                            romaji_title = romaji_title.replace('\u2019', '\u0060')
-                            romaji_title = romaji_title.replace('`', "'")
+                        if "romaji" in title and title["romaji"]:
+                            romaji_title = title["romaji"].replace("-", " ")
+                            romaji_title = romaji_title.replace("\u2019", "\u0060")
+                            romaji_title = romaji_title.replace("`", "'")
                             match = match or Check_Title_Match(romaji_title, name)
-                        if 'synonyms' in manga_item:
-                            for synonym in manga_item['synonyms']:
-                                synonym = synonym.replace('-', ' ')
-                                synonym = synonym.replace('\u2019', '\u0060')
-                                synonym = synonym.replace('`', "'")
+                        if "synonyms" in manga_item:
+                            for synonym in manga_item["synonyms"]:
+                                synonym = synonym.replace("-", " ")
+                                synonym = synonym.replace("\u2019", "\u0060")
+                                synonym = synonym.replace("`", "'")
                                 match = match or Check_Title_Match(synonym, name)
                         # If match, append to matches list
                         if match:
@@ -67,13 +69,13 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
                 # Sort matches in descending order of match
                 matches.sort(key=lambda x: x[0], reverse=True)
                 # Get list of IDs for matches
-                id_list = [manga_item['id'] for match, manga_item in matches if match]
+                id_list = [manga_item["id"] for match, manga_item in matches if match]
 
                 # If IDs found, print details
                 if id_list:
                     app.update_terminal(f"\nList of IDs for {name} : {id_list}")
-                    romaji_title = matches[0][1]['title']['romaji']
-                    english_title = matches[0][1]['title']['english']
+                    romaji_title = matches[0][1]["title"]["romaji"]
+                    english_title = matches[0][1]["title"]["english"]
                     app.update_terminal(f"Romaji Title: {romaji_title}")
                     app.update_terminal(f"English Title: {english_title}")
                     for match, manga_item in matches:
@@ -91,31 +93,37 @@ def Get_Manga_ID(name, last_chapter_read, app, max_retries=5, delay=15):
             except pymoe.errors.serverError as e:
                 # Handle server error
                 if "Too Many Requests" in str(e):
-                    app.update_terminal(f"Too Many Requests For Pymoe. Retrying in {delay} seconds...")
+                    app.update_terminal(
+                        f"Too Many Requests For Pymoe. Retrying in {delay} seconds..."
+                    )
                     time.sleep(delay)
                     retry_count += 1
                 else:
                     app.update_terminal(f"An unexpected server error occurred: {e}")
                     break
         else:
-            app.update_terminal('\nSkipping a title...')
+            app.update_terminal("\nSkipping a title...")
             return []
 
     # If retries exhausted, update terminal
-    app.update_terminal(f"Failed to get manga ID for '{name}' after {max_retries} retries.")
+    app.update_terminal(
+        f"Failed to get manga ID for '{name}' after {max_retries} retries."
+    )
     return []
+
 
 def Check_Title_Match(title, name):
     # Remove punctuation from the title and the search name
-    title = title.translate(str.maketrans('', '', string.punctuation))
-    name = name.translate(str.maketrans('', '', string.punctuation))
+    title = title.translate(str.maketrans("", "", string.punctuation))
+    name = name.translate(str.maketrans("", "", string.punctuation))
 
     # Split the title and the search name into words
     title_words = set(title.lower().split())
     name_words = set(name.lower().split())
-    
+
     # Check if all words in the search name are in the title
     return name_words.issubset(title_words)
+
 
 # Function to clean the manga IDs
 def Clean_Manga_IDs(manga_names_ids, app):
@@ -135,7 +143,7 @@ def Clean_Manga_IDs(manga_names_ids, app):
         else:
             # If only one ID, add it directly to the cleaned dictionary
             cleaned_manga_names_ids[manga_name] = unique_ids
-    
+
     # Print the manga names with multiple IDs
     app.update_terminal("\nDuplicate Manga Names and IDs:")
     if not multiple_id_manga_names:
@@ -145,13 +153,18 @@ def Clean_Manga_IDs(manga_names_ids, app):
             app.update_terminal(f"\n{manga_name}")
             for id_info in ids:
                 manga_id, last_chapter_read, status, last_read_at = id_info
-                app.update_terminal(f"ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}")
+                app.update_terminal(
+                    f"ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}"
+                )
         app.update_terminal("\n")
     # Write the manga names with multiple IDs to a file
-    app.update_progress_and_status("Writing multiple ID's file...", ((5.5 + (0.5/3))/10))
+    app.update_progress_and_status(
+        "Writing multiple ID's file...", ((5.5 + (0.5 / 3)) / 10)
+    )
     Write_Multiple_IDs(multiple_id_manga_names)
     # Return the cleaned manga names and IDs
     return cleaned_manga_names_ids
+
 
 # Function to get the manga not found
 def Get_No_Manga_Found(app):
@@ -164,5 +177,7 @@ def Get_No_Manga_Found(app):
     else:
         for manga in no_manga_found:
             name, last_chapter_read = manga
-            app.update_terminal(f"{name}, Last Chapter Read: {last_chapter_read}, Status: Not Found")
+            app.update_terminal(
+                f"{name}, Last Chapter Read: {last_chapter_read}, Status: Not Found"
+            )
         app.update_terminal("\n")
