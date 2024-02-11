@@ -49,7 +49,7 @@ Most buttons and objects when hovered have tooltips connected which explains the
 | `GUI.py` GUI At Startup
 
 Currently, I use this script to update my manga list from my [Kenmei](https://www.kenmei.co) account.
-I plan later to grab manga lists from certain manga websites. If you have any you would like me to look into please let me know.
+If you have any features you would like added, please let me know.
 
 The script outputs 3 different text files when finished.
    - One which has manga that was found to have multiple different IDs associated with it. (usually due to the name being found as a direct match in English or Romaji and others which has matches in synonyms)
