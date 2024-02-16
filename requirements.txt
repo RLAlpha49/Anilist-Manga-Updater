@@ -1,0 +1,6 @@
+Pillow
+customtkinter
+CTkToolTip
+requests
+pymoe
+pandas
