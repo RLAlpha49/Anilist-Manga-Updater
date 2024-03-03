@@ -1,3 +1,4 @@
+#!/user/bin/env python
 """
 This module runs the main GUI of the application using the subprocess module.
 """

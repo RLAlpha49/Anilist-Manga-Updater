@@ -1,5 +1,5 @@
 """
-This module contains functions for creating, saving, loading, and 
+This module contains functions for creating, saving, loading, and
 setting the configuration for the AniList API.
 
 Functions:
@@ -7,14 +7,15 @@ Functions:
 - save_config: Saves the configuration dictionary to a file.
 - Get_Config: Gets the configuration dictionary.
 - load_config: Loads the configuration dictionary from a file.
-- Set_Environment_Variables: Sets the environment variables with 
+- Set_Environment_Variables: Sets the environment variables with
     the values from the configuration dictionary.
 """
 
 # pylint: disable=C0103
 # Import necessary modules
-import os
 import json
+
+import os
 
 
 # Function to create a configuration dictionary

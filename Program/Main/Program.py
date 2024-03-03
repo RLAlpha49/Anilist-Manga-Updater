@@ -2,29 +2,18 @@
 # Import necessary modules
 import time
 
-# Import necessary functions
+from API.AccessAPI import Get_Format, Get_User_Manga_List, Manga
+from API.APIRequests import Set_Access_Token, needs_refresh
+from API.UpdateManga import Get_Chapters_Updated, Set_Chapters_Updated, Update_Manga
+from Manga.GetID import Clean_Manga_IDs, Get_No_Manga_Found, Set_No_Manga_Found
+from Manga.manga_search import MangaSearch
+from Utils.Config import Get_Config, load_config
 from Utils.GetFromFile import (
     Get_Manga_Names,
     Manga_Found_In_CSV,
     alternative_titles_dict,
 )
 from Utils.WriteToFile import Write_Chapters_Updated
-from Utils.Config import Get_Config, load_config
-
-from Manga.GetID import (
-    Clean_Manga_IDs,
-    Get_No_Manga_Found,
-    Set_No_Manga_Found,
-)
-from Manga.manga_search import MangaSearch
-
-from API.AccessAPI import (
-    Manga,
-    Get_Format,
-    Get_User_Manga_List,
-)
-from API.APIRequests import Set_Access_Token, needs_refresh
-from API.UpdateManga import Update_Manga, Get_Chapters_Updated, Set_Chapters_Updated
 
 # Define constants for API call delay and update delay
 API_CALL_DELAY = 0.3
@@ -159,7 +148,7 @@ class Program:  # pylint: disable=R0903, C0115
         for manga_name, manga_info in manga_names.items():
             try:
                 app.update_progress_and_status(
-                    f"Getting ID for {manga_name}...", progress
+                    f"Getting ID for {manga_name}...", progress  # noqa: F821
                 )
             except UnboundLocalError:
                 app.update_progress_and_status(f"Getting ID for {manga_name}...")

@@ -1,21 +1,22 @@
 """
-This module contains functions for getting the access token and 
+This module contains functions for getting the access token and
 authentication code for the AniList API.
 
 Functions:
-- Get_Access_Token: Gets the access token from the environment variables 
+- Get_Access_Token: Gets the access token from the environment variables
     or opens the authorization URL in the web browser.
-- Get_Authentication_Code: Opens the authorization URL in the web browser 
-    with the parameters and checks if the access token is set in the 
+- Get_Authentication_Code: Opens the authorization URL in the web browser
+    with the parameters and checks if the access token is set in the
     environment variables.
 """
 
 # pylint: disable=C0103
 # Import necessary modules
-import webbrowser
 import os
 import time
 import platform
+
+import webbrowser
 
 # Define the authorization URL for AniList OAuth
 authorization_url = "https://anilist.co/api/v2/oauth/authorize"

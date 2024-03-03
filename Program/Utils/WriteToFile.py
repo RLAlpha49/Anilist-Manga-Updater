@@ -1,16 +1,16 @@
 """
-This module contains functions to manage and write data to files. 
+This module contains functions to manage and write data to files.
 
-It includes functions to save and retrieve alternative titles of manga, 
-manage files in a directory, write names of not found manga and manga with 
+It includes functions to save and retrieve alternative titles of manga,
+manage files in a directory, write names of not found manga and manga with
 multiple IDs to files, and write the number of chapters updated to a file.
 """
 
 # pylint: disable=C0103
-import os
-import json
 import datetime
 import glob
+import json
+import os
 
 directory = "Manga_Data"
 

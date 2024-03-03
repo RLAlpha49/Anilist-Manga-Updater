@@ -3,6 +3,7 @@ This module contains the MangaSearch class which is used to search for a manga o
 """
 
 import time
+
 import pymoe
 from Manga.GetID import Check_Title_Match, no_manga_found  # pylint: disable=E0401
 
@@ -66,7 +67,7 @@ class MangaSearch:  # pylint: disable=R0902
         for attempt in range(max_retries):  # pylint: disable=W0612
             try:
                 return pymoe.manga.search.anilist.manga(self.name)
-            except (pymoe.errors.serverError, KeyError) as e:
+            except (pymoe.errors.serverError, KeyError) as e:  # pylint: disable=E1101
                 # Handle server error
                 if "Too Many Requests" in str(e):
                     self.app.update_terminal(
@@ -223,7 +224,7 @@ class MangaSearch:  # pylint: disable=R0902
                     self.retry_count = (
                         0  # Reset the retry count after a successful search
                     )
-                except pymoe.errors.serverError as e:
+                except pymoe.errors.serverError as e:  # pylint: disable=E1101
                     self.handle_server_error(e)
                     continue
                 except IndexError:

@@ -1,7 +1,7 @@
 """
 This module is responsible for handling all operations related to MangaSearch.
 
-It includes classes and methods to search for a manga on Anilist, process the search results, 
+It includes classes and methods to search for a manga on Anilist, process the search results,
 retrieve the ID of the manga, and handle any errors that occur during these operations.
 
 Classes:
@@ -17,8 +17,8 @@ Functions:
 
 # Import necessary modules and functions
 import string
-from Utils.WriteToFile import Write_Multiple_IDs, Write_Not_Found
 
+from Utils.WriteToFile import Write_Multiple_IDs, Write_Not_Found
 
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []

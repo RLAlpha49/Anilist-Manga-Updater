@@ -1,14 +1,14 @@
 """
-This module contains functions for reading manga data from a CSV file, 
-getting the difference between the current and previous file, 
+This module contains functions for reading manga data from a CSV file,
+getting the difference between the current and previous file,
 getting the manga names and their details, and printing the manga found in the CSV file.
 """
 
 # pylint: disable=C0103, W0602, W0603, E0401
 # Import necessary modules
 import pandas as pd
-from Utils.WriteToFile import Get_Alt_Titles_From_File
 from Utils.titles import alternative_titles_dict
+from Utils.WriteToFile import Get_Alt_Titles_From_File
 
 # Initialize an empty dictionary to store the manga names and chapters
 manga_names_chapters = {}

@@ -1,7 +1,7 @@
 """
-This module contains functions to update manga details such as status, progress, 
-and privacy settings. It also includes functions to handle the updating process, 
-including creating a dictionary of variables for updating, updating the status 
+This module contains functions to update manga details such as status, progress,
+and privacy settings. It also includes functions to handle the updating process,
+including creating a dictionary of variables for updating, updating the status
 and progress of the manga, and sending the update request to the Anilist API.
 """
 
@@ -9,7 +9,12 @@ and progress of the manga, and sending the update request to the Anilist API.
 
 from datetime import datetime, timedelta
 
-from API.AccessAPI import Get_User, status_mapping, chapters_updated, userId
+from API.AccessAPI import (
+    Get_User,
+    chapters_updated,
+    status_mapping,
+    userId,
+)  # noqa: F401
 from API.APIRequests import api_request
 
 

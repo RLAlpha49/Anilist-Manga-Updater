@@ -1,14 +1,14 @@
 """
 This module contains functions to send API requests to Anilist's GraphQL endpoint.
-It includes functions to handle rate limits, set the access token, and check if 
+It includes functions to handle rate limits, set the access token, and check if
 the access token needs to be refreshed.
 """
 
 # pylint: disable=C0103, W0601, E0401
 
 import time
-import requests
 
+import requests
 from Utils.Config import load_config
 
 # Define the API endpoint

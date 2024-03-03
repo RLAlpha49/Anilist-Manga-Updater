@@ -1,7 +1,7 @@
 """
-This module contains functions and a class for accessing and manipulating a user's 
-manga list on Anilist. It includes functions to get the user ID, retrieve the user's 
-manga list, and get the format of a manga. It also includes the Manga class, which 
+This module contains functions and a class for accessing and manipulating a user's
+manga list on Anilist. It includes functions to get the user ID, retrieve the user's
+manga list, and get the format of a manga. It also includes the Manga class, which
 represents a manga with its details.
 """
 
@@ -10,7 +10,6 @@ represents a manga with its details.
 from datetime import datetime
 
 from API.APIRequests import api_request
-
 
 # Initialize the counter for the number of chapters updated
 chapters_updated = 0

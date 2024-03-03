@@ -3,6 +3,7 @@ This is the titles module. This module is responsible for the list of alternativ
 """
 
 # pylint: disable=C0301
+# flake8: noqa: E501
 # Initialize the dictionary to store the alternative titles
 alternative_titles_dict = {
     "The Part Time Nation of the Gods": "The Part-Time Land of the Gods",

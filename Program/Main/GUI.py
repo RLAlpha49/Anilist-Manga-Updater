@@ -2,33 +2,41 @@
 """
 This module contains the implementation of the main GUI for the application.
 
-It includes classes for the main window, buttons, and other GUI components, 
+It includes classes for the main window, buttons, and other GUI components,
 as well as methods for handling user input and updating the GUI.
 """
 
 # pylint: disable=C0103, W0604, E0401, C0413
 # Import necessary modules
+import datetime
 import os
+import platform
 import sys
 import threading
 import time
-import platform
-import datetime
 
-from tkinter import messagebox, filedialog, simpledialog
-from PIL import Image
+from tkinter import filedialog, messagebox, simpledialog
 
-import customtkinter
 import CTkToolTip
+import customtkinter
+from PIL import Image
 
 # Import custom functions
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from Utils.Config import create_config, save_config, Get_Config, load_config
-from Utils.WriteToFile import Save_Alt_Titles_To_File, Get_Alt_Titles_From_File
-from Utils.GetFromFile import alternative_titles_dict
-from API.GetAccessToken import Get_Access_Token
-from API.APIRequests import Set_Access_Token
+from API.APIRequests import Set_Access_Token  # noqa: E402
+from API.GetAccessToken import Get_Access_Token  # noqa: E402
+from Utils.Config import (
+    Get_Config,
+    create_config,
+    load_config,
+    save_config,
+)  # noqa: E402
+from Utils.GetFromFile import alternative_titles_dict  # noqa: E402
+from Utils.WriteToFile import (
+    Get_Alt_Titles_From_File,
+    Save_Alt_Titles_To_File,
+)  # noqa: E402
 
 # Define a global variable for the progress
 global progress, progress_status
