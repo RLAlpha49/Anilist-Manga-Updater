@@ -23,6 +23,7 @@ virtualenv venv
 if [ -f venv/bin/activate ]
 then
     # Activate the virtual environment
+    # shellcheck disable=SC1091
     . venv/bin/activate
 else
     echo "Failed to create virtual environment"

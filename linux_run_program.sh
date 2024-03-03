@@ -4,10 +4,11 @@
 if [ -f venv/bin/activate ]
 then
     # Activate the virtual environment
+    # shellcheck disable=SC1091
     . venv/bin/activate
 
     # Run the Python program
-    python main.py
+    python Program/main.py
 
     # Deactivate the virtual environment
     deactivate

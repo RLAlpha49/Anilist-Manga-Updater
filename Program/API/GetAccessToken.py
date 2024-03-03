@@ -13,9 +13,8 @@ Functions:
 # pylint: disable=C0103
 # Import necessary modules
 import os
-import time
 import platform
-
+import time
 import webbrowser
 
 # Define the authorization URL for AniList OAuth

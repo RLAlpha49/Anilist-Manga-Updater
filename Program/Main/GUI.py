@@ -14,7 +14,6 @@ import platform
 import sys
 import threading
 import time
-
 from tkinter import filedialog, messagebox, simpledialog
 
 import CTkToolTip
@@ -26,17 +25,17 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from API.APIRequests import Set_Access_Token  # noqa: E402
 from API.GetAccessToken import Get_Access_Token  # noqa: E402
-from Utils.Config import (
+from Utils.Config import (  # noqa: E402
     Get_Config,
     create_config,
     load_config,
     save_config,
-)  # noqa: E402
+)
 from Utils.GetFromFile import alternative_titles_dict  # noqa: E402
-from Utils.WriteToFile import (
+from Utils.WriteToFile import (  # noqa: E402
     Get_Alt_Titles_From_File,
     Save_Alt_Titles_To_File,
-)  # noqa: E402
+)
 
 # Define a global variable for the progress
 global progress, progress_status

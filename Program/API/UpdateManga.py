@@ -9,12 +9,12 @@ and progress of the manga, and sending the update request to the Anilist API.
 
 from datetime import datetime, timedelta
 
-from API.AccessAPI import (
+from API.AccessAPI import (  # noqa: F401
     Get_User,
     chapters_updated,
     status_mapping,
     userId,
-)  # noqa: F401
+)
 from API.APIRequests import api_request
 
 
