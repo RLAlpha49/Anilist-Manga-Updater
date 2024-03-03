@@ -1,33 +1,59 @@
-# Import necessary modules and functions
-from GetFromFile import Get_Manga_Names, Manga_Found_In_CSV, alternative_titles_dict
-from GetID import Get_Manga_ID, Clean_Manga_IDs, Get_No_Manga_Found, Set_No_Manga_Found
-from AccessAPI import (
-    Get_Format,
-    Update_Manga,
-    Get_Chapters_Updated,
-    Set_Chapters_Updated,
-    Set_Access_Token,
-    needs_refresh,
-)
-from WriteToFile import Write_Chapters_Updated
-from Config import Get_Config, load_config
+# pylint: disable=C0103, C0114, E0401
+# Import necessary modules
 import time
+
+# Import necessary functions
+from Utils.GetFromFile import (
+    Get_Manga_Names,
+    Manga_Found_In_CSV,
+    alternative_titles_dict,
+)
+from Utils.WriteToFile import Write_Chapters_Updated
+from Utils.Config import Get_Config, load_config
+
+from Manga.GetID import (
+    Clean_Manga_IDs,
+    Get_No_Manga_Found,
+    Set_No_Manga_Found,
+)
+from Manga.manga_search import MangaSearch
+
+from API.AccessAPI import (
+    Manga,
+    Get_Format,
+    Get_User_Manga_List,
+)
+from API.APIRequests import Set_Access_Token, needs_refresh
+from API.UpdateManga import Update_Manga, Get_Chapters_Updated, Set_Chapters_Updated
 
 # Define constants for API call delay and update delay
 API_CALL_DELAY = 0.3
 UPDATE_DELAY = 0.3
 
 
-class Program:
+class Program:  # pylint: disable=R0903, C0115
     # Function to print the time taken for a task
     def print_time_taken(self, start_time, task_name):
+        """
+        Prints the time taken to perform a task and returns the time taken.
+
+        This function calculates the time taken to perform a task.
+        It then updates the terminal with a message indicating the time taken to perform the task.
+
+        Args:
+        start_time: The time when the task started.
+        task_name: The name of the task.
+
+        Returns:
+        float: The time taken to perform the task, rounded to three decimal places.
+        """
         end_time = time.time()
         time_taken = round((end_time - start_time), 3)
         self.app.update_terminal(f"\nTime taken to {task_name}: {time_taken} seconds")
         return time_taken
 
     # Initialize the Program class
-    def __init__(self, app):
+    def __init__(self, app):  # pylint: disable=R0912, R0914, R0915
         self.app = app
 
         Set_No_Manga_Found()
@@ -47,7 +73,7 @@ class Program:
         Set_Access_Token(app)
         # Check if the access token needs to be refreshed
         refresh = needs_refresh(app)
-        if refresh == True:
+        if refresh:
             app.update_terminal("Access Token needs to be refreshed")
             app.update_progress_and_status("Token needs to be refreshed...", 0)
             return
@@ -58,38 +84,38 @@ class Program:
             # If the configuration is not loaded successfully, get the configuration
             Get_Config(app)
             return
-        else:
-            # If the configuration is loaded successfully, get the client ID, secret ID, access token, months, and private from the configuration
-            client = config["ANILIST_CLIENT_ID"]
-            secret = config["ANILIST_CLIENT_SECRET"]
-            token = config["ACCESS_TOKEN"]
-            months = config["MONTHS"]
-            private = config["PRIVATE"]
+        # If the configuration is loaded successfully, get the client ID, secret ID,
+        # access token, months, and private from the configuration
+        client = config["ANILIST_CLIENT_ID"]
+        secret = config["ANILIST_CLIENT_SECRET"]
+        token = config["ACCESS_TOKEN"]
+        months = config["MONTHS"]
+        private = config["PRIVATE"]
 
-            # Flag to indicate whether all values are set
-            all_values_set = True
+        # Flag to indicate whether all values are set
+        all_values_set = True
 
-            # Check if any of the values are None and print a message if they are
-            if client is None:
-                app.update_terminal("Client ID needs to be set")
-                all_values_set = False
-            if secret is None:
-                app.update_terminal("Secret ID needs to be set")
-                all_values_set = False
-            if months is None:
-                app.update_terminal("Months needs to be set")
-                all_values_set = False
-            if private is None:
-                app.update_terminal("Private needs to be set")
-                all_values_set = False
-            if token is None:
-                app.update_terminal("Access Token needs to be set")
-                all_values_set = False
+        # Check if any of the values are None and print a message if they are
+        if client is None:
+            app.update_terminal("Client ID needs to be set")
+            all_values_set = False
+        if secret is None:
+            app.update_terminal("Secret ID needs to be set")
+            all_values_set = False
+        if months is None:
+            app.update_terminal("Months needs to be set")
+            all_values_set = False
+        if private is None:
+            app.update_terminal("Private needs to be set")
+            all_values_set = False
+        if token is None:
+            app.update_terminal("Access Token needs to be set")
+            all_values_set = False
 
-            # If not all values are set, return
-            if not all_values_set:
-                app.update_progress_and_status("Configuration needs to be set...", 0)
-                return
+        # If not all values are set, return
+        if not all_values_set:
+            app.update_progress_and_status("Configuration needs to be set...", 0)
+            return
 
         # Update progress and status
         current_step += 0.5
@@ -153,11 +179,11 @@ class Program:
             # Get the manga IDs regardless of the status
             if status != "plan_to_read":
                 last_chapter_read = manga_info["last_chapter_read"]
-                manga_ids = Get_Manga_ID(manga_name, last_chapter_read, app)
+                manga_search = MangaSearch(manga_name, last_chapter_read, app)
             else:
-                manga_ids = Get_Manga_ID(manga_name, None, app)
+                manga_search = MangaSearch(manga_name, None, app)
 
-            # Iterate through the list of manga IDs
+            manga_ids = manga_search.get_manga_id()
             for manga_id in manga_ids:
                 # Get the format of the manga regardless of the status
                 media_info = Get_Format(manga_id, app)
@@ -167,7 +193,7 @@ class Program:
 
                     # If the manga name is not already in the manga_names_ids dictionary
                     if manga_name not in manga_names_ids:
-                        # Add the manga name to the manga_names_ids dictionary with an empty list as the value
+                        # Add the manga name to the manga_names_ids dictionary
                         manga_names_ids[manga_name] = []
 
                     # If the status is not 'plan_to_read', append additional information
@@ -225,7 +251,8 @@ class Program:
             for id_info in ids:
                 manga_id, last_chapter_read, status, last_read_at = id_info
                 self.app.update_terminal(
-                    f"{manga_name}, ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}"
+                    f"{manga_name}, ID: {manga_id}, Last Chapter Read: "
+                    f"{last_chapter_read}, Status: {status}, Last Read At: {last_read_at}"
                 )
         self.app.update_terminal("\n\n")
 
@@ -252,46 +279,86 @@ class Program:
         manga_updated = 0
         total_manga = sum(len(info_list) for info_list in manga_names_ids.values())
 
+        # Create a list to store the IDs of the manga that were not updated
+        skipped_ids = []
+
+        # Get the entire manga list from AniList
+        manga_list = Get_User_Manga_List(app)
+
         # Iterate over entries in the cleaned manga_names_ids dictionary
         for manga_name, manga_info_list in manga_names_ids.items():
             # For each manga, there is a list of information (manga_info_list)
             for manga_info in manga_info_list:
-                try:
+                # Unpack the manga_info list into individual variables
+                manga_id, last_chapter_read, status, last_read_at = manga_info
+                # Find the manga in the manga list
+                manga_entry = next(
+                    (entry for entry in manga_list if entry["mediaId"] == manga_id),
+                    None,
+                )
+                # If the manga was not found in the manga list
+                if manga_entry is None:
+                    self.app.update_terminal(
+                        f"Manga: {manga_name} (ID: {manga_id}) was not "
+                        "found on user list. Adding..."
+                    )
+                    chapter_anilist, status_anilist = 0, None
+                else:
+                    # Get the current progress and status of the manga from the manga entry
+                    chapter_anilist, status_anilist = (
+                        manga_entry["progress"],
+                        manga_entry["status"],
+                    )
+
+                # If the progress or status has changed or the manga was not found in the manga list
+                if (
+                    manga_entry is None
+                    or chapter_anilist != last_chapter_read
+                    or status_anilist != status
+                ):
+                    # Print the manga information
+                    self.app.update_terminal(
+                        f"Manga: {manga_name}, Manga ID: {manga_id}, Last Chapter Read: "
+                        f"{last_chapter_read}, Status: {status}, Last Read At: {last_read_at}"
+                    )
+                    # Call the Update_Manga function to update the manga's progress and status
+                    manga = Manga(
+                        name=manga_name,
+                        manga_id=manga_id,
+                        last_chapter_read=last_chapter_read,
+                        private_bool=private,
+                        status=status,
+                        last_read_at=last_read_at,
+                        months=months,
+                    )
+
+                    Update_Manga(manga, app, chapter_anilist, status_anilist)
+                    # Sleep for 0.3 seconds to reduce hitting the API rate limit
+                    time.sleep(UPDATE_DELAY)
+
+                    # After updating the manga, increment the counter
+                    manga_updated += 1
+
+                    # Calculate the progress for this step
+                    step_progress = manga_updated / total_manga
+
+                    # Adjust the progress to be between 60% and 90%
+                    progress = 0.6 + step_progress * 0.3
+
                     app.update_progress_and_status(
                         f"Updating {manga_name}...", progress
                     )
-                except UnboundLocalError:
-                    app.update_progress_and_status(f"Updating {manga_name}...")
-                # Unpack the manga_info list into individual variables
-                manga_id, last_chapter_read, status, last_read_at = manga_info
-                # Print the manga information
-                self.app.update_terminal(
-                    f"Manga: {manga_name}, Manga ID: {manga_id}, Last Chapter Read: {last_chapter_read}, Status: {status}, Last Read At: {last_read_at}"
-                )
-                # Call the Update_Manga function to update the manga's progress and status on Anilist
-                Update_Manga(
-                    manga_name,
-                    manga_id,
-                    last_chapter_read,
-                    private,
-                    status,
-                    last_read_at,
-                    months,
-                    app,
-                )
-                # Sleep for 0.3 seconds to reduce hitting the API rate limit
-                time.sleep(UPDATE_DELAY)
+                else:
+                    # If the progress and status have not changed, add the manga ID to list
+                    skipped_ids.append(manga_id)
 
-                # After updating the manga, increment the counter
-                manga_updated += 1
-
-                # Calculate the progress for this step
-                step_progress = manga_updated / total_manga
-
-                # Adjust the progress to be between 60% and 90%
-                progress = 0.6 + step_progress * 0.3
-
-                app.update_progress_and_status(f"Updating {manga_name}...", progress)
+        # After the loop, print the IDs of the manga that were not updated
+        if skipped_ids:
+            self.app.update_terminal(
+                f"Skipped updating the following manga IDs because their entries "
+                f"did not change: {', '.join(map(str, skipped_ids))}"
+            )
+            print(skipped_ids)
 
         current_step += 3
         # After the loop, the progress should be exactly 90%
@@ -324,12 +391,15 @@ class Program:
             manga_update_start_time, "update Manga data"
         )
 
-        # Calculate the total time taken by adding the time taken to get manga data and the time taken to update manga data
-        self.app.update_terminal(
-            f"\nTotal time taken: {round((manga_data_time_taken + manga_update_time_taken), 3)} seconds"
-        )
+        # Calculate the total time taken by adding the time taken to get manga data
+        # and the time taken to update manga data
+        total_time = round((manga_data_time_taken + manga_update_time_taken), 3)
+        self.app.update_terminal(f"\nTotal time taken: {total_time} seconds")
 
-        # Print a message indicating that the script has finished and provide information about the generated text files
+        # Print a message indicating that the script has finished and provide
+        # information about the generated text files
         self.app.update_terminal(
-            "\nScript has finished, the 2 txt files generated by the program have manga that was not found on anilist and manga that had multiple id's associated to it.\nPlease check these 2 files and see if there is anything that you need to do manually.\n"
+            "\nScript has finished, the 2 txt files generated by the program have manga "
+            "that was not found on anilist and manga that had multiple id's associated to it."
+            "\nPlease check the 2 files to see if there is anything that you need to do manually.\n"
         )

@@ -1,23 +1,34 @@
 #!/user/bin/env python
+"""
+This module contains the implementation of the main GUI for the application.
+
+It includes classes for the main window, buttons, and other GUI components, 
+as well as methods for handling user input and updating the GUI.
+"""
+
+# pylint: disable=C0103, W0604, E0401, C0413
 # Import necessary modules
-import tkinter as tk
-from tkinter import messagebox, filedialog, simpledialog
-import customtkinter
-import CTkToolTip
 import os
 import sys
 import threading
 import time
 import platform
 import datetime
+
+from tkinter import messagebox, filedialog, simpledialog
 from PIL import Image
 
+import customtkinter
+import CTkToolTip
+
 # Import custom functions
-from Config import create_config, save_config, Get_Config, load_config
-from WriteToFile import Save_Alt_Titles_To_File, Get_Alt_Titles_From_File
-from GetFromFile import alternative_titles_dict
-from GetAccessToken import Get_Access_Token
-from AccessAPI import Set_Access_Token
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from Utils.Config import create_config, save_config, Get_Config, load_config
+from Utils.WriteToFile import Save_Alt_Titles_To_File, Get_Alt_Titles_From_File
+from Utils.GetFromFile import alternative_titles_dict
+from API.GetAccessToken import Get_Access_Token
+from API.APIRequests import Set_Access_Token
 
 # Define a global variable for the progress
 global progress, progress_status
@@ -36,34 +47,52 @@ config_path = "config.json"
 
 # Define the base path and image directory for the application
 base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+base_path = os.path.dirname(os.path.dirname(base_path))
+
 image_directory = os.path.join(base_path, "Resources")
 image1dir = os.path.join(image_directory, "Anilist-Manga-Updater-Logo2.png")
 
 
 # Define a class for the access token thread
 class AccessTokenThread(threading.Thread):
+    """
+    A class used to create a thread for getting the access token.
+
+    Attributes
+    ----------
+    stop : bool
+        a flag used to stop the thread
+    """
+
     def __init__(self):
-        # Initialize the thread
-        super(AccessTokenThread, self).__init__()
-        # Define a stop flag for the thread
+        """
+        Initialize the thread and define a stop flag for the thread.
+        """
+        super().__init__()
         self.stop = False
 
     def run(self):
-        # Run the Get_Access_Token function in the thread
-        Get_Access_Token(self, app)
+        """
+        Run the Get_Access_Token function in the thread.
+        """
+        Get_Access_Token(self, app)  # pylint: disable=E0601
 
     def stop_thread(self):
-        # Set the stop flag to True to stop the thread
+        """
+        Set the stop flag to True to stop the thread.
+        """
         self.stop = True
 
 
-class App(customtkinter.CTk):
-    def __init__(self):
+class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
+    def __init__(self):  # pylint: disable=R0915
         super().__init__()
 
-        global program_thread
+        global program_thread  # pylint: disable=W0601
         program_thread = None
         self.after_id = None
+        self.start_time = None
+        self.thread1 = None
 
         # Load the application logo
         logo = customtkinter.CTkImage(
@@ -128,7 +157,7 @@ class App(customtkinter.CTk):
         self.private_button.grid(row=6, column=0, padx=20, pady=5)
         self.alt_titles_button = customtkinter.CTkButton(
             self.sidebar_frame,
-            command=lambda: self.manage_alternative_titles(),
+            command=lambda: self.manage_alternative_titles(),  # pylint: disable=W0108
             text="Manage Alt Titles",
         )
         self.alt_titles_button.grid(row=7, column=0, padx=20, pady=5)
@@ -206,7 +235,12 @@ class App(customtkinter.CTk):
 
         # Create a status label under the progress bar
         self.status_label = customtkinter.CTkLabel(
-            self, text=f"Status: {progress_status}"
+            self,
+            text=(
+                f"Status: {progress_status[:37]}..."
+                if len(progress_status) > 40
+                else progress_status
+            ),
         )
         self.status_label.grid(
             row=6, column=1, columnspan=3, padx=(20, 20), sticky="nsew"
@@ -259,7 +293,8 @@ class App(customtkinter.CTk):
         # Add a welcome message to the terminal
         self.terminal.insert(
             "end",
-            "Welcome to Anilist Manga Updater!\n\nPlease make sure to set all values with the buttons on the left side.\n\n",
+            "Welcome to Anilist Manga Updater!\n\n"
+            "Please make sure to set all values with the buttons on the left side.\n\n",
         )
         self.terminal.configure(state="disabled")
 
@@ -273,7 +308,10 @@ class App(customtkinter.CTk):
         # Create tooltips for the buttons and option menus
         self.start_button_tooltip = CTkToolTip.CTkToolTip(
             self.start_button,
-            "Starts the program.\nThe only way to stop this is to exit the Program with the exit button.",
+            (
+                "Starts the program.\n"
+                "The only way to stop this is to exit the Program with the exit button.",
+            ),
         )
         self.api_button_tooltip = CTkToolTip.CTkToolTip(
             self.api_button,
@@ -285,11 +323,22 @@ class App(customtkinter.CTk):
         )
         self.month_button_tooltip = CTkToolTip.CTkToolTip(
             self.month_button,
-            "Opens a dialog to set the number of months.\nThis checks when the last time you read a chapter was and if it was after the number of months you set, it will change the status to Paused.\nIf you want the program to ignore this set this to 0",
+            (
+                "Opens a dialog to set the number of months.\n"
+                "This checks when the last time you read a chapter was and if it was "
+                "after the number of months you set.\n"
+                "It will change the status to Paused.\n"
+                "If you want the program to ignore this set this to 0",
+            ),
         )
         self.private_button_tooltip = CTkToolTip.CTkToolTip(
             self.private_button,
-            "Opens a dialog to set the private value.\nThis is for if you want to set the manga that you update on here to private on Anilist.\nMeaning it will not show up as activity or on your list for other users.",
+            (
+                "Opens a dialog to set the private value.\n"
+                "This is for if you want to set the manga that you update on here "
+                "to private on Anilist.\n"
+                "Meaning it will not show up as activity or on your list for other users."
+            ),
         )
         self.appearance_mode_optionemenu_tooltip = CTkToolTip.CTkToolTip(
             self.appearance_mode_optionemenu,
@@ -297,11 +346,19 @@ class App(customtkinter.CTk):
         )
         self.scaling_optionemenu_tooltip = CTkToolTip.CTkToolTip(
             self.scaling_optionemenu,
-            "Changes the UI scaling of the application.\nYou may need to resize winodw to fit the new scaling.",
+            (
+                "Changes the UI scaling of the application.\n"
+                "You may need to resize winodw to fit the new scaling.",
+            ),
         )
         self.exit_button_tooltip = CTkToolTip.CTkToolTip(
             self.exit_button,
-            "Exits the application.\nPlease use this to exit program.\nIt is possible that the application will still run if you just close the window rather than use this button.",
+            (
+                "Exits the application.\n"
+                "Please use this to exit program.\n"
+                "It is possible that the application will still run if you just "
+                "close the window rather than use this button."
+            ),
         )
         self.previous_file_path_textbox_tooltip = CTkToolTip.CTkToolTip(
             self.previous_file_path_textbox,
@@ -322,148 +379,107 @@ class App(customtkinter.CTk):
         )
 
     def manage_alternative_titles(self):
+        """
+        This method manages alternative titles.
+        It allows the user to add, edit, or delete alternative titles.
+        The user interacts with the method through a series of dialog boxes and terminal prompts.
+        """
         alt_titles_dict = Get_Alt_Titles_From_File(alternative_titles_dict)
-        # Create a new Tkinter window
-        root = tk.Tk()
-        # Hide the root window
-        root.withdraw()
-        # Make the root window always appear on top
-        root.attributes("-topmost", 1)
+        action = self.get_action()
+        if action is None:
+            return
 
-        # Display a numbered list of options in the terminal
+        if action in ["edit", "delete"]:
+            original_title = self.get_original_title(alt_titles_dict)
+            if original_title is None:
+                return
+
+            if action == "edit":
+                self.edit_alternative_title(alt_titles_dict, original_title)
+            elif action == "delete":
+                self.delete_alternative_title(alt_titles_dict, original_title)
+        elif action == "add":
+            self.add_alternative_title(alt_titles_dict)
+
+    def get_action(self):
+        """
+        Get the action from the user.
+        """
         options = ["add", "edit", "delete"]
-        self.update_terminal("Manage Alternative Titles")
         for i, option in enumerate(options, 1):
             self.update_terminal(f"{i}. {option}")
         self.update_terminal("")
 
-        # Ask the user to enter the number of the option they want to select
         action_index = simpledialog.askinteger(
             "Manage Alternative Titles",
             "Enter the number of the option you want to select:",
         )
-        if action_index == 0:
-            messagebox.showerror("Error", "Index out of range")
-            self.update_terminal("Out of range\n")
-            return
-        try:
-            action = options[action_index - 1]
-        except TypeError:
-            messagebox.showerror("Error", "Canceled")
-            self.update_terminal("Canceled\n")
-            return
-        except IndexError:
-            messagebox.showerror("Error", "Index out of range")
-            self.update_terminal("\nIndex out of range\n")
-            return
+        if action_index is None or action_index == 0 or action_index > len(options):
+            return None
+        return options[action_index - 1]
 
-        if action in ["edit", "delete"]:
-            # Display a numbered list of the keys and values in the dictionary in the terminal
-            titles = list(alt_titles_dict.items())
-            self.update_terminal("\nSelect a title")
-            for i, (title, alt_title) in enumerate(titles, 1):
-                self.update_terminal(f"{i}. {title} ==> {alt_title}")
+    def get_original_title(self, alt_titles_dict):
+        """
+        Get the original title from the user.
+        """
+        titles = list(alt_titles_dict.items())
+        for i, (title, _) in enumerate(titles, 1):
+            self.update_terminal(f"{i}. {title}")
 
-            # Ask the user to enter the number of the key they want to select
-            title_index = simpledialog.askinteger(
-                "Select a title", "Enter the number of the title you want to select:"
-            )
-            if title_index == 0:
-                messagebox.showerror("Error", "Index out of range")
-                self.update_terminal("\nOut of range\n")
-                return
-            try:
-                original_title, _ = titles[title_index - 1]
-            except IndexError:
-                messagebox.showerror("Error", "Index out of range")
-                self.update_terminal("\nIndex out of range\n")
-                return
-            except TypeError:
-                messagebox.showerror("Error", "Canceled")
-                self.update_terminal("\nCanceled\n")
-                return
+        title_index = simpledialog.askinteger(
+            "Select a title", "Enter the number of the title you want to select:"
+        )
+        if title_index is None or title_index == 0 or title_index > len(titles):
+            return None
+        return titles[title_index - 1][0]
 
-            if action == "edit":
-                # Ask the user for the new alternative title
-                new_alternative_title = simpledialog.askstring(
-                    "Edit Alternative Title", "Enter the new alternative title:"
-                )
-                if new_alternative_title is None:
-                    # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
-                    messagebox.showerror("Error", "Canceled")
-                    self.update_terminal("\nCanceled\n")
-                    return
-                elif new_alternative_title == "":
-                    # If the user enters an empty string, show an error message and update the terminal
-                    messagebox.showerror("Error", "No Title Entered")
-                    self.update_terminal("\nNo Title Entered\n")
-                    return
-                # Update the alternative title in the dictionary
-                alt_titles_dict[original_title] = new_alternative_title
-                Save_Alt_Titles_To_File(alt_titles_dict)
-                # Show a message box to confirm that the alternative title has been updated
-                messagebox.showinfo(
-                    "Edit Alternative Title",
-                    f"The alternative title for '{original_title}' has been updated to '{new_alternative_title}'.",
-                )
-                self.update_terminal(
-                    f"The alternative title for '{original_title}' has been updated to '{new_alternative_title}'."
-                )
-            elif action == "delete":
-                # Delete the alternative title from the dictionary
-                alt_titles_dict.pop(original_title, None)
-                Save_Alt_Titles_To_File(alt_titles_dict)
-                # Show a message box to confirm that the alternative title has been deleted
-                messagebox.showinfo(
-                    "Delete Alternative Title",
-                    f"The alternative title for '{original_title}' has been deleted.",
-                )
-                self.update_terminal(
-                    f"The alternative title for '{original_title}' has been deleted.\n"
-                )
-        elif action == "add":
-            # Ask the user for the original title and the alternative title
-            try:
-                original_title = simpledialog.askstring(
-                    "Add Alternative Title", "Enter the original title:"
-                )
-            except TypeError:
-                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
-                messagebox.showerror("Error", "Canceled")
-                self.update_terminal("\nCanceled\n")
-                return
-            if original_title == "" or "None":
-                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
-                messagebox.showerror("Error", "No Title Entered")
-                self.update_terminal("\nNo Title Entered\n")
-                return
-            try:
-                alternative_title = simpledialog.askstring(
-                    "Add Alternative Title", "Enter the alternative title:"
-                )
-            except TypeError:
-                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
-                messagebox.showerror("Error", "Canceled")
-                self.update_terminal("\nCanceled\n")
-                return
-            if alternative_title == "" or "None":
-                # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
-                messagebox.showerror("Error", "No Title Entered")
-                self.update_terminal("\nNo Title Entered\n")
-                return
-            # Add the alternative title to the dictionary
-            alt_titles_dict[original_title] = alternative_title
-            Save_Alt_Titles_To_File(alt_titles_dict)
-            # Show a message box to confirm that the alternative title has been added
-            messagebox.showinfo(
-                "Add Alternative Title",
-                f"The alternative title '{alternative_title}' has been added for '{original_title}'.",
-            )
-            self.update_terminal(
-                f"The alternative title '{alternative_title}' has been added for '{original_title}'.\n"
-            )
+    def edit_alternative_title(self, alt_titles_dict, original_title):
+        """
+        Edit an alternative title.
+        """
+        new_alternative_title = simpledialog.askstring(
+            "Edit Alternative Title", "Enter the new alternative title:"
+        )
+        if new_alternative_title is None or new_alternative_title == "":
+            return
+        alt_titles_dict[original_title] = new_alternative_title
+        Save_Alt_Titles_To_File(alt_titles_dict)
+
+    def delete_alternative_title(self, alt_titles_dict, original_title):
+        """
+        Delete an alternative title.
+        """
+        alt_titles_dict.pop(original_title, None)
+        Save_Alt_Titles_To_File(alt_titles_dict)
+
+    def add_alternative_title(self, alt_titles_dict):
+        """
+        Add an alternative title.
+        """
+        original_title = simpledialog.askstring(
+            "Add Alternative Title", "Enter the original title:"
+        )
+        if original_title is None or original_title == "":
+            return
+        alternative_title = simpledialog.askstring(
+            "Add Alternative Title", "Enter the alternative title:"
+        )
+        if alternative_title is None or alternative_title == "":
+            return
+        alt_titles_dict[original_title] = alternative_title
+        Save_Alt_Titles_To_File(alt_titles_dict)
 
     def update_estimated_time_remaining(self, estimated_time_remaining):
+        """
+        This method updates the estimated time remaining label in the GUI.
+
+        It converts the estimated time remaining from seconds to hours, minutes, and seconds,
+        updates the time remaining label, and schedules itself to be called again after 1 second
+        if there is still time remaining.
+
+        Parameters:
+        estimated_time_remaining (int): The estimated time remaining in seconds.
+        """
         # Convert the estimated time remaining to hours, minutes, and seconds
         time_remaining = str(datetime.timedelta(seconds=int(estimated_time_remaining)))
 
@@ -485,6 +501,15 @@ class App(customtkinter.CTk):
             )
 
     def update_progress_bar(self):
+        """
+        This method updates the progress bar and status label in the GUI.
+
+        If the program thread is running, it updates the progress and status,
+        as well as the time taken label. If the program thread is not running,
+        it stops the function.
+
+        This method is scheduled to be called every 100 milliseconds.
+        """
         if program_thread.is_alive():
             # If the thread is running, update the progress and status
             self.progress_bar.set(progress)
@@ -504,8 +529,20 @@ class App(customtkinter.CTk):
         self.after(100, self.update_progress_bar)  # Update every second
 
     def update_progress_and_status(self, status, program_progress=None):
+        """
+        This method updates the progress and status of the program.
+
+        It updates the global variables `progress` and `progress_status` that were
+        updated in the Program.py file. If the `program_progress` is different from
+        `progress`, it updates the objects associated with it.
+
+        Parameters:
+        status (str): The status of the program.
+        program_progress (float, optional): The progress of the program.
+        Defaults to None.
+        """
         # Update the global variables that were updated in the Program.py file
-        global progress, progress_status
+        global progress, progress_status  # pylint: disable=W0603
         if program_progress is None:
             program_progress = progress
         if program_progress != progress:
@@ -518,6 +555,16 @@ class App(customtkinter.CTk):
             )
 
     def update_terminal(self, text: str):
+        """
+        This method updates the terminal in the GUI with the provided text.
+
+        It first checks if the scrollbar is at the bottom. If it is, it will
+        automatically scroll to the end after inserting the text. The terminal is
+        temporarily enabled for the insertion of the text and then disabled again.
+
+        Parameters:
+        text (str): The text to be inserted into the terminal.
+        """
         # Check if the scrollbar is at the bottom
         at_bottom = self.terminal.yview()[1] == 1.0
 
@@ -536,6 +583,20 @@ class App(customtkinter.CTk):
         self.terminal.configure(state="disabled")
 
     def browse_file(self, entry_widget, is_previous):
+        """
+        This method opens a file dialog for the user to select a file, and updates
+        the entry widget with the selected file path.
+
+        If the user cancels the file dialog, the text of the entry widget is restored
+        to its previous state. If the user selects a file, the file path is inserted
+        into the entry widget and stored in the appropriate variable.
+
+        Parameters:
+        entry_widget (tkinter.Entry): The entry widget to update with the selected
+        file path.
+        is_previous (bool): A flag indicating whether the selected file is a previous
+        Kenmei export file.
+        """
         # Store the current text of the entry widget
         current_text = entry_widget.get()
 
@@ -570,6 +631,12 @@ class App(customtkinter.CTk):
         entry_widget.configure(state="disabled")
 
     def open_input_dialog_event(self):
+        """
+        This method opens input dialogs for the client ID and secret ID.
+
+        If the user cancels either dialog, it updates the terminal with a cancellation message.
+        If the user enters both IDs, it creates a configuration file and saves it.
+        """
         # Open input dialogs for the client ID and secret ID
         client_id = customtkinter.CTkInputDialog(
             text="Type in the Client ID:", title="Client ID"
@@ -590,6 +657,14 @@ class App(customtkinter.CTk):
             save_config(config, config_path)
 
     def open_token_dialog_event(self):
+        """
+        This method opens an input dialog for the access token.
+
+        If the user cancels the dialog, it shows an error message and updates the
+        terminal with a cancellation message. If the user enters the access token,
+        it loads the configuration file, adds the access token, and saves the
+        configuration file.
+        """
         # Open an input dialog for the access token
         token = customtkinter.CTkInputDialog(
             text="Type in the Access Token:", title="Access Token"
@@ -605,21 +680,40 @@ class App(customtkinter.CTk):
             Set_Access_Token(app)
             self.thread1.stop_thread()
         except TypeError:
-            # If the user cancels the dialog, show an error message and update the terminal with a cancellation message
+            # If the user cancels the dialog, show an error message
             messagebox.showerror("Error", "Canceled")
             self.update_terminal("Canceled")
             self.thread1.stop_thread()
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
+        """
+        This method changes the appearance mode of the application.
+
+        Parameters:
+        new_appearance_mode (str): The new appearance mode.
+        """
         # Change the appearance mode of the application
         customtkinter.set_appearance_mode(new_appearance_mode)
 
     def change_scaling_event(self, new_scaling: str):
+        """
+        This method changes the UI scaling of the application.
+
+        Parameters:
+        new_scaling (str): The new UI scaling.
+        """
         # Change the UI scaling of the application
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
         customtkinter.set_widget_scaling(new_scaling_float)
 
     def access_token_button_clicked(self):
+        """
+        This method is called when the access token button is clicked.
+
+        It gets the configuration, pauses execution for 2 seconds, creates a new
+        thread for getting the access token, starts the access token thread, opens
+        the token dialog, and waits for the access token thread to finish.
+        """
         # Get the configuration
         Get_Config(app)
         # Pause execution for 2 seconds
@@ -638,6 +732,15 @@ class App(customtkinter.CTk):
         self.thread1.join()
 
     def month_button_clicked(self):
+        """
+        This method is called when the month button is clicked.
+
+        It opens an input dialog for the user to enter the number of months. If the
+        user input is a digit, it updates the number of months in the configuration
+        and saves it. If the configuration is not found, it shows an error message
+        and updates the terminal. If the user input is not a digit, it shows an error
+        message and updates the terminal.
+        """
         while True:
             # Open an input dialog for the number of months
             months = customtkinter.CTkInputDialog(
@@ -654,31 +757,39 @@ class App(customtkinter.CTk):
                     config["MONTHS"] = months_value
                     save_config(config, config_path)
                     break
-                else:
-                    # If the configuration is not found, show an error message and update the terminal
-                    messagebox.showerror(
-                        "Error",
-                        "No config file found. Please set the API values first.",
-                    )
-                    self.update_terminal(
-                        "No config file found. Please set the API values first."
-                    )
-                    break
-            else:
-                # If the user input is not a digit, show an error message and update the terminal
-                messagebox.showerror("Error", "Canceled")
-                self.update_terminal("Canceled")
+
+                # If the configuration is not found, show an error message
+                messagebox.showerror(
+                    "Error",
+                    "No config file found. Please set the API values first.",
+                )
+                self.update_terminal(
+                    "No config file found. Please set the API values first."
+                )
+                break
+            # If the user input is not a digit, show an error message
+            messagebox.showerror("Error", "Canceled")
+            self.update_terminal("Canceled")
 
     def start_button_clicked(self):
-        global progress
-        global program_thread
+        """
+        This method is called when the start button is clicked.
+
+        It checks if the program thread is already running. If it is, it returns
+        immediately. If the program thread is not running, it creates a new thread
+        for the program, starts the program thread, sets the start time to the
+        current time, updates the time taken label, updates the progress bar,
+        and resets the progress to 0.
+        """
+        global progress  # pylint: disable=W0603
+        global program_thread  # pylint: disable=W0601
 
         # Check if the thread is already running
         if program_thread is not None and program_thread.is_alive():
             return
 
         # Import the Program class
-        from Program import Program
+        from Main.Program import Program  # pylint: disable=C0415
 
         # Create a new thread for the program
         program_thread = threading.Thread(target=Program, args=(self,))
@@ -686,12 +797,22 @@ class App(customtkinter.CTk):
         program_thread.start()
 
         self.start_time = time.time()
-        self.time_taken_label.configure(text=f"Time Taken: 0:00:00")
+        self.time_taken_label.configure(text="Time Taken: 0:00:00")
 
         self.update_progress_bar()
         progress = 0
 
     def private_button_clicked(self):
+        """
+        This method is called when the private button is clicked.
+
+        It opens an input dialog for the user to enter the private value. If the user
+        input is "yes" or "no", it updates the private value in the configuration and
+        saves it. If the configuration is not found, it shows an error message and
+        updates the terminal. If the user input is not "yes" or "no", it shows an error
+        message and updates the terminal. If the user cancels the dialog, it shows an
+        error message and updates the terminal.
+        """
         while True:
             # Open an input dialog for the private value
             private = customtkinter.CTkInputDialog(
@@ -709,28 +830,29 @@ class App(customtkinter.CTk):
                         config["PRIVATE"] = private_value
                         save_config(config, config_path)
                         break
-                    else:
-                        # If the configuration is not found, show an error message and update the terminal
-                        messagebox.showerror(
-                            "Error",
-                            "No config file found. Please set the API values first.",
-                        )
-                        self.update_terminal(
-                            "No config file found. Please set the API values first."
-                        )
-                        break
-                else:
-                    # If the user input is not "yes" or "no", show an error message and update the terminal
+                    # If the configuration is not found, show an error message
                     messagebox.showerror(
-                        "Error", "Invalid input. Please enter Yes or No."
+                        "Error",
+                        "No config file found. Please set the API values first.",
                     )
-                    self.update_terminal("Invalid input. Please enter Yes or No.")
+                    self.update_terminal(
+                        "No config file found. Please set the API values first."
+                    )
+                    break
+                # If the user input is not "yes" or "no", show an error message
+                messagebox.showerror("Error", "Invalid input. Please enter Yes or No.")
+                self.update_terminal("Invalid input. Please enter Yes or No.")
             except AttributeError:
-                # If the user cancels the dialog, show an error message and update the terminal
+                # If the user cancels the dialog, show an error message
                 messagebox.showerror("Error", "Canceled")
                 self.update_terminal("Canceled")
 
     def on_close(self):
+        """
+        This method is called when the application is closed.
+
+        It exits the application.
+        """
         # Exit the application
         sys.exit(0)
 

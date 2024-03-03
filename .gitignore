@@ -1,11 +1,8 @@
-kenmei-export.csv
-multiple_manga_ids.txt
-not_found_manga_names.txt
-config.json
+**/__pycache__/
 /dist
 /Pictures
-/__pycache__
 /Chapters-Updated
+/Manga_Data
+config.json
 Pyinstaller Compile.txt
 Forum.txt
-/Manga_Data
