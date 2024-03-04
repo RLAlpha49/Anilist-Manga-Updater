@@ -30,8 +30,16 @@ else
     exit 1
 fi
 
+# Check if tkinter is installed
+if ! python -c "import tkinter" >/dev/null 2>&1
+then
+    echo "tkinter could not be found, trying to install..."
+    # Install tkinter for Python 3
+    sudo apt-get install python3-tk
+fi
+
 # List of packages to install
-packages="tkinter customtkinter CTkToolTip PIL requests pandas pymoe"
+packages="customtkinter CTkToolTip Pillow requests pandas pymoe"
 
 # Loop through the list of packages
 for package in $packages
