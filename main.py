@@ -2,13 +2,15 @@
 This module runs the main GUI of the application using the subprocess module.
 """
 
+# pylint: disable=W0212
+
 import os
-import sys
 import subprocess
+import sys
 
 # Check if we're running in a PyInstaller bundle
 if getattr(sys, "frozen", False):
-    application_path = sys._MEIPASS  # pylint: disable=W0212
+    application_path = sys._MEIPASS  # type: ignore
 else:
     application_path = os.path.dirname(os.path.abspath(__file__))
 

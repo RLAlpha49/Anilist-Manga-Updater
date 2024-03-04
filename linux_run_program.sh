@@ -8,7 +8,7 @@ then
     . venv/bin/activate
 
     # Run the Python program
-    python Program/main.py
+    python main.py
 
     # Deactivate the virtual environment
     deactivate
