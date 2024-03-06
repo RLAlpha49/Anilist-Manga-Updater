@@ -16,7 +16,7 @@ def log(message: str):
 
     # Get the previous frame in the stack, otherwise it would be this function
     frame = inspect.currentframe()
-    if frame is not None:
+    if frame is not None and frame.f_back is not None:
         func = frame.f_back.f_code
 
         # Dump the message in the format you want

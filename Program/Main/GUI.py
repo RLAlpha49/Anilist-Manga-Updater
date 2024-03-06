@@ -38,7 +38,6 @@ from Utils.WriteToFile import (  # noqa: E402
     Save_Alt_Titles_To_File,
 )
 
-
 # Define a global variable for the progress
 global progress, progress_status
 progress = 0
