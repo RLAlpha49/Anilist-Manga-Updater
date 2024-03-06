@@ -16,6 +16,7 @@ from API.AccessAPI import (  # noqa: F401
     userId,
 )
 from API.APIRequests import api_request
+from Utils.log import log
 
 
 def update_manga_variables(manga_id, progress=None, status=None, private=None):
@@ -31,14 +32,18 @@ def update_manga_variables(manga_id, progress=None, status=None, private=None):
     Returns:
     dict: A dictionary of variables for updating a manga, excluding any parameters that are None.
     """
+    log("Function update_manga_variables called.")
     variables = {
         "mediaId": manga_id,
         "progress": progress,
         "status": status,
         "private": private,
     }
+    log(f"Created the variables dictionary: {variables}")
     # Only return variables that are not None
-    return {k: v for k, v in variables.items() if v is not None}
+    filtered_variables = {k: v for k, v in variables.items() if v is not None}
+    log(f"Filtered the variables dictionary: {filtered_variables}")
+    return filtered_variables
 
 
 def Update_Manga(manga, app, chapter_anilist, manga_status):
@@ -59,15 +64,24 @@ def Update_Manga(manga, app, chapter_anilist, manga_status):
     """
     global userId
 
+    log("Function Update_Manga called.")
     # Get the user ID
     if userId is None:
+        log("User ID is not set. Getting the user ID.")
         userId = Get_User(app)
+        log(f"Got the user ID: {userId}")
 
+    log("Updating the status of the manga.")
     manga.status = update_status(manga)
+    log(f"Updated the status of the manga to: {manga.status}")
 
+    log("Updating the variables for the manga.")
     variables_list = update_variables(manga, chapter_anilist, manga_status)
+    log(f"Updated the variables for the manga: {variables_list}")
 
+    log("Updating the progress of the manga.")
     update_manga_progress(manga, app, variables_list, chapter_anilist)
+    log("Updated the progress of the manga.")
 
 
 def update_status(manga):
@@ -86,15 +100,28 @@ def update_status(manga):
     Returns:
     str: The updated status of the manga.
     """
+    log("Function update_status called.")
     if manga.status != "plan_to_read":
+        log("The manga status is not 'plan_to_read'.")
         # Check if last_read_at is more than # months ago
         if int(manga.months) != 0:
+            log("The manga has been read in the past.")
             if datetime.now() - manga.last_read_at >= timedelta(
                 days=30 * int(manga.months)
             ):
+                log(
+                    "The last read date is more than a certain number "
+                    "of months ago. Updating the status to 'PAUSED'."
+                )
                 return "PAUSED"
+            log(
+                "The last read date is not more than a certain number "
+                "of months ago. Mapping the status."
+            )
             return status_mapping.get(manga.status.lower(), manga.status)
+        log("The manga has not been read in the past. Mapping the status.")
         return status_mapping.get(manga.status.lower(), manga.status)
+    log("The manga status is 'plan_to_read'. Mapping the status.")
     return status_mapping.get(manga.status.lower(), manga.status)
 
 
@@ -115,36 +142,55 @@ def update_variables(manga, chapter_anilist, manga_status):
     Returns:
     list: A list of updated variables for the manga.
     """
+    log("Function update_variables called.")
     variables_list = []
 
     if manga.status == "PLANNING" or (
         manga.status != manga_status
         and (manga.last_chapter_read <= chapter_anilist or chapter_anilist is None)
     ):
+        log(
+            "The manga status is 'PLANNING' or the manga status is not equal to the AniList status "
+            "and the last read chapter is less than or equal to the AniList chapter "
+            "or the AniList chapter is None."
+        )
         manga.last_chapter_read = (
             0 if manga.status == "PLANNING" else manga.last_chapter_read
         )
+        log(f"Updated the last read chapter to: {manga.last_chapter_read}")
         chapter_anilist = 0 if manga.status == "PLANNING" else chapter_anilist
+        log(f"Updated the AniList chapter to: {chapter_anilist}")
 
         first_variables = update_manga_variables(
             manga.id, status=manga.status, private=manga.private_bool
         )
+        log(f"Updated the first set of variables: {first_variables}")
 
         variables_list.append(first_variables)
+        log("Appended the first set of variables to the list.")
 
     elif manga.last_chapter_read > chapter_anilist or chapter_anilist is None:
+        log(
+            "The last read chapter is greater than the AniList chapter "
+            "or the AniList chapter is None."
+        )
         first_variables = update_manga_variables(
             manga.id, progress=(chapter_anilist + 1), private=manga.private_bool
         )
+        log(f"Updated the first set of variables: {first_variables}")
         second_variables = update_manga_variables(
             manga.id, progress=manga.last_chapter_read, private=manga.private_bool
         )
+        log(f"Updated the second set of variables: {second_variables}")
         third_variables = update_manga_variables(
             manga.id, status=manga.status, private=manga.private_bool
         )
+        log(f"Updated the third set of variables: {third_variables}")
 
         variables_list.extend([first_variables, second_variables, third_variables])
+        log("Appended the first, second, and third sets of variables to the list.")
 
+    log("Returning the list of variables.")
     return variables_list
 
 
@@ -182,25 +228,37 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
     }
     """
 
+    log("Function update_manga_progress called.")
     for variables in variables_list:
+        log(f"Processing variables: {variables}")
         previous_mediaId = variables.get("mediaId")
         response = api_request(query, app, variables)
+        log(f"Received response: {response}")
         if response:
+            log("Response is successful.")
             if manga.last_chapter_read > chapter_anilist or chapter_anilist is None:
+                log(
+                    "Last read chapter is greater than AniList chapter or AniList chapter is None."
+                )
                 if previous_mediaId != variables_mediaId:
+                    log("Previous mediaId is not equal to variables_mediaId.")
                     variables_mediaId = previous_mediaId
                     message = (
                         f"Manga: {manga.name}({manga.id}) Has been set to chapter "
                         f"{manga.last_chapter_read} from {chapter_anilist}\n"
                     )
+                    log(message)
                     app.update_terminal(message)
                     chapters_updated += manga.last_chapter_read - chapter_anilist
+                    log(f"Updated chapters_updated to: {chapters_updated}")
             else:
+                log("Last read chapter is less than or equal to AniList chapter.")
                 app.update_terminal(
                     f"Manga: {manga.name}({manga.id}) Has less than or equal chapter progress\n"
                 )
                 break
         else:
+            log("Response is not successful.")
             app.update_terminal("Failed to alter data.")
             return
 
@@ -215,6 +273,8 @@ def Get_Chapters_Updated():
     Returns:
         int: The number of chapters updated.
     """
+    log("Function Get_Chapters_Updated called.")
+    log(f"Returning the number of chapters updated: {chapters_updated}")
     return chapters_updated
 
 
@@ -226,4 +286,6 @@ def Set_Chapters_Updated():
     It's typically used to reset the count of chapters updated.
     """
     global chapters_updated
+    log("Function Set_Chapters_Updated called.")
     chapters_updated = 0
+    log("Set the number of chapters updated to zero.")

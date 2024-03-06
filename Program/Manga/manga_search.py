@@ -6,6 +6,7 @@ import time
 
 import pymoe
 from Manga.GetID import Check_Title_Match, no_manga_found  # pylint: disable=E0401
+from Utils.log import log  # pylint: disable=E0401
 
 
 class MangaSearch:  # pylint: disable=R0902
@@ -47,6 +48,13 @@ class MangaSearch:  # pylint: disable=R0902
         max_retries (int, optional): The maximum number of retries. Defaults to 5.
         delay (int, optional): The delay between retries in seconds. Defaults to 15.
         """
+        log("Function __init__ called.")
+        log(
+            f"Parameters - name: {name}, "
+            f"last_chapter_read: {last_chapter_read}, "
+            f"max_retries: {max_retries}, "
+            f"delay: {delay}"
+        )
         self.name = name
         self.last_chapter_read = last_chapter_read
         self.app = app
@@ -55,6 +63,7 @@ class MangaSearch:  # pylint: disable=R0902
         self.retry_count = 0
         self.matches = []
         self.id_list = []
+        log("MangaSearch object initialized.")
 
     def search_manga(self):  # pylint: disable=R1710
         """
@@ -63,16 +72,24 @@ class MangaSearch:  # pylint: disable=R0902
         Returns:
         list: A list of manga items from the search results. If an error occurs, it returns None.
         """
+        log("Function search_manga called.")
         max_retries = 5  # Maximum number of retries
         for attempt in range(max_retries):  # pylint: disable=W0612
+            log(
+                f"Attempt {attempt+1} of {max_retries} to search for manga: {self.name}"
+            )
             try:
-                return pymoe.manga.search.anilist.manga(self.name)
+                result = pymoe.manga.search.anilist.manga(self.name)
+                log(f"Search successful. Found {len(result)} results.")
+                return result
             except (pymoe.errors.serverError, KeyError) as e:  # pylint: disable=E1101
                 # Handle server error
+                log(f"Error encountered: {e}")
                 if "Too Many Requests" in str(e):
                     self.app.update_terminal(
                         f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds..."
                     )
+                    log("Too many requests. Delaying next attempt.")
                     time.sleep(self.delay)
                     self.retry_count += 1
                 else:
@@ -80,10 +97,12 @@ class MangaSearch:  # pylint: disable=R0902
                         f"\nAn unexpected error occurred for {self.name}: {e}. "
                         "Retrying in 2 seconds..."
                     )
+                    log("Unexpected error. Retrying in 2 seconds.")
                     time.sleep(2)
         self.app.update_terminal(
             f"Failed to search for {self.name} after {max_retries} attempts."
         )
+        log(f"Failed to search for {self.name} after {max_retries} attempts.")
 
     def process_manga_item(self, manga_item):
         """
@@ -96,20 +115,25 @@ class MangaSearch:  # pylint: disable=R0902
         Parameters:
         manga_item (dict): The manga item to process.
         """
+        log("Function process_manga_item called.")
         title = manga_item["title"]
         match = False
         if "english" in title and title["english"]:
             english_title = self.process_title(title["english"])
             match = match or self.check_title_match(english_title)
+            log(f"Checked English title: {english_title}. Match: {match}")
         if "romaji" in title and title["romaji"]:
             romaji_title = self.process_title(title["romaji"])
             match = match or self.check_title_match(romaji_title)
+            log(f"Checked Romaji title: {romaji_title}. Match: {match}")
         if "synonyms" in manga_item:
             for synonym in manga_item["synonyms"]:
                 synonym = self.process_title(synonym)
                 match = match or self.check_title_match(synonym)
+                log(f"Checked synonym: {synonym}. Match: {match}")
         if match:
             self.matches.append((match, manga_item))
+            log("Match found. Added to matches.")
 
     def process_title(self, title):
         """
@@ -121,9 +145,12 @@ class MangaSearch:  # pylint: disable=R0902
         Returns:
         str: The processed title.
         """
+        log("Function process_title called.")
+        log(f"Processing title: {title}")
         title = title.replace("-", " ")
         title = title.replace("\u2019", "\u0060")
         title = title.replace("`", "'")
+        log(f"Processed title: {title}")
         return title
 
     def check_title_match(self, title):
@@ -136,7 +163,11 @@ class MangaSearch:  # pylint: disable=R0902
         Returns:
         bool: True if the title matches the name, False otherwise.
         """
-        return Check_Title_Match(title, self.name)
+        log("Function check_title_match called.")
+        log(f"Checking if title: {title} matches name: {self.name}")
+        match = Check_Title_Match(title, self.name)
+        log(f"Match result: {match}")
+        return match
 
     def get_id_list(self):
         """
@@ -145,8 +176,11 @@ class MangaSearch:  # pylint: disable=R0902
         This method sorts the matches by the match score in descending order.
         Then it gets the list of IDs for the matches with a positive match score.
         """
+        log("Function get_id_list called.")
         self.matches.sort(key=lambda x: x[0], reverse=True)
+        log("Sorted matches by match score in descending order.")
         self.id_list = [manga_item["id"] for match, manga_item in self.matches if match]
+        log(f"Got list of IDs from matches: {self.id_list}")
 
     def print_details(self):
         """
@@ -155,15 +189,20 @@ class MangaSearch:  # pylint: disable=R0902
         This method prints the list of IDs, the romaji title, the English title,
         and the Anilist URL for the matches with a positive match score.
         """
+        log("Function print_details called.")
         if self.id_list:
             self.app.update_terminal(f"\nList of IDs for {self.name} : {self.id_list}")
+            log(f"Printed list of IDs for {self.name}.")
             romaji_title = self.matches[0][1]["title"]["romaji"]
             english_title = self.matches[0][1]["title"]["english"]
             self.app.update_terminal(f"Romaji Title: {romaji_title}")
+            log(f"Printed Romaji title: {romaji_title}.")
             self.app.update_terminal(f"English Title: {english_title}")
+            log(f"Printed English title: {english_title}.")
             for match, manga_item in self.matches:
                 if match:
                     self.app.update_terminal(f"Anilist URL: {manga_item['siteUrl']}")
+                    log(f"Printed Anilist URL: {manga_item['siteUrl']}.")
 
     def handle_no_ids_found(self):
         """
@@ -172,9 +211,12 @@ class MangaSearch:  # pylint: disable=R0902
         This method prints a message and adds the name and the last chapter read
         to the list of manga not found if no IDs are found.
         """
+        log("Function handle_no_ids_found called.")
         if not self.id_list:
             self.app.update_terminal(f"\nNo manga found for '{self.name}'.")
+            log(f"No manga found for '{self.name}'.")
             no_manga_found.append((self.name, self.last_chapter_read))
+            log(f"Added '{self.name}' to the list of manga not found.")
 
     def handle_server_error(self, e):
         """
@@ -187,16 +229,20 @@ class MangaSearch:  # pylint: disable=R0902
         Parameters:
         e (Exception): The server error to handle.
         """
+        log("Function handle_server_error called.")
         if "Too Many Requests" in str(e):
             self.app.update_terminal(
                 f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds..."
             )
+            log("Too Many Requests For Pymoe. Retrying.")
             time.sleep(self.delay)
             self.retry_count += 1
+            log(f"Incremented retry count to {self.retry_count}.")
         else:
             self.app.update_terminal(
                 f"An unexpected server error occurred for {self.name}: {e}"
             )
+            log(f"An unexpected server error occurred for {self.name}: {e}")
 
     def get_manga_id(self):
         """
@@ -212,11 +258,15 @@ class MangaSearch:  # pylint: disable=R0902
         list: A list of IDs for the manga. If no IDs are found or an error occurs, it returns
         an empty list.
         """
+        log("Function get_manga_id called.")
         result = []
         while self.retry_count < self.max_retries:
+            log(f"Retry count: {self.retry_count}. Max retries: {self.max_retries}.")
             if self.name != "Skipping Title":
+                log(f"Searching for manga: {self.name}.")
                 try:
                     manga = self.search_manga()
+                    log(f"Search results for manga: {manga}.")
                     if manga is None or not manga:
                         break
                     for manga_item in manga:
@@ -224,6 +274,7 @@ class MangaSearch:  # pylint: disable=R0902
                     self.retry_count = (
                         0  # Reset the retry count after a successful search
                     )
+                    log("Reset retry count after a successful search.")
                 except pymoe.errors.serverError as e:  # pylint: disable=E1101
                     self.handle_server_error(e)
                     continue
@@ -231,31 +282,42 @@ class MangaSearch:  # pylint: disable=R0902
                     self.app.update_terminal(
                         f"\nNo search results found for '{self.name}'."
                     )
+                    log(f"No search results found for '{self.name}'.")
                     no_manga_found.append((self.name, self.last_chapter_read))
+                    log(f"Added '{self.name}' to the list of manga not found.")
                     break
                 except KeyError:
                     self.app.update_terminal(
                         f"\nFailed to get data for '{self.name}', retrying..."
                     )
+                    log(f"Failed to get data for '{self.name}', retrying.")
                     self.retry_count += 1
+                    log(f"Incremented retry count to {self.retry_count}.")
                     continue
                 if not self.matches:
                     self.app.update_terminal(
                         f"\nNo search results found for '{self.name}'."
                     )
+                    log(f"No search results found for '{self.name}'.")
                     no_manga_found.append((self.name, self.last_chapter_read))
+                    log(f"Added '{self.name}' to the list of manga not found.")
                     break
                 self.get_id_list()
                 self.print_details()
                 self.handle_no_ids_found()
                 if self.id_list:
                     result = self.id_list
+                    log(f"Got list of IDs: {result}.")
                     break
             else:
                 self.app.update_terminal("\nSkipping a title...")
+                log("Skipping a title.")
                 break
         else:
             self.app.update_terminal(
+                f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries."
+            )
+            log(
                 f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries."
             )
         return result
