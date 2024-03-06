@@ -15,13 +15,17 @@ def log(message: str):
     current_time = time.strftime("%H:%M:%S", time.localtime())
 
     # Get the previous frame in the stack, otherwise it would be this function
-    func = inspect.currentframe().f_back.f_code
+    frame = inspect.currentframe()
+    if frame is not None:
+        func = frame.f_back.f_code
 
-    # Dump the message in the format you want
-    print(
-        f"{current_time}, "
-        f"File: {func.co_filename}, "
-        f"Function: {func.co_name}, "
-        f"Line: {func.co_firstlineno}, "
-        f"Message: {message}"
-    )
+        # Dump the message in the format you want
+        print(
+            f"{current_time}, "
+            f"File: {func.co_filename}, "
+            f"Function: {func.co_name}, "
+            f"Line: {func.co_firstlineno}, "
+            f"Message: {message}"
+        )
+    else:
+        print("Error: Could not get the current frame.")

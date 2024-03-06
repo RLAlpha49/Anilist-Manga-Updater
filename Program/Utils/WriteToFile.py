@@ -12,7 +12,7 @@ import glob
 import json
 import os
 
-from Utils.log import log # pylint: disable=E0401
+from Utils.log import log  # pylint: disable=E0401
 
 directory = "Manga_Data"
 
@@ -71,7 +71,9 @@ def Get_Alt_Titles_From_File(alternative_titles_dict):
             return alternative_titles_dict
     # If the file does not exist, return an empty dictionary
     else:
-        log(f"File {directory}/alternative_titles.json does not exist. Creating it now.")
+        log(
+            f"File {directory}/alternative_titles.json does not exist. Creating it now."
+        )
         Save_Alt_Titles_To_File(alternative_titles_dict)
         # Open the file to read
         with open(

@@ -9,8 +9,8 @@ represents a manga with its details.
 
 from datetime import datetime
 
-from API.APIRequests import api_request
 import API.queries as Queries
+from API.APIRequests import api_request
 from Utils.log import log
 
 # Initialize the counter for the number of chapters updated

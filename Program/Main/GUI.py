@@ -32,11 +32,12 @@ from Utils.Config import (  # noqa: E402
     save_config,
 )
 from Utils.GetFromFile import alternative_titles_dict  # noqa: E402
+from Utils.log import log  # noqa: E402
 from Utils.WriteToFile import (  # noqa: E402
     Get_Alt_Titles_From_File,
     Save_Alt_Titles_To_File,
 )
-from Utils.log import log
+
 
 # Define a global variable for the progress
 global progress, progress_status

@@ -7,9 +7,9 @@ getting the manga names and their details, and printing the manga found in the C
 # pylint: disable=C0103, W0602, W0603, E0401
 # Import necessary modules
 import pandas as pd
+from Utils.log import log
 from Utils.titles import alternative_titles_dict
 from Utils.WriteToFile import Get_Alt_Titles_From_File
-from Utils.log import log
 
 # Initialize an empty dictionary to store the manga names and chapters
 manga_names_chapters = {}

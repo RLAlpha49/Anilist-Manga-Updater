@@ -8,8 +8,8 @@ the access token needs to be refreshed.
 
 import time
 
-import requests
 import API.queries as Queries
+import requests
 from Utils.Config import load_config
 from Utils.log import log
 

@@ -13,8 +13,8 @@ from Utils.GetFromFile import (
     Manga_Found_In_CSV,
     alternative_titles_dict,
 )
-from Utils.WriteToFile import Write_Chapters_Updated
 from Utils.log import log
+from Utils.WriteToFile import Write_Chapters_Updated
 
 # Define constants for API call delay and update delay
 API_CALL_DELAY = 0.3

@@ -18,8 +18,8 @@ Functions:
 # Import necessary modules and functions
 import string
 
-from Utils.WriteToFile import Write_Multiple_IDs, Write_Not_Found
 from Utils.log import log
+from Utils.WriteToFile import Write_Multiple_IDs, Write_Not_Found
 
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []
