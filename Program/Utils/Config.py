@@ -16,7 +16,7 @@ Functions:
 import json
 import os
 
-from Utils.log import log  # pylint: disable=E0401
+from Utils.log import Logger  # pylint: disable=E0401
 
 
 # Function to create a configuration dictionary
@@ -35,8 +35,8 @@ def create_config(client, secret, token=None, months=None, private=None):
     dict: The configuration dictionary.
     """
     # Create and return the configuration dictionary directly
-    log("Function create_config called.")
-    log(
+    Logger.INFO("Function create_config called.")
+    Logger.DEBUG(
         f"Parameters - client: {client}, secret: {secret}, "
         f"token: {token}, months: {months}, private: {private}"
     )
@@ -59,12 +59,12 @@ def save_config(config, file_path):
     file_path (str): The path to the configuration file.
     """
     # Open the configuration file in write mode with explicit encoding
-    log("Function save_config called.")
-    log(f"Saving config to file: {file_path}")
+    Logger.INFO("Function save_config called.")
+    Logger.DEBUG(f"Saving config to file: {file_path}")
     with open(file_path, "w", encoding="utf-8") as file:
         # Write the configuration dictionary to the file in JSON format
         json.dump(config, file, indent=4)
-    log("Config saved successfully.")
+    Logger.INFO("Config saved successfully.")
 
 
 # Function to get the configuration dictionary
@@ -79,21 +79,21 @@ def Get_Config(app):
     app (App): The application object.
     """
     # Load the configuration dictionary from the file
-    log("Function Get_Config called.")
+    Logger.INFO("Function Get_Config called.")
     config = load_config("config.json")
 
     if config:
         # If the configuration dictionary is loaded successfully, print a message
         app.update_terminal("Configuration file found.")
-        log("Configuration file found.")
+        Logger.INFO("Configuration file found.")
 
         # Set the environment variables with the values from the configuration dictionary
         Set_Environment_Variables(config)
         app.update_terminal("Environment variables set.")
-        log("Environment variables set.")
+        Logger.INFO("Environment variables set.")
     else:
         # If the configuration dictionary is not loaded successfully, print a message
-        log("Configuration file not found.")
+        Logger.WARN("Configuration file not found.")
         message = (
             "\nConfiguration file not found. Please use buttons on the left side "
             "to set the Client, Secret ID's, as well as the Private value and number of Months"
@@ -112,19 +112,19 @@ def load_config(file_path):
     Returns:
     dict: The configuration dictionary if the file is found, otherwise None.
     """
-    log("Function load_config called.")
-    log(f"Attempting to load config from file: {file_path}")
+    Logger.INFO("Function load_config called.")
+    Logger.DEBUG(f"Attempting to load config from file: {file_path}")
     try:
         # Open the configuration file in read mode with explicit encoding
         with open(file_path, "r", encoding="utf-8") as file:
             # Load the configuration dictionary from the file
             config = json.load(file)
-        log("Configuration loaded successfully.")
+        Logger.INFO("Configuration loaded successfully.")
         # Return the configuration dictionary
         return config
     except FileNotFoundError:
         # If the configuration file is not found, return None
-        log("Configuration file not found. Returning None.")
+        Logger.WARN("Configuration file not found. Returning None.")
         return None
 
 
@@ -136,10 +136,10 @@ def Set_Environment_Variables(config):
     Parameters:
     config (dict): The configuration dictionary.
     """
-    log("Function Set_Environment_Variables called.")
+    Logger.INFO("Function Set_Environment_Variables called.")
     # Set the environment variables with the values from the configuration dictionary
     for key, value in config.items():
         if value is not None:
             os.environ[key] = value
-            log(f"Environment variable {key} set to {value}.")
-    log("Finished setting environment variables.")
+            Logger.DEBUG(f"Environment variable {key} set to {value}.")
+    Logger.INFO("Finished setting environment variables.")

@@ -117,6 +117,7 @@ alternative_titles_dict = {
     "The Time Mage’s Strong New Game ～I Returned to the Past To Rewrite It as the World’s Strongest": "Toki Majutsushi no Tsuyokute New Game: Kako ni Modotte Sekai Saikyou Kara Yarinaosu",
     "Tonari No Kuuderera O Amayakashitara, Uchi No Aikagi O Watasu Koto Ni Natta": "Tonari no Quderella wo Amayakashitara, Uchi no Aikagi wo Watasu Koto ni Natta",
     "Hachinan tte, Sore wa Nai Deshou!": "The 8th Son? Are You Kidding Me?",
+    "Reincarnator" : "Hwansaengjwa",
     "Prince Hero": "Skipping Title",  # Not on site and assosiates it with a different manga name
     # Titles i personally skip, most of them are not on Anilist in general
     #    "My Cells Kingdom" : "Skipping Title",
