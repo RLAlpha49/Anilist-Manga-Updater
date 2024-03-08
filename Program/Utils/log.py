@@ -1,9 +1,9 @@
 """
-This module provides a custom Logger class for logging messages with 
+This module provides a custom Logger class for logging messages with
 additional information.
 
-The Logger class provides static methods for logging messages at different 
-levels (INFO, DEBUG, WARNING, ERROR, CRITICAL). Each log message includes 
+The Logger class provides static methods for logging messages at different
+levels (INFO, DEBUG, WARNING, ERROR, CRITICAL). Each log message includes
 the current time, file name, function name, and line number.
 """
 
@@ -13,6 +13,7 @@ import inspect
 import logging
 import os
 from datetime import datetime
+import sys
 
 # Create logs directory if it doesn't exist
 if not os.path.exists("logs"):
@@ -34,6 +35,10 @@ if os.path.exists("logs/latest.log"):
         )
 
 
+# Define the main directory of your project
+MAIN_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 class Logger:
     """
     A custom Logger class for logging messages with additional information.
@@ -48,10 +53,12 @@ class Logger:
         """
         Sets up the logger to print to both the terminal and a file.
         """
+        handlers = [
+            logging.FileHandler("logs/latest.log", encoding="utf-8"),
+            logging.StreamHandler(stream=sys.stdout),
+        ]
         logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(asctime)s, %(message)s",
-            handlers=[logging.FileHandler("logs/latest.log"), logging.StreamHandler()],
+            level=logging.DEBUG, format="%(asctime)s, %(message)s", handlers=handlers
         )
 
     @staticmethod
@@ -123,7 +130,7 @@ class Logger:
             # Prepare the log message
             log_message = (
                 f"Level: {logging.getLevelName(level)}, "
-                f"File: {os.path.normpath(func.co_filename)}, "
+                f"File: ..\\{os.path.relpath(func.co_filename, start=MAIN_DIR)}, "
                 f"Function: {func.co_name}, Line: {frame.f_lineno}, "
                 f"Message: {message}"
             )

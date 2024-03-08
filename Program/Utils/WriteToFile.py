@@ -17,21 +17,51 @@ from Utils.log import Logger  # pylint: disable=E0401
 directory = "Manga_Data"
 
 
+def create_directory_if_not_exists(dir_path):
+    """
+    Checks if the given directory exists, creates it if it doesn't.
+
+    Args:
+        dir_path (str): The path of the directory to check or create.
+    """
+    if not os.path.exists(dir_path):
+        Logger.WARNING(f"Directory {dir_path} does not exist. Creating it now.")
+        os.makedirs(dir_path)
+
+
+def create_directory_and_get_timestamp(dir_path):
+    """
+    Checks if the given directory exists, creates it if it doesn't,
+    and then returns the current timestamp.
+
+    Args:
+        dir_path (str): The path of the directory to check or create.
+
+    Returns:
+        str: The current timestamp in the format "YYYY-MM-DD_HH-MM-SS".
+    """
+    # Check if directory exists, if not, create it
+    create_directory_if_not_exists(dir_path)
+    # Get current timestamp
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    Logger.DEBUG(f"Current timestamp: {timestamp}")
+    return timestamp
+
+
 def Save_Alt_Titles_To_File(alternative_titles_dict):
     """
     Saves alternative titles to a file.
 
     Parameters:
     alternative_titles_dict (dict): A dictionary of alternative titles.
+    directory (str): The directory where the file will be saved.
 
     Returns:
     None
     """
     Logger.INFO("Function Save_Alt_Titles_To_File called.")
     # Check if directory exists, if not, create it
-    if not os.path.exists(directory):
-        Logger.WARNING(f"Directory {directory} does not exist. Creating it now.")
-        os.makedirs(directory)
+    create_directory_if_not_exists(directory)
     # Open a file to write, this will overwrite the file if it already exists
     with open(
         f"{directory}/alternative_titles.json", "w", encoding="utf-8"
@@ -52,34 +82,32 @@ def Get_Alt_Titles_From_File(alternative_titles_dict):
 
     Parameters:
     alternative_titles_dict (dict): A dictionary of alternative titles.
+    directory (str): The directory where the file is located.
 
     Returns:
     dict: The dictionary of alternative titles loaded from the file.
     """
     Logger.INFO("Function Get_Alt_Titles_From_File called.")
+    filename = f"{directory}/alternative_titles.json"
+    # Check if the directory exists, if not, create it
+    create_directory_if_not_exists(directory)
     # Check if the file exists
-    if os.path.exists(f"{directory}/alternative_titles.json"):
-        Logger.DEBUG(f"File {directory}/alternative_titles.json exists.")
+    if os.path.exists(filename):
+        Logger.DEBUG(f"File {filename} exists.")
         # Open the file to read
-        with open(
-            f"{directory}/alternative_titles.json", "r", encoding="utf-8"
-        ) as alt_titles_file:
-            Logger.DEBUG(f"Reading from file: {directory}/alternative_titles.json")
+        with open(filename, "r", encoding="utf-8") as alt_titles_file:
+            Logger.DEBUG(f"Reading from file: {filename}")
             # Load the dictionary from the file
             alternative_titles_dict = json.load(alt_titles_file)
             Logger.INFO("Loaded dictionary from file.")
             return alternative_titles_dict
-    # If the file does not exist, return an empty dictionary
+    # If the file does not exist, save the dictionary to the file and then read it
     else:
-        Logger.WARNING(
-            f"File {directory}/alternative_titles.json does not exist. Creating it now."
-        )
+        Logger.WARNING(f"File {filename} does not exist. Creating it now.")
         Save_Alt_Titles_To_File(alternative_titles_dict)
         # Open the file to read
-        with open(
-            f"{directory}/alternative_titles.json", "r", encoding="utf-8"
-        ) as alt_titles_file:
-            Logger.DEBUG(f"Reading from file: {directory}/alternative_titles.json")
+        with open(filename, "r", encoding="utf-8") as alt_titles_file:
+            Logger.DEBUG(f"Reading from file: {filename}")
             # Load the dictionary from the file
             alternative_titles_dict = json.load(alt_titles_file)
             Logger.INFO("Loaded dictionary from file.")
@@ -134,12 +162,7 @@ def Write_Not_Found(not_found_manga_names):
     None
     """
     Logger.INFO("Function Write_Not_Found called.")
-    # Check if directory exists, if not, create it
-    if not os.path.exists(directory):
-        Logger.WARNING(f"Directory {directory} does not exist. Creating it now.")
-        os.makedirs(directory)
-    # Get current timestamp
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = create_directory_and_get_timestamp(directory)
     Logger.DEBUG(f"Current timestamp: {timestamp}")
     # Open a file to write
     with open(
@@ -190,13 +213,7 @@ def Write_Multiple_IDs(multiple_id_manga_names):
     None
     """
     Logger.INFO("Function Write_Multiple_IDs called.")
-    # Check if directory exists, if not, create it
-    if not os.path.exists(directory):
-        Logger.WARNING(f"Directory {directory} does not exist. Creating it now.")
-        os.makedirs(directory)
-    # Get current timestamp
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    Logger.DEBUG(f"Current timestamp: {timestamp}")
+    timestamp = create_directory_and_get_timestamp(directory)
     # Open a file to write
     with open(
         f"{directory}/multiple_ids_{timestamp}.txt", "w", encoding="utf-8"

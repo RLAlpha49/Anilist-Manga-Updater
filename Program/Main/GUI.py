@@ -752,7 +752,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             # And store the file path in the appropriate variable
             if is_previous:
                 self.previous_file_path = file_path
-                Logger.INFO("Stored the selected file path in the previous_file_path variable.")
+                Logger.INFO(
+                    "Stored the selected file path in the previous_file_path variable."
+                )
             else:
                 self.file_path = file_path
                 Logger.INFO("Stored the selected file path in the file_path variable.")
@@ -789,7 +791,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.update_terminal("Canceled")
         else:
             # If the user enters both IDs, create a configuration file and save it
-            Logger.INFO("User entered both IDs. Creating and saving configuration file.")
+            Logger.INFO(
+                "User entered both IDs. Creating and saving configuration file."
+            )
             config = create_config(client_id_value, secret_id_value)
             self.update_terminal("Configuration file created and saved.")
             save_config(config, config_path)
@@ -928,7 +932,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                 config = load_config(config_path)
                 if config is not None:
                     # Update the number of months in the configuration and save it
-                    Logger.INFO("Updating number of months in configuration and saving it.")
+                    Logger.INFO(
+                        "Updating number of months in configuration and saving it."
+                    )
                     config["MONTHS"] = months_value
                     save_config(config, config_path)
                     Logger.INFO("Configuration saved.")
@@ -1022,7 +1028,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                     config = load_config(config_path)
                     if config is not None:
                         # Update the private value in the configuration and save it
-                        Logger.INFO("Updating private value in configuration and saving it.")
+                        Logger.INFO(
+                            "Updating private value in configuration and saving it."
+                        )
                         config["PRIVATE"] = private_value
                         save_config(config, config_path)
                         Logger.INFO("Configuration saved.")
@@ -1039,13 +1047,17 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                     Logger.INFO("Updated terminal with error message.")
                     break
                 # If the user input is not "yes" or "no", show an error message
-                Logger.WARNING("User input is not 'yes' or 'no'. Showing error message.")
+                Logger.WARNING(
+                    "User input is not 'yes' or 'no'. Showing error message."
+                )
                 messagebox.showerror("Error", "Invalid input. Please enter Yes or No.")
                 self.update_terminal("Invalid input. Please enter Yes or No.")
                 Logger.INFO("Updated terminal with error message.")
             except AttributeError:
                 # If the user cancels the dialog, show an error message
-                Logger.WARNING("User cancelled the input dialog. Showing error message.")
+                Logger.WARNING(
+                    "User cancelled the input dialog. Showing error message."
+                )
                 messagebox.showerror("Error", "Canceled")
                 self.update_terminal("Canceled")
                 Logger.INFO("Updated terminal with cancellation message.")
