@@ -124,22 +124,24 @@ class Logger:
         frame = inspect.currentframe()
         if frame is not None:
             # Get the previous frame in the stack, otherwise it would be this function
-            frame = (
-                frame.f_back.f_back
-            )
+            frame = frame.f_back
             if frame is not None:
-                func = frame.f_code
+                frame = frame.f_back
+                if frame is not None:
+                    func = frame.f_code
 
-                # Prepare the log message
-                log_message = (
-                    f"Level: {logging.getLevelName(level)}, "
-                    f"File: ..\\{os.path.relpath(func.co_filename, start=MAIN_DIR)}, "
-                    f"Function: {func.co_name}, Line: {frame.f_lineno}, "
-                    f"Message: {message}"
-                )
+                    # Prepare the log message
+                    log_message = (
+                        f"Level: {logging.getLevelName(level)}, "
+                        f"File: ..\\{os.path.relpath(func.co_filename, start=MAIN_DIR)}, "
+                        f"Function: {func.co_name}, Line: {frame.f_lineno}, "
+                        f"Message: {message}"
+                    )
 
-                # Log the message at the appropriate level
-                logging.log(level, log_message)
+                    # Log the message at the appropriate level
+                    logging.log(level, log_message)
+                else:
+                    logging.error("Error: Could not get the previous frame.")
             else:
                 logging.error("Error: Could not get the previous frame.")
         else:
