@@ -244,19 +244,53 @@ class MangaSearch:  # pylint: disable=R0902
             )
             Logger.ERROR(f"An unexpected server error occurred for {self.name}: {e}")
 
-    def get_manga_id(self):
+    def search_and_process_manga(self):
         """
-        Retrieves the ID of the manga.
-
-        This method searches for the manga, processes the search results, gets the list of IDs,
-        prints the details, and handles cases where no IDs are found. If the manga name is
-        "Skipping Title", it skips the search and returns an empty list. If the maximum number
-        of retries is reached without finding an ID, it prints an error message and returns an
-        empty list.
+        Searches for a manga and processes the search results.
 
         Returns:
-        list: A list of IDs for the manga. If no IDs are found or an error occurs, it returns
-        an empty list.
+        bool: True if the search was successful, False otherwise.
+        """
+        manga = self.search_manga()
+        if manga:
+            Logger.DEBUG(f"Search results for manga: {manga}.")
+        if manga is None or not manga:
+            Logger.DEBUG("No search results for manga.")
+            return False
+        for manga_item in manga:
+            self.process_manga_item(manga_item)
+        self.retry_count = 0  # Reset the retry count after a successful search
+        Logger.DEBUG("Reset retry count after a successful search.")
+        return True
+
+    def handle_search_errors(self, error):
+        """
+        Handles errors that occur during the search.
+
+        Parameters:
+        error (Exception): The error that occurred.
+        """
+        if isinstance(error, pymoe.errors.serverError):  # pylint: disable=E1101
+            self.handle_server_error(error)
+        elif isinstance(error, IndexError):
+            self.app.update_terminal(f"\nNo search results found for '{self.name}'.")
+            Logger.WARNING(f"No search results found for '{self.name}'.")
+            no_manga_found.append((self.name, self.last_chapter_read))
+            Logger.DEBUG(f"Added '{self.name}' to the list of manga not found.")
+        elif isinstance(error, KeyError):
+            self.app.update_terminal(
+                f"\nFailed to get data for '{self.name}', retrying..."
+            )
+            Logger.ERROR(f"Failed to get data for '{self.name}', retrying.")
+            self.retry_count += 1
+            Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
+
+    def get_manga_id(self):
+        """
+        Gets the ID of the manga.
+
+        Returns:
+        list: A list of manga IDs.
         """
         Logger.INFO("Function get_manga_id called.")
         result = []
@@ -267,36 +301,14 @@ class MangaSearch:  # pylint: disable=R0902
             if self.name != "Skipping Title":
                 Logger.INFO(f"Searching for manga: {self.name}.")
                 try:
-                    manga = self.search_manga()
-                    if manga:
-                        Logger.DEBUG(f"Search results for manga: {manga}.")
-                    if manga is None or not manga:
-                        Logger.DEBUG("No search results for manga.")
+                    if not self.search_and_process_manga():
                         break
-                    for manga_item in manga:
-                        self.process_manga_item(manga_item)
-                    self.retry_count = (
-                        0  # Reset the retry count after a successful search
-                    )
-                    Logger.DEBUG("Reset retry count after a successful search.")
-                except pymoe.errors.serverError as e:  # pylint: disable=E1101
-                    self.handle_server_error(e)
-                    continue
-                except IndexError:
-                    self.app.update_terminal(
-                        f"\nNo search results found for '{self.name}'."
-                    )
-                    Logger.WARNING(f"No search results found for '{self.name}'.")
-                    no_manga_found.append((self.name, self.last_chapter_read))
-                    Logger.DEBUG(f"Added '{self.name}' to the list of manga not found.")
-                    break
-                except KeyError:
-                    self.app.update_terminal(
-                        f"\nFailed to get data for '{self.name}', retrying..."
-                    )
-                    Logger.ERROR(f"Failed to get data for '{self.name}', retrying.")
-                    self.retry_count += 1
-                    Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
+                except (
+                    pymoe.errors.serverError,
+                    IndexError,
+                    KeyError,
+                ) as e:  # pylint: disable=E1101
+                    self.handle_search_errors(e)
                     continue
                 if not self.matches:
                     self.app.update_terminal(
