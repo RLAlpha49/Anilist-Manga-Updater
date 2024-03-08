@@ -304,10 +304,10 @@ class MangaSearch:  # pylint: disable=R0902
                     if not self.search_and_process_manga():
                         break
                 except (
-                    pymoe.errors.serverError,
+                    pymoe.errors.serverError,  # pylint: disable=E1101
                     IndexError,
                     KeyError,
-                ) as e:  # pylint: disable=E1101
+                ) as e:
                     self.handle_search_errors(e)
                     continue
                 if not self.matches:
