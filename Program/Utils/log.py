@@ -12,8 +12,8 @@ the current time, file name, function name, and line number.
 import inspect
 import logging
 import os
-from datetime import datetime
 import sys
+from datetime import datetime
 
 # Create logs directory if it doesn't exist
 if not os.path.exists("logs"):
@@ -120,23 +120,28 @@ class Logger:
         message (str): The message to log.
         level (int): The logging level of the message (e.g., logging.INFO, logging.DEBUG).
         """
-        # Get the previous frame in the stack, otherwise it would be this function
-        frame = (
-            inspect.currentframe().f_back.f_back
-        )  # One more step back to get the caller of INFO, DEBUG, etc.
+        # Get the current frame
+        frame = inspect.currentframe()
         if frame is not None:
-            func = frame.f_code
-
-            # Prepare the log message
-            log_message = (
-                f"Level: {logging.getLevelName(level)}, "
-                f"File: ..\\{os.path.relpath(func.co_filename, start=MAIN_DIR)}, "
-                f"Function: {func.co_name}, Line: {frame.f_lineno}, "
-                f"Message: {message}"
+            # Get the previous frame in the stack, otherwise it would be this function
+            frame = (
+                frame.f_back.f_back
             )
+            if frame is not None:
+                func = frame.f_code
 
-            # Log the message at the appropriate level
-            logging.log(level, log_message)
+                # Prepare the log message
+                log_message = (
+                    f"Level: {logging.getLevelName(level)}, "
+                    f"File: ..\\{os.path.relpath(func.co_filename, start=MAIN_DIR)}, "
+                    f"Function: {func.co_name}, Line: {frame.f_lineno}, "
+                    f"Message: {message}"
+                )
+
+                # Log the message at the appropriate level
+                logging.log(level, log_message)
+            else:
+                logging.error("Error: Could not get the previous frame.")
         else:
             logging.error("Error: Could not get the current frame.")
 
