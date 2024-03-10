@@ -11,6 +11,7 @@ the current time, file name, function name, and line number.
 
 import inspect
 import logging
+import glob
 import os
 import sys
 from datetime import datetime
@@ -49,9 +50,12 @@ class Logger:
     """
 
     @staticmethod
-    def setup():
+    def setup(max_logs=15):
         """
         Sets up the logger to print to both the terminal and a file.
+
+        Parameters:
+        max_logs (int): The maximum number of log files to keep.
         """
         handlers = [
             logging.FileHandler("logs/latest.log", encoding="utf-8"),
@@ -60,6 +64,19 @@ class Logger:
         logging.basicConfig(
             level=logging.DEBUG, format="%(asctime)s, %(message)s", handlers=handlers
         )
+
+        # Get a list of all log files
+        log_files = glob.glob("logs/*.log")
+
+        # Sort the log files by creation time
+        log_files.sort(key=os.path.getctime)
+
+        # If the number of log files exceeds the maximum, delete the oldest ones
+        while len(log_files) > max_logs:
+            os.remove(log_files.pop(0))
+
+        # Apply the handlers
+        logging.getLogger().handlers = handlers
 
     @staticmethod
     def INFO(message: str):
