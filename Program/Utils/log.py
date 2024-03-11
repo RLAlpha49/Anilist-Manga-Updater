@@ -9,9 +9,9 @@ the current time, file name, function name, and line number.
 
 # pylint: disable=C0103
 
+import glob
 import inspect
 import logging
-import glob
 import os
 import sys
 from datetime import datetime
