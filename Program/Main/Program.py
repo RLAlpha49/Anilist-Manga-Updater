@@ -179,6 +179,9 @@ class Program:  # pylint: disable=R0903, C0115
         start_time = time.time()
         times = []
         Logger.DEBUG(f"Start time for loop: {start_time}")
+        
+        # Initialize a counter for the number of manga processed
+        manga_processed = 0
 
         # Iterate through the manga_names dictionary
         for manga_name, manga_info in manga_names.items():
@@ -203,10 +206,6 @@ class Program:  # pylint: disable=R0903, C0115
             manga_name = manga_name.replace("-", " ")
             manga_name = manga_name.replace("`", "'")
             Logger.DEBUG(f"Processed manga name: {manga_name}")
-
-            # Sleep for 0.4 seconds to reduce hitting the API rate limit
-            time.sleep(API_CALL_DELAY)
-            Logger.INFO("Slept to avoid hitting API rate limit.")
 
             status = manga_info["status"]
             Logger.DEBUG(f"Manga status: {status}")
@@ -233,6 +232,10 @@ class Program:  # pylint: disable=R0903, C0115
                     # Add the media format to the cache
                     self.cache.set(f"{manga_id}_format", media_info)
 
+                    # Sleep for API_CALL_DELAY seconds to reduce hitting the API rate limit
+                    time.sleep(API_CALL_DELAY)
+                    Logger.INFO("Slept to avoid hitting API rate limit.")
+
                 # If the format of the manga is not a novel
                 if media_info != "NOVEL":
                     Logger.DEBUG("Media info is not a novel.")
@@ -258,6 +261,8 @@ class Program:  # pylint: disable=R0903, C0115
                         Logger.DEBUG(
                             "Appended additional information to manga_names_ids."
                         )
+            # Increment the counter for the number of manga processed
+            manga_processed += 1
 
             # Record the time after finding the ID
             time_after = time.time()
@@ -289,8 +294,8 @@ class Program:  # pylint: disable=R0903, C0115
             app.update_estimated_time_remaining(estimated_time_remaining)
             Logger.DEBUG("Updated estimated time remaining.")
 
-            # Calculate the progress for this step
-            step_progress = (time_after - start_time) / estimated_total_time
+            # Calculate the progress for this step based on the number of manga processed
+            step_progress = manga_processed / len(manga_names)
             Logger.DEBUG(f"Step progress: {step_progress}")
 
             # Adjust the progress to be between 20% and 50%

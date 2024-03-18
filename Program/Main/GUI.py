@@ -594,6 +594,10 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Parameters:
         estimated_time_remaining (int): The estimated time remaining in seconds.
         """
+        # If estimated_time_remaining is less than 0, set it to 0
+        if estimated_time_remaining < 0:
+            estimated_time_remaining = 0
+
         # Convert the estimated time remaining to hours, minutes, and seconds
         time_remaining = str(datetime.timedelta(seconds=int(estimated_time_remaining)))
 
@@ -643,7 +647,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                 "Program thread is not running. Stopping progress bar update."
             )
             return
-        self.after(100, self.update_progress_bar)
+        self.after(50, self.update_progress_bar)
 
     def update_progress_and_status(self, status, program_progress=None):
         """
