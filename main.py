@@ -23,9 +23,9 @@ Logger.DEBUG(f"Application path: {application_path}")
 gui_script_path = os.path.join(application_path, "Program", "Main", "GUI.py")
 Logger.DEBUG(f"GUI script path: {gui_script_path}")
 
-startupinfo = subprocess.STARTUPINFO()
-startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-startupinfo.wShowWindow = subprocess.SW_HIDE
+startupinfo = subprocess.STARTUPINFO()  # type: ignore
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # type: ignore
+startupinfo.wShowWindow = subprocess.SW_HIDE  # type: ignore
 
 try:
     Logger.INFO("Starting GUI script...")
