@@ -15,6 +15,7 @@ from Utils.GetFromFile import (
 )
 from Utils.log import Logger
 from Utils.WriteToFile import Write_Chapters_Updated
+from Utils.cache import Cache
 
 # Define constants for API call delay and update delay
 API_CALL_DELAY = 0.3
@@ -50,6 +51,7 @@ class Program:  # pylint: disable=R0903, C0115
     def __init__(self, app):  # pylint: disable=R0912, R0914, R0915
         Logger.INFO("Initializing the class.")
         self.app = app
+        self.cache = Cache("Manga_Data/format_cache.json")
 
         Set_No_Manga_Found()
         Logger.DEBUG("Set_No_Manga_Found called.")
@@ -222,9 +224,14 @@ class Program:  # pylint: disable=R0903, C0115
             Logger.DEBUG(f"Got manga IDs: {manga_ids}")
 
             for manga_id in manga_ids:
-                # Get the format of the manga regardless of the status
-                media_info = Get_Format(manga_id, app)
-                Logger.DEBUG(f"Got media info: {media_info}")
+                # Check if the media format is in the cache
+                media_info = self.cache.get(f"{manga_id}_format")
+                if media_info is None:
+                    # Get the format of the manga regardless of the status
+                    media_info = Get_Format(manga_id, app)
+                    Logger.DEBUG(f"Got media info: {media_info}")
+                    # Add the media format to the cache
+                    self.cache.set(f"{manga_id}_format", media_info)
 
                 # If the format of the manga is not a novel
                 if media_info != "NOVEL":

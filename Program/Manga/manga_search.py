@@ -7,6 +7,7 @@ import time
 import pymoe
 from Manga.GetID import Check_Title_Match, no_manga_found  # pylint: disable=E0401
 from Utils.log import Logger  # pylint: disable=E0401
+from Utils.cache import Cache  # pylint: disable=E0401
 
 
 class MangaSearch:  # pylint: disable=R0902
@@ -63,6 +64,7 @@ class MangaSearch:  # pylint: disable=R0902
         self.retry_count = 0
         self.matches = []
         self.id_list = []
+        self.cache = Cache("Manga_Data/title_cache.json")
         Logger.DEBUG("MangaSearch object initialized.")
 
     def search_manga(self):  # pylint: disable=R1710
@@ -294,6 +296,14 @@ class MangaSearch:  # pylint: disable=R0902
         """
         Logger.INFO("Function get_manga_id called.")
         result = []
+
+        # Check if the manga ID is in the cache
+        cached_result = self.cache.get(self.name)
+        if cached_result is not None:
+            self.app.update_terminal(f"\nFound manga: {self.name} in cache.")
+            Logger.INFO(f"Found manga: {self.name} in cache.")
+            return cached_result
+
         while self.retry_count < self.max_retries:
             Logger.DEBUG(
                 f"Retry count: {self.retry_count}. Max retries: {self.max_retries}."
@@ -324,6 +334,8 @@ class MangaSearch:  # pylint: disable=R0902
                 if self.id_list:
                     result = self.id_list
                     Logger.DEBUG(f"Got list of IDs: {result}.")
+                    # Add the manga ID to the cache
+                    self.cache.set(self.name, result)
                     break
             else:
                 self.app.update_terminal("\nSkipping a title...")

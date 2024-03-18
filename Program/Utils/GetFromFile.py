@@ -8,8 +8,8 @@ getting the manga names and their details, and printing the manga found in the C
 # Import necessary modules
 import pandas as pd
 from Utils.log import Logger
-from Utils.titles import alternative_titles_dict
 from Utils.WriteToFile import Get_Alt_Titles_From_File
+from Utils.dictionaries import alternative_titles_dict
 
 # Initialize an empty dictionary to store the manga names and chapters
 manga_names_chapters = {}
