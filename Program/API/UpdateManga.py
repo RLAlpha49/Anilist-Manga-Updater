@@ -144,8 +144,11 @@ def update_variables(manga, chapter_anilist, manga_status):
     """
     Logger.INFO("Function update_variables called.")
     variables_list = []
+    Logger.DEBUG(f"Manga: {manga.name} (status: {manga_status})")
 
-    if manga.status == "PLANNING" or (
+    if manga_status == "COMPLETED":
+        Logger.DEBUG("The current manga status is 'COMPLETED'. Skipping status update.")
+    elif manga.status == "PLANNING" or (
         manga.status != manga_status
         and (manga.last_chapter_read <= chapter_anilist or chapter_anilist is None)
     ):
