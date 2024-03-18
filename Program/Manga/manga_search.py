@@ -6,8 +6,8 @@ import time
 
 import pymoe
 from Manga.GetID import Check_Title_Match, no_manga_found  # pylint: disable=E0401
-from Utils.log import Logger  # pylint: disable=E0401
 from Utils.cache import Cache  # pylint: disable=E0401
+from Utils.log import Logger  # pylint: disable=E0401
 
 
 class MangaSearch:  # pylint: disable=R0902

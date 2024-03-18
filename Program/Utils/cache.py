@@ -6,7 +6,10 @@ It stores key-value pairs in a JSON file located in the Manga_Data directory.
 import json
 import os
 
-from Utils.dictionaries import cache_title_dict, cache_format_dict  # pylint: disable=E0401
+from Utils.dictionaries import (  # pylint: disable=E0401
+    cache_title_dict,
+    cache_format_dict,
+)
 from Utils.log import Logger  # pylint: disable=E0401
 
 
@@ -35,7 +38,9 @@ class Cache:
                 self.cache = json.load(f)
             Logger.INFO("Cache loaded successfully.")
         except FileNotFoundError:
-            Logger.WARNING("Cache file not found. Initializing cache with default values.")
+            Logger.WARNING(
+                "Cache file not found. Initializing cache with default values."
+            )
             if "format_cache.json" in self.cache_file:
                 self.cache = cache_format_dict
             else:

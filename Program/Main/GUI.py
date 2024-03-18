@@ -595,8 +595,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         estimated_time_remaining (int): The estimated time remaining in seconds.
         """
         # If estimated_time_remaining is less than 0, set it to 0
-        if estimated_time_remaining < 0:
-            estimated_time_remaining = 0
+        estimated_time_remaining = max(estimated_time_remaining, 0)
 
         # Convert the estimated time remaining to hours, minutes, and seconds
         time_remaining = str(datetime.timedelta(seconds=int(estimated_time_remaining)))

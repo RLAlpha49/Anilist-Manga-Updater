@@ -7,6 +7,7 @@ from API.APIRequests import Set_Access_Token, needs_refresh
 from API.UpdateManga import Get_Chapters_Updated, Set_Chapters_Updated, Update_Manga
 from Manga.GetID import Clean_Manga_IDs, Get_No_Manga_Found, Set_No_Manga_Found
 from Manga.manga_search import MangaSearch
+from Utils.cache import Cache
 from Utils.Config import Get_Config, load_config
 from Utils.GetFromFile import (
     Get_Manga_Names,
@@ -15,7 +16,6 @@ from Utils.GetFromFile import (
 )
 from Utils.log import Logger
 from Utils.WriteToFile import Write_Chapters_Updated
-from Utils.cache import Cache
 
 # Define constants for API call delay and update delay
 API_CALL_DELAY = 0.3
@@ -179,7 +179,7 @@ class Program:  # pylint: disable=R0903, C0115
         start_time = time.time()
         times = []
         Logger.DEBUG(f"Start time for loop: {start_time}")
-        
+
         # Initialize a counter for the number of manga processed
         manga_processed = 0
 
