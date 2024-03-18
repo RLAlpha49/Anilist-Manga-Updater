@@ -2,7 +2,7 @@
 This is the titles module. This module is responsible for the list of alternative titles.
 """
 
-# pylint: disable=C0301
+# pylint: disable=C0301, C0302
 # flake8: noqa: E501
 # Initialize the dictionary to store the alternative titles
 alternative_titles_dict = {
@@ -170,7 +170,8 @@ alternative_titles_dict = {
     #    "World's Strongest Invalid Swordsman" : "Skipping Title"
 }
 
-
+# This is the only way to directly connect the title to a manga id.
+# You can go through the multiple id's and pick which one you want to use.
 cache_title_dict = {
     "Helmut: The Forsaken Child": [154782],
     "The Academy's Genius Swordsman": [167649],
@@ -895,7 +896,7 @@ cache_title_dict = {
         146217,
     ],
     "Reincarnated as a Dragon Hatchling": [97494, 101468],
-    "That Time I Got Reincarnated as a Slime": [86399, 86355, 110029],
+    "That Time I Got Reincarnated as a Slime": [86399],
     "Regressor's Life After Retirement": [170745],
     "Mahou Joshi Gakuen no Suketto Kyoushi": [107322, 107324],
     "Umareta Chokugo ni Suterareta kedo, Zensei ga Taikensha datta node Yoyuu de Ikitemasu": [
