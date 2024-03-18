@@ -80,8 +80,9 @@ def Update_Manga(manga, app, chapter_anilist, manga_status):
     Logger.DEBUG(f"Updated the variables for the manga: {variables_list}")
 
     Logger.INFO("Updating the progress of the manga.")
-    update_manga_progress(manga, app, variables_list, chapter_anilist)
+    updated = update_manga_progress(manga, app, variables_list, chapter_anilist)
     Logger.DEBUG("Updated the progress of the manga.")
+    return updated
 
 
 def update_status(manga):
@@ -233,6 +234,8 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
     }
     """
 
+    update_sent = False
+
     Logger.INFO("Function update_manga_progress called.")
     for variables in variables_list:
         Logger.DEBUG(f"Processing variables: {variables}")
@@ -256,6 +259,7 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
                     app.update_terminal(message)
                     chapters_updated += manga.last_chapter_read - chapter_anilist
                     Logger.DEBUG(f"Updated chapters_updated to: {chapters_updated}")
+                    update_sent = True
             else:
                 Logger.DEBUG(
                     "Last read chapter is less than or equal to AniList chapter."
@@ -267,7 +271,11 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
         else:
             Logger.ERROR("Response is not successful.")
             app.update_terminal("Failed to alter data.")
-            return
+            return None
+    if not update_sent:
+        return False
+
+    return True
 
 
 def Get_Chapters_Updated():

@@ -7,8 +7,8 @@ import json
 import os
 
 from Utils.dictionaries import (  # pylint: disable=E0401
-    cache_title_dict,
     cache_format_dict,
+    cache_title_dict,
 )
 from Utils.log import Logger  # pylint: disable=E0401
 

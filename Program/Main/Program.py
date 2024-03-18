@@ -420,12 +420,13 @@ class Program:  # pylint: disable=R0903, C0115
                     )
                     Logger.DEBUG(f"Created Manga instance: {manga}")
 
-                    Update_Manga(manga, app, chapter_anilist, status_anilist)
+                    updated = Update_Manga(manga, app, chapter_anilist, status_anilist)
                     Logger.DEBUG("Updated manga.")
 
-                    # Sleep for 0.3 seconds to reduce hitting the API rate limit
-                    time.sleep(UPDATE_DELAY)
-                    Logger.DEBUG("Slept to avoid hitting API rate limit.")
+                    if updated:
+                        # Sleep for 0.3 seconds to reduce hitting the API rate limit
+                        time.sleep(UPDATE_DELAY)
+                        Logger.DEBUG("Slept to avoid hitting API rate limit.")
 
                     # After updating the manga, increment the counter
                     manga_updated += 1
