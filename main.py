@@ -23,9 +23,13 @@ Logger.DEBUG(f"Application path: {application_path}")
 gui_script_path = os.path.join(application_path, "Program", "Main", "GUI.py")
 Logger.DEBUG(f"GUI script path: {gui_script_path}")
 
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+startupinfo.wShowWindow = subprocess.SW_HIDE
+
 try:
     Logger.INFO("Starting GUI script...")
-    subprocess.run(["python", gui_script_path], check=True)
+    subprocess.run(["python", gui_script_path], check=True, startupinfo=startupinfo)
     Logger.INFO("GUI script finished successfully.")
 except subprocess.CalledProcessError as e:
     Logger.CRITICAL(f"An error occurred while running the GUI script: {e.output}")
