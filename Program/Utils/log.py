@@ -40,6 +40,7 @@ if os.path.exists("logs/latest.log"):
 MAIN_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+# noinspection PyClassHasNoInit
 class Logger:
     """
     A custom Logger class for logging messages with additional information.
