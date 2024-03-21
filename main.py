@@ -12,6 +12,7 @@ from Program.Utils.log import Logger  # pylint: disable=E0401, E0611
 
 # Check if we're running in a PyInstaller bundle
 if getattr(sys, "frozen", False):
+    # noinspection PyProtectedMember
     application_path = sys._MEIPASS  # type: ignore
     Logger.INFO("Running in a PyInstaller bundle.")
 else:

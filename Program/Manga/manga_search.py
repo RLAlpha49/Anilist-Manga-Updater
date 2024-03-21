@@ -137,7 +137,8 @@ class MangaSearch:  # pylint: disable=R0902
             self.matches.append((match, manga_item))
             Logger.INFO("Match found. Added to matches.")
 
-    def process_title(self, title):
+    @staticmethod
+    def process_title(title):
         """
         Processes the title by replacing certain characters.
 

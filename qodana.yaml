@@ -1,0 +1,10 @@
+version: "1.0"
+linter: jetbrains/qodana-python-community:2023.3
+exclude:
+  - name: PyPackageRequirementsInspection
+  - name: PyPep8NamingInspection
+  - name: PyGlobalUndefinedInspection
+  - name: All
+    paths:
+      - Program/Main/GUI.py
+      - Program/Utils/dictionaries.py

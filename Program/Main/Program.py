@@ -187,6 +187,7 @@ class Program:  # pylint: disable=R0903, C0115
         for manga_name, manga_info in manga_names.items():
             Logger.INFO(f"Processing manga: {manga_name}")
             try:
+                # noinspection PyUnboundLocalVariable
                 app.update_progress_and_status(
                     f"Getting ID for {manga_name}...", progress  # noqa: F821
                 )

@@ -156,6 +156,7 @@ def Get_File_Diff(app):
     """
     Logger.INFO("Function Get_File_Diff called.")
     global manga_names_chapters
+    df_previous = None
     try:
         manga_names_chapters = {}
         # Read the current file
@@ -175,8 +176,7 @@ def Get_File_Diff(app):
         Logger.ERROR("FileNotFoundError encountered. Returning None.")
         return None
 
-    if has_previous_file:
-        # If there is a previous file, get the difference between the current and previous file
+    if has_previous_file and df_previous is not None:
         df_diff = pd.merge(
             df,
             df_previous,

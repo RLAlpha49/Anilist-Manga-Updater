@@ -24,6 +24,7 @@ class Cache:
 
     def __init__(self, cache_file):
         self.cache_file = cache_file
+        self.cache = {}  # Initialize cache as an empty dictionary
         Logger.INFO(f"Cache initialized with file: {self.cache_file}")
         self.load_cache()
 
@@ -35,16 +36,16 @@ class Cache:
         try:
             os.makedirs(os.path.dirname(self.cache_file), exist_ok=True)
             with open(self.cache_file, "r", encoding="utf-8") as f:
-                self.cache = json.load(f)
+                self.cache.update(json.load(f))
             Logger.INFO("Cache loaded successfully.")
         except FileNotFoundError:
             Logger.WARNING(
                 "Cache file not found. Initializing cache with default values."
             )
             if "format_cache.json" in self.cache_file:
-                self.cache = cache_format_dict
+                self.cache.update(cache_format_dict)
             else:
-                self.cache = cache_title_dict
+                self.cache.update(cache_title_dict)
             self.save_cache()
 
     def save_cache(self):
