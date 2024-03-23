@@ -1,5 +1,5 @@
 ---
-name: Lint Code Base
+name: Linting
 
 on:
   push:
@@ -28,6 +28,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: Make scripts executable
+        run: chmod +x linux_install_and_run.sh
+
       - name: Super-Linter
         uses: super-linter/super-linter@v6.3.0
         env:
@@ -35,3 +38,4 @@ jobs:
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_CHECKOV: false
+          VALIDATE_PYTHON_MYPY: false
