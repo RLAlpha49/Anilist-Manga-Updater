@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Set up pip caching
         uses: actions/cache@v4
@@ -28,9 +28,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Lint Code Base
-        uses: github/super-linter@v4
+      - name: Super-Linter
+        uses: super-linter/super-linter@v6.3.0
         env:
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_CHECKOV: false
