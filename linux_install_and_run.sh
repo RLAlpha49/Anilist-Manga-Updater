@@ -16,8 +16,11 @@ then
     pip install virtualenv
 fi
 
-# Create a virtual environment
-virtualenv venv
+# Create a virtual environment if it doesn't exist
+if [ ! -d "venv" ]
+then
+    virtualenv venv
+fi
 
 # Check if the activate script exists
 if [ -f venv/bin/activate ]
@@ -44,9 +47,17 @@ packages="customtkinter CTkToolTip Pillow requests pandas pymoe"
 # Loop through the list of packages
 for package in $packages
 do
-    # Install the package
-    pip install "$package"
+    # Check if the package is installed
+    if ! python -c "import $package" >/dev/null 2>&1
+    then
+        echo "$package could not be found, trying to install..."
+        # Install the package
+        pip install "$package"
+    fi
 done
+
+# Run the Python program
+python main.py
 
 # Deactivate the virtual environment
 deactivate
