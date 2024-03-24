@@ -3,4 +3,4 @@ customtkinter
 CTkToolTip
 requests
 pymoe
-pandas
+pandas==2.2.0
