@@ -28,6 +28,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: Make scripts executable
+        run: chmod +x linux_install_and_run.sh
+
       - name: Super-Linter
         uses: super-linter/super-linter@v6.3.0
         env:
