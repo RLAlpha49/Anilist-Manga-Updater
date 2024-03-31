@@ -525,7 +525,8 @@ class Program:  # pylint: disable=R0903, C0115
 
         Args:
         manga_name (str): The name of the manga.
-        id_info (tuple): A tuple containing the manga ID, last chapter read, status, and last read date.
+        id_info (tuple): A tuple containing the manga ID, last chapter read,
+                         status, and last read date.
 
         Returns:
         str: A formatted string containing the processed information.
