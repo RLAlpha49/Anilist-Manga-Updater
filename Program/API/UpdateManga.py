@@ -183,7 +183,6 @@ def update_variables(manga, chapter_anilist, manga_status):
             progress=((chapter_anilist if chapter_anilist is not None else 0) + 1),
             private=manga.private_bool,
         )
-        second_variables = None
         third_variables = None
 
         Logger.DEBUG(f"Updated the first set of variables: {first_variables}")
