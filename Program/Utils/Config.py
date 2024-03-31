@@ -37,8 +37,8 @@ def create_config(client, secret, token=None, months=None, private=None):
     # Create and return the configuration dictionary directly
     Logger.INFO("Function create_config called.")
     Logger.DEBUG(
-        f"Parameters - client: {client}, secret: {secret}, "
-        f"token: {token}, months: {months}, private: {private}"
+        f"Parameters - client: {client}, "
+        f"months: {months}, private: {private}"
     )
     return {
         "ANILIST_CLIENT_ID": client,

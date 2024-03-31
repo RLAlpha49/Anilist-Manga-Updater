@@ -2,6 +2,8 @@
 # Import necessary modules
 import time
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from API.AccessAPI import Get_Format, Get_User_Manga_List, Manga
 from API.APIRequests import Set_Access_Token, needs_refresh
 from API.UpdateManga import Get_Chapters_Updated, Set_Chapters_Updated, Update_Manga
@@ -16,10 +18,6 @@ from Utils.GetFromFile import (
 )
 from Utils.log import Logger
 from Utils.WriteToFile import Write_Chapters_Updated
-
-# Define constants for API call delay and update delay
-API_CALL_DELAY = 0.3
-UPDATE_DELAY = 0.3
 
 
 class Program:  # pylint: disable=R0903, C0115
@@ -233,10 +231,6 @@ class Program:  # pylint: disable=R0903, C0115
                     # Add the media format to the cache
                     self.cache.set(f"{manga_id}_format", media_info)
 
-                    # Sleep for API_CALL_DELAY seconds to reduce hitting the API rate limit
-                    time.sleep(API_CALL_DELAY)
-                    Logger.INFO("Slept to avoid hitting API rate limit.")
-
                 # If the format of the manga is not a novel
                 if media_info != "NOVEL":
                     Logger.DEBUG("Media info is not a novel.")
@@ -320,15 +314,24 @@ class Program:  # pylint: disable=R0903, C0115
 
         # Print the dictionary containing manga names and associated IDs
         self.app.update_terminal("\nManga Names With Associated IDs & Chapters Read:")
-        Logger.INFO("Printing manga names with associated IDs & chapters read:")
-        for manga_name, ids in manga_names_ids.items():
-            for id_info in ids:
-                manga_id, last_chapter_read, status, last_read_at = id_info
-                self.app.update_terminal(
-                    f"{manga_name}, ID: {manga_id}, Last Chapter Read: "
-                    f"{last_chapter_read}, Status: {status}, Last Read At: {last_read_at}"
-                )
-                Logger.DEBUG(f"Printed info for manga: {manga_name}")
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            # Create a list to store the futures
+            futures = []
+
+            for manga_name, ids in manga_names_ids.items():
+                for id_info in ids:
+                    # Submit the task to the executor
+                    future = executor.submit(self.process_id_info, manga_name, id_info)
+                    futures.append(future)
+
+            # Gather the results
+            messages = []
+            for future in futures:
+                messages.append(future.result())
+
+            # Update the terminal
+            self.app.update_terminal("\n".join(messages))
         self.app.update_terminal("\n\n")
 
         app.update_progress_and_status(
@@ -424,11 +427,6 @@ class Program:  # pylint: disable=R0903, C0115
                     updated = Update_Manga(manga, app, chapter_anilist, status_anilist)
                     Logger.DEBUG("Updated manga.")
 
-                    if updated:
-                        # Sleep for 0.3 seconds to reduce hitting the API rate limit
-                        time.sleep(UPDATE_DELAY)
-                        Logger.DEBUG("Slept to avoid hitting API rate limit.")
-
                     # After updating the manga, increment the counter
                     manga_updated += 1
                     Logger.DEBUG(f"Incremented manga_updated to: {manga_updated}")
@@ -518,3 +516,12 @@ class Program:  # pylint: disable=R0903, C0115
             "that was not found on anilist and manga that had multiple id's associated to it."
             "\nPlease check the 2 files to see if there is anything that you need to do manually.\n"
         )
+
+    def process_id_info(self, manga_name, id_info):
+        manga_id, last_chapter_read, status, last_read_at = id_info
+        message = (
+            f"{manga_name}, ID: {manga_id}, Last Chapter Read: "
+            f"{last_chapter_read}, Status: {status}, Last Read At: {last_read_at}"
+        )
+        Logger.DEBUG(f"Processed info for manga: {manga_name}")
+        return message

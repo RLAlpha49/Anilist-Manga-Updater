@@ -48,23 +48,27 @@ def api_request(query, app, variables=None, retries=3):
         )
         Logger.DEBUG("Sent the POST request.")
 
-        rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", 0))
-        rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", 0))
+        rate_limit_remaining = response.headers.get("X-RateLimit-Remaining")
+        rate_limit_reset = response.headers.get("X-RateLimit-Reset")
+        retry_after = response.headers.get("Retry-After")
         Logger.DEBUG(
-            f"Got the rate limit headers: {rate_limit_remaining}, {rate_limit_reset}."
+            f"Got the rate limit headers (X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After): "
+            f"{rate_limit_remaining}, {rate_limit_reset}, {retry_after}."
         )
 
         if response.status_code == 429:
             Logger.WARNING("The status code is 429. The rate limit has been hit.")
-            wait_time = rate_limit_reset - int(time.time())
-            if wait_time < 0:
+            wait_time = (
+                int(rate_limit_reset) - int(time.time())
+                if rate_limit_reset is not None
+                else 0
+            )
+            if wait_time <= 0:
                 app.update_terminal(
-                    f"\nReset time: {wait_time} Seconds\n"
-                    "Error: Rate limit reset time is in the past."
+                    f"\nRetry after: {retry_after} Seconds\n"
                 )
 
-                Logger.ERROR("The rate limit reset time is in the past.")
-                wait_time = 65
+                wait_time = 60
                 app.update_terminal(f"Waiting for {wait_time} seconds.\n")
                 Logger.INFO(f"Set the wait time to: {wait_time} seconds.")
                 time.sleep(wait_time)
@@ -73,15 +77,12 @@ def api_request(query, app, variables=None, retries=3):
                     f"\nRate limit hit. Waiting for {wait_time} seconds."
                 )
                 Logger.INFO(
-                    f"The rate limit reset time is in the future. Waiting for {wait_time} seconds."
+                    f"Rate limit hit. Waiting for {wait_time} seconds."
                 )
                 time.sleep(wait_time)
             return api_request(query, app, variables)
 
-        if rate_limit_remaining < 5:
-            app.update_terminal(
-                f"\nWarning: Only {rate_limit_remaining} requests remaining until rate limit reset."
-            )
+        if int(rate_limit_remaining) < 5 if rate_limit_remaining is not None else True:
             Logger.WARNING(
                 f"Warning: Only {rate_limit_remaining} requests remaining until rate limit reset."
             )
@@ -143,7 +144,6 @@ def Set_Access_Token(app):
             Logger.INFO("Access token found in the configuration.")
             # Get the access token
             access_token = config["ACCESS_TOKEN"]
-            Logger.DEBUG(f"Access token: {access_token}")
 
             # Define the headers for the API request
             headers = {"Authorization": f"Bearer {access_token}"}

@@ -912,6 +912,8 @@ cache_title_dict = {
     "City of Sanctuary": [118611],
     "My Three Tyrant Brothers": [133140],
     "Okiraku Ryoushu no Tanoshii Ryouchi Bouei": [137941, 137942],
+    "Nihonkoku Shoukan": [103898, 133418],
+    "I Have Nine Quadrillion Simp Gold Coins": [174177],
 }
 
 cache_format_dict = {
@@ -1581,4 +1583,8 @@ cache_format_dict = {
     "133140_format": "MANGA",
     "137941_format": "NOVEL",
     "137942_format": "MANGA",
+    "173710_format": "MANGA",
+    "103898_format": "MANGA",
+    "133418_format": "NOVEL",
+    "174177_format": "MANGA",
 }

@@ -7,6 +7,10 @@ getting the manga names and their details, and printing the manga found in the C
 # pylint: disable=C0103, W0602, W0603, E0401
 # Import necessary modules
 import pandas as pd
+
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from Utils.dictionaries import alternative_titles_dict
 from Utils.log import Logger
 from Utils.WriteToFile import Get_Alt_Titles_From_File
@@ -31,24 +35,32 @@ def Manga_Found_In_CSV(app):  # pylint: disable=R1710
     None
     """
     Logger.INFO("Function Manga_Found_In_CSV called.")
-    # Get the manga with the last chapter from the CSV file
     manga_with_last_chapter = Get_Manga_Names(app, alternative_titles_dict)
     Logger.DEBUG("Retrieved manga with last chapter from CSV file.")
 
-    try:
-        # Print the manga found in the CSV file
-        app.update_terminal("Manga found in CSV:")
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        # Create a list to store the futures
+        futures = []
+
         for title, details in manga_with_last_chapter.items():
-            last_chapter_read = details.get("last_chapter_read")
-            last_read_at = details.get("last_read_at")
-            Logger.DEBUG(f"Processing manga: {title}")
-            app.update_terminal(
-                f"Title: {title}, Last Chapter Read: {last_chapter_read}, "
-                f"Last Read At: {last_read_at}"
-            )
-    except AttributeError:
-        Logger.ERROR("AttributeError encountered. Returning None.")
-        return None
+            # Submit the task to the executor
+            future = executor.submit(process_manga_details, title, details)
+            futures.append(future)
+
+        # Gather the results
+        messages = []
+        for future in as_completed(futures):
+            messages.append(future.result())
+
+        # Update the terminal
+        app.update_terminal("\n".join(messages))
+
+
+def process_manga_details(title, details):
+    last_chapter_read = details.get("last_chapter_read")
+    last_read_at = details.get("last_read_at")
+    Logger.DEBUG(f"Processing manga: {title}")
+    return f"Title: {title}, Last Chapter Read: {last_chapter_read}, Last Read At: {last_read_at}"
 
 
 def get_alternative_title(title, alt_titles_dict):

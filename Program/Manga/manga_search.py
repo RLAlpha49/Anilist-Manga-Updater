@@ -84,7 +84,7 @@ class MangaSearch:  # pylint: disable=R0902
                 result = pymoe.manga.search.anilist.manga(self.name)
                 Logger.DEBUG(f"Search successful. Found {len(result)} results.")
                 return result[:100]
-            except (pymoe.errors.serverError, KeyError) as e:  # pylint: disable=E1101
+            except (pymoe.utils.errors.serverError, KeyError) as e:  # pylint: disable=E1101
                 # Handle server error
                 Logger.ERROR(f"Error encountered: {e}")
                 if "Too Many Requests" in str(e):
@@ -273,7 +273,7 @@ class MangaSearch:  # pylint: disable=R0902
         Parameters:
         error (Exception): The error that occurred.
         """
-        if isinstance(error, pymoe.errors.serverError):  # pylint: disable=E1101
+        if isinstance(error, pymoe.utils.errors.serverError):  # pylint: disable=E1101
             self.handle_server_error(error)
         elif isinstance(error, IndexError):
             self.app.update_terminal(f"\nNo search results found for '{self.name}'.")
@@ -315,7 +315,7 @@ class MangaSearch:  # pylint: disable=R0902
                     if not self.search_and_process_manga():
                         break
                 except (
-                    pymoe.errors.serverError,  # pylint: disable=E1101
+                    pymoe.utils.errors.serverError,  # pylint: disable=E1101
                     IndexError,
                     KeyError,
                 ) as e:

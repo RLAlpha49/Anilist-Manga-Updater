@@ -153,49 +153,39 @@ def update_variables(manga, chapter_anilist, manga_status):
         manga.status != manga_status
         and (manga.last_chapter_read <= chapter_anilist or chapter_anilist is None)
     ):
-        Logger.DEBUG(
-            "The manga status is 'PLANNING' or the manga status is not equal to the AniList status "
-            "and the last read chapter is less than or equal to the AniList chapter "
-            "or the AniList chapter is None."
-        )
-        manga.last_chapter_read = (
-            0 if manga.status == "PLANNING" else manga.last_chapter_read
-        )
-        Logger.DEBUG(f"Updated the last read chapter to: {manga.last_chapter_read}")
-        chapter_anilist = 0 if manga.status == "PLANNING" else chapter_anilist
-        Logger.DEBUG(f"Updated the AniList chapter to: {chapter_anilist}")
-
         first_variables = update_manga_variables(
             manga.id, status=manga.status, private=manga.private_bool
         )
-        Logger.DEBUG(f"Updated the first set of variables: {first_variables}")
-
         variables_list.append(first_variables)
-        Logger.DEBUG("Appended the first set of variables to the list.")
 
     elif manga.last_chapter_read > chapter_anilist or chapter_anilist is None:
-        Logger.DEBUG(
-            "The last read chapter is greater than the AniList chapter "
-            "or the AniList chapter is None."
-        )
         first_variables = update_manga_variables(
             manga.id,
             progress=((chapter_anilist if chapter_anilist is not None else 0) + 1),
             private=manga.private_bool,
         )
-        Logger.DEBUG(f"Updated the first set of variables: {first_variables}")
-        second_variables = update_manga_variables(
-            manga.id, progress=manga.last_chapter_read, private=manga.private_bool
-        )
-        Logger.DEBUG(f"Updated the second set of variables: {second_variables}")
-        third_variables = update_manga_variables(
-            manga.id, status=manga.status, private=manga.private_bool
-        )
-        Logger.DEBUG(f"Updated the third set of variables: {third_variables}")
+        second_variables = None
+        third_variables = None
 
-        variables_list.extend([first_variables, second_variables, third_variables])
-        Logger.DEBUG(
-            "Appended the first, second, and third sets of variables to the list."
+        if manga.status == "PLANNING":
+            second_variables = update_manga_variables(
+                manga.id,
+                progress=manga.last_chapter_read,
+            )
+            third_variables = update_manga_variables(manga.id, status=manga.status)
+        else:
+            second_variables = update_manga_variables(
+                manga.id,
+                status=manga.status,
+                progress=manga.last_chapter_read,
+            )
+
+        variables_list.extend(
+            [
+                v
+                for v in [first_variables, second_variables, third_variables]
+                if v is not None
+            ]
         )
 
     Logger.INFO("Returning the list of variables.")
