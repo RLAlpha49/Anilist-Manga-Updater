@@ -1,8 +1,7 @@
 # pylint: disable=C0103, C0114, E0401
 # Import necessary modules
 import time
-
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 from API.AccessAPI import Get_Format, Get_User_Manga_List, Manga
 from API.APIRequests import Set_Access_Token, needs_refresh
@@ -322,7 +321,9 @@ class Program:  # pylint: disable=R0903, C0115
             for manga_name, ids in manga_names_ids.items():
                 for id_info in ids:
                     # Submit the task to the executor
-                    future = executor.submit(self.process_id_info, manga_name, id_info)
+                    future = executor.submit(
+                        Program.process_id_info, manga_name, id_info
+                    )
                     futures.append(future)
 
             # Gather the results
@@ -424,7 +425,7 @@ class Program:  # pylint: disable=R0903, C0115
                     )
                     Logger.DEBUG(f"Created Manga instance: {manga}")
 
-                    updated = Update_Manga(manga, app, chapter_anilist, status_anilist)
+                    Update_Manga(manga, app, chapter_anilist, status_anilist)
                     Logger.DEBUG("Updated manga.")
 
                     # After updating the manga, increment the counter
@@ -517,7 +518,18 @@ class Program:  # pylint: disable=R0903, C0115
             "\nPlease check the 2 files to see if there is anything that you need to do manually.\n"
         )
 
-    def process_id_info(self, manga_name, id_info):
+    @staticmethod
+    def process_id_info(manga_name, id_info):
+        """
+        Process the ID information of a manga.
+
+        Args:
+        manga_name (str): The name of the manga.
+        id_info (tuple): A tuple containing the manga ID, last chapter read, status, and last read date.
+
+        Returns:
+        str: A formatted string containing the processed information.
+        """
         manga_id, last_chapter_read, status, last_read_at = id_info
         message = (
             f"{manga_name}, ID: {manga_id}, Last Chapter Read: "

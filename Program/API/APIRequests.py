@@ -64,9 +64,7 @@ def api_request(query, app, variables=None, retries=3):
                 else 0
             )
             if wait_time <= 0:
-                app.update_terminal(
-                    f"\nRetry after: {retry_after} Seconds\n"
-                )
+                app.update_terminal(f"\nRetry after: {retry_after} Seconds\n")
 
                 wait_time = 60
                 app.update_terminal(f"Waiting for {wait_time} seconds.\n")
@@ -76,9 +74,7 @@ def api_request(query, app, variables=None, retries=3):
                 app.update_terminal(
                     f"\nRate limit hit. Waiting for {wait_time} seconds."
                 )
-                Logger.INFO(
-                    f"Rate limit hit. Waiting for {wait_time} seconds."
-                )
+                Logger.INFO(f"Rate limit hit. Waiting for {wait_time} seconds.")
                 time.sleep(wait_time)
             return api_request(query, app, variables)
 

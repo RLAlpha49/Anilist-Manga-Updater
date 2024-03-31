@@ -84,7 +84,10 @@ class MangaSearch:  # pylint: disable=R0902
                 result = pymoe.manga.search.anilist.manga(self.name)
                 Logger.DEBUG(f"Search successful. Found {len(result)} results.")
                 return result[:100]
-            except (pymoe.utils.errors.serverError, KeyError) as e:  # pylint: disable=E1101
+            except (
+                pymoe.utils.errors.serverError,
+                KeyError,
+            ) as e:  # pylint: disable=E1101
                 # Handle server error
                 Logger.ERROR(f"Error encountered: {e}")
                 if "Too Many Requests" in str(e):

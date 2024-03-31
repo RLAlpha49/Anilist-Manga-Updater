@@ -6,10 +6,9 @@ getting the manga names and their details, and printing the manga found in the C
 
 # pylint: disable=C0103, W0602, W0603, E0401
 # Import necessary modules
-import pandas as pd
-
-import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import pandas as pd
 
 from Utils.dictionaries import alternative_titles_dict
 from Utils.log import Logger
@@ -57,6 +56,16 @@ def Manga_Found_In_CSV(app):  # pylint: disable=R1710
 
 
 def process_manga_details(title, details):
+    """
+    Process the details of a manga.
+
+    Args:
+    title (str): The title of the manga.
+    details (dict): A dictionary containing details about the manga.
+
+    Returns:
+    str: A formatted string containing the processed information.
+    """
     last_chapter_read = details.get("last_chapter_read")
     last_read_at = details.get("last_read_at")
     Logger.DEBUG(f"Processing manga: {title}")
