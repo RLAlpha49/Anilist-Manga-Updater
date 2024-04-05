@@ -41,21 +41,15 @@ def Get_User(app):
     int: The user ID if the request was successful and the user ID is not None, otherwise None.
     """
     Logger.INFO("Function Get_User called.")
-    # Define the query to get the user ID
     query = Queries.VIEWER
-    Logger.DEBUG("Defined the query to get the user ID.")
-    # Send the API request
     data = api_request(query, app)
-    Logger.DEBUG("Sent the API request.")
-    # If the request was successful
+
     if data:
         Logger.INFO("The request was successful.")
-        # Get the user ID from the response
         userId_value = data.get("data", {}).get("Viewer", {}).get("id")
         Logger.DEBUG(f"Got the user ID from the response: {userId_value}.")
-        # Return the user ID, or None if the user ID is None
         return userId_value if userId_value else None
-    # If the request was not successful
+
     Logger.WARNING("The request was not successful.")
     return None
 
@@ -72,60 +66,39 @@ def Get_User_Manga_List(app):
     'progress', and 'status' keys.
     """
     Logger.INFO("Function Get_User_Manga_List called.")
-    # Define the query to get the user's manga list
     query = Queries.MANGALIST
-    Logger.DEBUG("Defined the query to get the user's manga list.")
-    # Initialize the chunk number
     chunk = 0
-    Logger.DEBUG("Initialized the chunk number.")
-    # Define the number of entries per chunk
     per_chunk = 500
-    Logger.DEBUG("Defined the number of entries per chunk.")
-    # Initialize the list of manga
     manga_list = []
-    Logger.DEBUG("Initialized the list of manga.")
-    # Get the user ID
     user_Id = Get_User(app)
-    Logger.DEBUG(f"Got the user ID: {user_Id}.")
-    # Loop indefinitely
+
     while True:
-        Logger.DEBUG("Starting a new loop iteration.")
-        # Define the variables for the query
         variables = {"userId": user_Id, "chunk": chunk, "perChunk": per_chunk}
-        Logger.DEBUG("Defined the variables for the query.")
-        # Send the API request
+        Logger.DEBUG(f"Sending API request with variables: {variables}")
         data = api_request(query, app, variables)
-        Logger.DEBUG("Sent the API request.")
-        # If the request was successful
+
         if data:
-            Logger.INFO("The request was successful.")
-            # Get the list of manga from the response
             chunk_manga_list = (
                 data.get("data", {}).get("MediaListCollection", {}).get("lists", [])
             )
-            Logger.DEBUG(
-                f"Got the list of manga from the response: {chunk_manga_list}."
-            )
-            # If the chunk is empty, break the loop
+
             if not chunk_manga_list:
-                Logger.INFO("The chunk is empty. Breaking the loop.")
+                Logger.DEBUG("No more chunks in manga list. Breaking the loop.")
                 break
-            # Flatten the list and add it to the manga list
-            for sublist in chunk_manga_list:
-                for entry in sublist.get("entries", []):
-                    manga_list.append(entry)
+
+            manga_list += [
+                entry
+                for sublist in chunk_manga_list
+                for entry in sublist.get("entries", [])
+            ]
             Logger.DEBUG(
-                f"Added the entries from the chunk to the manga list: {manga_list}."
+                f"Added chunk to manga list. Current list length: {len(manga_list)}"
             )
-            # Increment the chunk number
             chunk += 1
-            Logger.DEBUG(f"Incremented the chunk number to: {chunk}.")
         else:
-            # If the request was not successful, break the loop
-            Logger.WARNING("The request was not successful. Breaking the loop.")
+            Logger.WARNING("API request returned no data. Breaking the loop.")
             break
-    # Return the manga list
-    Logger.INFO("Returning the manga list.")
+
     return manga_list
 
 
@@ -145,11 +118,7 @@ def Get_Format(media_id, app):
     Logger.INFO(f"Function Get_Format called with media_id: {media_id}")
     # Define the query to get the format of the manga
     query = Queries.FORMAT
-    Logger.DEBUG("Defined the query to get the format of the manga.")
-    # Define the variables for the query
     variables = {"id": media_id}
-    Logger.DEBUG("Defined the variables for the query.")
-    # Send the API request
     data = api_request(query, app, variables)
     Logger.DEBUG("Sent the API request.")
     # If the request was successful
@@ -165,7 +134,7 @@ def Get_Format(media_id, app):
     return None
 
 
-class Manga:  # pylint: disable=R0903
+class Manga:  # pylint: disable=R0913
     """
     Represents a Manga with its details.
 
@@ -189,20 +158,12 @@ class Manga:  # pylint: disable=R0903
         last_read_at,
         months,
     ):
-        Logger.INFO("Initializing a new Manga object.")
         self.name = name
-        Logger.DEBUG(f"Set the name attribute to: {name}.")
         self.id = manga_id
-        Logger.DEBUG(f"Set the id attribute to: {manga_id}.")
         self.last_chapter_read = last_chapter_read
-        Logger.DEBUG(f"Set the last_chapter_read attribute to: {last_chapter_read}.")
         self.private_bool = (
             True if private_bool == "Yes" else False if private_bool == "No" else None
         )
-        Logger.DEBUG(f"Set the private_bool attribute to: {self.private_bool}.")
         self.status = status
-        Logger.DEBUG(f"Set the status attribute to: {status}.")
         self.last_read_at = datetime.strptime(last_read_at, "%Y-%m-%d %H:%M:%S UTC")
-        Logger.DEBUG(f"Set the last_read_at attribute to: {self.last_read_at}.")
         self.months = months
-        Logger.DEBUG(f"Set the months attribute to: {months}.")

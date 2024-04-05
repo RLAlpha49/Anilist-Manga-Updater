@@ -288,7 +288,7 @@ class MangaSearch:  # pylint: disable=R0902
                 f"\nFailed to get data for '{self.name}', retrying..."
             )
             Logger.ERROR(f"Failed to get data for '{self.name}', retrying.")
-            self.retry_count += 1
+            self.retry_count += 1 if "Too Many Requests" in str(error) else 0
             Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
 
     def get_manga_id(self):
@@ -336,7 +336,7 @@ class MangaSearch:  # pylint: disable=R0902
                 self.print_details()
                 self.handle_no_ids_found()
                 if self.id_list:
-                    result = self.id_list
+                    result = [id for id in self.id_list]
                     Logger.DEBUG(f"Got list of IDs: {result}.")
                     # Add the manga ID to the cache
                     self.cache.set(self.name, result)

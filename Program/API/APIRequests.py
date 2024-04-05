@@ -21,12 +21,6 @@ def api_request(query, app, variables=None, retries=3):
     """
     Send a POST request to the API endpoint and handle rate limits.
 
-    This function sends a POST request to the API endpoint with the given query and variables.
-    It also checks the rate limit headers and waits if the rate limit has been hit.
-    If the rate limit is close to being hit, it prints a warning.
-    If the request is successful, it returns the JSON response.
-    If the request is not successful, it prints an error message and returns None.
-
     Parameters:
         query (str): The GraphQL query to send.
         app: The application object used to update the terminal and progress.
@@ -39,79 +33,47 @@ def api_request(query, app, variables=None, retries=3):
     """
     Logger.INFO("Function api_request called.")
     for _ in range(retries):
-        Logger.DEBUG("Starting a new loop iteration.")
         response = requests.post(
             url,
             json={"query": query, "variables": variables},
             headers=headers,
             timeout=10,
         )
-        Logger.DEBUG("Sent the POST request.")
-
-        rate_limit_remaining = response.headers.get("X-RateLimit-Remaining")
-        rate_limit_reset = response.headers.get("X-RateLimit-Reset")
-        retry_after = response.headers.get("Retry-After")
-        Logger.DEBUG(
-            f"Got the rate limit headers (X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After): "
-            f"{rate_limit_remaining}, {rate_limit_reset}, {retry_after}."
-        )
 
         if response.status_code == 429:
-            Logger.WARNING("The status code is 429. The rate limit has been hit.")
-            wait_time = (
-                int(rate_limit_reset) - int(time.time())
-                if rate_limit_reset is not None
-                else 0
+            wait_time = int(response.headers.get("X-RateLimit-Reset", 0)) - int(
+                time.time()
             )
-            if wait_time <= 0:
-                app.update_terminal(f"\nRetry after: {retry_after} Seconds\n")
-
-                wait_time = 60
-                app.update_terminal(f"Waiting for {wait_time} seconds.\n")
-                Logger.INFO(f"Set the wait time to: {wait_time} seconds.")
-                time.sleep(wait_time)
-            else:
-                app.update_terminal(
-                    f"\nRate limit hit. Waiting for {wait_time} seconds."
-                )
-                Logger.INFO(f"Rate limit hit. Waiting for {wait_time} seconds.")
-                time.sleep(wait_time)
+            wait_time = max(wait_time, 60)
+            Logger.WARNING(f"Rate limit hit. Waiting for {wait_time} seconds.")
+            app.update_terminal(f"\nRate limit hit. Waiting for {wait_time} seconds.")
+            time.sleep(wait_time)
             return api_request(query, app, variables)
 
-        if int(rate_limit_remaining) < 5 if rate_limit_remaining is not None else True:
-            Logger.WARNING(
-                f"Warning: Only {rate_limit_remaining} requests remaining until rate limit reset."
-            )
-
         if response.status_code == 200:
-            Logger.INFO("The status code is 200. The request was successful.")
+            Logger.INFO("Request successful.")
             return response.json()
 
         if response.status_code == 500:
+            Logger.ERROR(
+                f"Server error, retrying request. Status code: {response.status_code}"
+            )
             app.update_terminal(
                 f"\nServer error, retrying request. Status code: {response.status_code}"
             )
-            Logger.ERROR("The status code is 500. Server error, retrying request.")
             time.sleep(2)
             continue
 
+        Logger.ERROR(f"Failed to retrieve data. Status code: {response.status_code}")
         app.update_terminal(
             f"\nFailed to retrieve data. Status code: {response.status_code}\n"
             "Assumming title is not on list\n"
         )
-        Logger.ERROR(
-            f"Failed to retrieve data. Status code: {response.status_code}. "
-            f"Assuming title is not on list."
-        )
         return None
 
+    Logger.ERROR(f"Failed to retrieve data after {retries} retries.")
     app.update_terminal(
-        f"\nFailed to retrieve data after {retries} retries. Status code: 500\n"
-        "Assumming title is not on list\n"
-    )
-    Logger.ERROR(
-        f"Failed to retrieve data after {retries} retries. "
-        f"Status code: 500. Assuming title is not on list."
+        f"\nFailed to retrieve data after {retries} retries.\nAssumming title is not on list\n"
     )
     return None
 

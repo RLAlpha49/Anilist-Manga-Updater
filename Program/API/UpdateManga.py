@@ -126,84 +126,71 @@ def update_status(manga):
     return status_mapping.get(manga.status.lower(), manga.status)
 
 
+def update_status(manga):
+    """
+    Updates the status of the given manga.
+
+    Args:
+    manga: The manga object whose status is to be updated. The manga object should
+    have 'status', 'months', and 'last_read_at' attributes.
+
+    Returns:
+    str: The updated status of the manga.
+    """
+    return (
+        "PAUSED"
+        if manga.status != "plan_to_read"
+        and int(manga.months) != 0
+        and datetime.now() - manga.last_read_at
+        >= timedelta(days=30 * int(manga.months))
+        else status_mapping.get(manga.status.lower(), manga.status)
+    )
+
+
 def update_variables(manga, chapter_anilist, manga_status):
     """
     Updates the variables for the given manga.
 
-    This function checks the status of the manga and its last read chapter against
-    the status and chapter from Anilist. Depending on the conditions, it updates the
-    variables accordingly and appends them to a list.
-
     Args:
-    manga: The manga object whose variables are to be updated. The manga object
-    should have 'status', 'last_chapter_read', and 'private_bool' attributes.
+    manga: The manga object whose variables are to be updated. The manga object should
+    have 'status', 'last_chapter_read', 'id', and 'private_bool' attributes.
     chapter_anilist: The current chapter of the manga from Anilist.
-    manga_status: The current status of the manga.
+    manga_status: The current status of the manga in the user's list.
 
     Returns:
-    list: A list of updated variables for the manga.
+    list: A list of dictionaries, each containing the variables for the mutation request.
     """
-    Logger.INFO("Function update_variables called.")
     variables_list = []
-    Logger.DEBUG(f"Manga: {manga.name} (status: {manga_status})")
-
     if manga_status == "COMPLETED":
-        Logger.DEBUG("The current manga status is 'COMPLETED'. Skipping status update.")
+        pass
     elif manga.status == "PLANNING" or (
         manga.status != manga_status
         and (manga.last_chapter_read <= chapter_anilist or chapter_anilist is None)
     ):
-        Logger.DEBUG(
-            "The manga status is 'PLANNING' or the manga status is not equal to the AniList status "
-            "and the last read chapter is less than or equal to the AniList chapter "
-            "or the AniList chapter is None."
-        )
         manga.last_chapter_read = (
             0 if manga.status == "PLANNING" else manga.last_chapter_read
         )
-        Logger.DEBUG(f"Updated the last read chapter to: {manga.last_chapter_read}")
         chapter_anilist = 0 if manga.status == "PLANNING" else chapter_anilist
-        Logger.DEBUG(f"Updated the AniList chapter to: {chapter_anilist}")
-
         first_variables = update_manga_variables(
             manga.id, status=manga.status, private=manga.private_bool
         )
-        Logger.DEBUG(f"Updated the first set of variables: {first_variables}")
-
         variables_list.append(first_variables)
-        Logger.DEBUG("Appended the first set of variables to the list.")
-
     elif manga.last_chapter_read > chapter_anilist or chapter_anilist is None:
-        Logger.DEBUG(
-            "The last read chapter is greater than the AniList chapter "
-            "or the AniList chapter is None."
-        )
         first_variables = update_manga_variables(
             manga.id,
             progress=((chapter_anilist if chapter_anilist is not None else 0) + 1),
             private=manga.private_bool,
         )
         third_variables = None
-
-        Logger.DEBUG(f"Updated the first set of variables: {first_variables}")
-
         if manga.status == "PLANNING":
             second_variables = update_manga_variables(
-                manga.id,
-                progress=manga.last_chapter_read,
+                manga.id, progress=manga.last_chapter_read
             )
-            Logger.DEBUG(f"Updated the second set of variables: {second_variables}")
-
             third_variables = update_manga_variables(manga.id, status=manga.status)
-            Logger.DEBUG(f"Updated the third set of variables: {third_variables}")
         else:
             second_variables = update_manga_variables(
-                manga.id,
-                status=manga.status,
-                progress=manga.last_chapter_read,
+                manga.id, status=manga.status, progress=manga.last_chapter_read
             )
-            Logger.DEBUG(f"Updated the second set of variables: {second_variables}")
-
         variables_list.extend(
             [
                 v
@@ -211,11 +198,6 @@ def update_variables(manga, chapter_anilist, manga_status):
                 if v is not None
             ]
         )
-        Logger.DEBUG(
-            "Appended the first, second, and third sets of variables to the list."
-        )
-
-    Logger.INFO("Returning the list of variables.")
     return variables_list
 
 

@@ -66,18 +66,22 @@ class Logger:
             level=logging.DEBUG, format="%(asctime)s, %(message)s", handlers=handlers
         )
 
-        # Get a list of all log files
-        log_files = glob.glob("logs/*.log")
+        logging.getLogger().handlers = handlers
+        Logger.manage_log_files(max_logs)
 
-        # Sort the log files by creation time
+    @staticmethod
+    def manage_log_files(max_logs):
+        """
+        Manages the number of log files in the logs directory.
+
+        Parameters:
+        max_logs (int): The maximum number of log files to keep.
+        """
+        log_files = glob.glob("logs/*.log")
         log_files.sort(key=os.path.getctime)
 
-        # If the number of log files exceeds the maximum, delete the oldest ones
         while len(log_files) > max_logs:
             os.remove(log_files.pop(0))
-
-        # Apply the handlers
-        logging.getLogger().handlers = handlers
 
     @staticmethod
     def INFO(message: str):
@@ -140,28 +144,23 @@ class Logger:
         """
         # Get the current frame
         frame = inspect.currentframe()
-        if frame is not None:
-            # Get the previous frame in the stack, otherwise it would be this function
-            frame = frame.f_back
+        for _ in range(3):
             if frame is not None:
                 frame = frame.f_back
-                if frame is not None:
-                    func = frame.f_code
 
-                    # Prepare the log message
-                    log_message = (
-                        f"Level: {logging.getLevelName(level)}, "
-                        f"File: ..\\{os.path.relpath(func.co_filename, start=MAIN_DIR)}, "
-                        f"Function: {func.co_name}, Line: {frame.f_lineno}, "
-                        f"Message: {message}"
-                    )
+        if frame is not None:
+            func = frame.f_code
 
-                    # Log the message at the appropriate level
-                    logging.log(level, log_message)
-                else:
-                    logging.error("Error: Could not get the previous frame.")
-            else:
-                logging.error("Error: Could not get the previous frame.")
+            # Prepare the log message
+            log_message = (
+                f"Level: {logging.getLevelName(level)}, "
+                f"File: ..\\{os.path.relpath(func.co_filename, start=MAIN_DIR)}, "
+                f"Function: {func.co_name}, Line: {frame.f_lineno}, "
+                f"Message: {message}"
+            )
+
+            # Log the message at the appropriate level
+            logging.log(level, log_message)
         else:
             logging.error("Error: Could not get the current frame.")
 

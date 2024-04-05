@@ -143,154 +143,122 @@ def manage_files(dir_path, file_type):
         Logger.INFO("No files to delete.")
 
 
-# Function to write not found manga names to a file
-def Write_Not_Found(not_found_manga_names):
+def write_to_file(filename, data, formatter):
     """
-    Writes the names of not found manga to a file.
+    Writes data to a file.
 
-    This function checks if the directory exists, if not, it creates it. Then it
-    opens a file to write the names of not found manga. If there are no not found
-    manga names, it writes a message to the file. Otherwise, it writes the manga
-    name, last chapter read, and a search link for each not found manga. After
-    writing to the file, it manages the files in the directory.
+    Parameters:
+    filename (str): The name of the file to write to.
+    data (list or dict): The data to write to the file.
+    formatter (function): A function that formats the data into a string.
+
+    Returns:
+    None
+    """
+    Logger.INFO(f"Function write_to_file called with filename: {filename}")
+    timestamp = create_directory_and_get_timestamp(directory)
+    # Open a file to write
+    with open(f"{directory}/{filename}_{timestamp}.txt", "w", encoding="utf-8") as file:
+        Logger.DEBUG(f"Writing to file: {directory}/{filename}_{timestamp}.txt")
+        # Write formatted data to the file
+        file.writelines(formatter(data))
+    Logger.INFO("Finished writing to file.")
+    # Manage files in the directory
+    manage_files(directory, filename)
+    Logger.INFO("Managed files in directory.")
+
+
+def formatter_not_found(not_found_manga_names):
+    """
+    Formats not found manga names for writing to a file.
 
     Parameters:
     not_found_manga_names (list): A list of tuples, where each tuple contains a
     manga name and the last chapter read.
 
     Returns:
-    None
+    list: A list of strings formatted for writing to a file.
     """
-    Logger.INFO("Function Write_Not_Found called.")
-    timestamp = create_directory_and_get_timestamp(directory)
-    Logger.DEBUG(f"Current timestamp: {timestamp}")
-    # Open a file to write
-    with open(
-        f"{directory}/not_found_{timestamp}.txt", "w", encoding="utf-8"
-    ) as not_found_file:
-        Logger.DEBUG(f"Writing to file: {directory}/not_found_{timestamp}.txt")
-        # If no not found manga names, write message to file
-        if not not_found_manga_names:
-            Logger.INFO("No Manga Names with No IDs Found")
-            not_found_file.write("Manga Names with No IDs Found:\nNo Manga Not Found")
-        else:
-            Logger.INFO("Writing Manga Names with No IDs Found")
-            # Write header to file
-            not_found_file.write("Manga Names with No IDs Found:\n")
-            # Loop through each not found manga name
-            for name, last_chapter_read in not_found_manga_names:
-                Logger.DEBUG(f"Writing data for manga: {name}")
-                # Create search link for the manga name
-                search_link = (
-                    f"https://anilist.co/search/manga?search={name.replace(' ', '%20')}"
-                )
-                # Write manga name, last chapter read, and search link to file
-                not_found_file.write(
-                    f"{name} - Last Chapter Read: {last_chapter_read}, Search Link: {search_link}\n"
-                )
-    Logger.INFO("Finished writing to file.")
-    # Manage files in the directory
-    manage_files(directory, "not_found")
-    Logger.INFO("Managed files in directory.")
+    # Initialize lines list with header
+    lines = ["Manga Names with No IDs Found:\n"]
+    # If no not found manga names, append message to lines
+    if not not_found_manga_names:
+        Logger.INFO("No Manga Names with No IDs Found")
+        lines.append("No Manga Names with No IDs Found\n")
+    else:
+        Logger.INFO("Writing Manga Names with No IDs Found")
+        # Loop through each not found manga name
+        for name, last_chapter_read in not_found_manga_names:
+            Logger.DEBUG(f"Writing data for manga: {name}")
+            # Create search link for the manga name
+            search_link = (
+                f"https://anilist.co/search/manga?search={name.replace(' ', '%20')}"
+            )
+            # Write manga name, last chapter read, and search link to file
+            lines.append(
+                f"{name} - Last Chapter Read: {last_chapter_read}, Search Link: {search_link}\n"
+            )
+    return lines
 
 
-# Function to write multiple IDs to a file
-def Write_Multiple_IDs(multiple_id_manga_names):
+def formatter_multiple_ids(multiple_id_manga_names):
     """
-    Writes the names of manga with multiple IDs to a file.
-
-    This function checks if the directory exists, if not, it creates it. Then it
-    opens a file to write the names of manga with multiple IDs. If there are no
-    manga with multiple IDs, it writes a message to the file. Otherwise, it writes
-    the manga name, IDs, and last chapter read for each manga with multiple IDs.
-    After writing to the file, it manages the files in the directory.
+    Formats manga names with multiple IDs for writing to a file.
 
     Parameters:
     multiple_id_manga_names (dict): A dictionary where keys are manga names and
     values are lists of tuples, each containing an ID and the last chapter read.
 
     Returns:
-    None
+    list: A list of strings formatted for writing to a file.
     """
-    Logger.INFO("Function Write_Multiple_IDs called.")
-    timestamp = create_directory_and_get_timestamp(directory)
-    # Open a file to write
-    with open(
-        f"{directory}/multiple_ids_{timestamp}.txt", "w", encoding="utf-8"
-    ) as multiple_file:
-        Logger.DEBUG(f"Writing to file: {directory}/multiple_ids_{timestamp}.txt")
-        # Initialize lines list with header
-        lines = ["Duplicate Manga Names and IDs:\n"]
-        # If no multiple ID manga names, append message to lines
-        if not multiple_id_manga_names:
-            Logger.INFO("No Manga Names with Multiple IDs Found")
-            lines.append("No Manga Names with Multiple IDs Found\n")
-        else:
-            Logger.INFO("Writing Manga Names with Multiple IDs")
-            # Loop through each manga name and its IDs
-            for manga_name, ids in multiple_id_manga_names.items():
-                Logger.DEBUG(f"Writing data for manga: {manga_name}")
-                # Get actual IDs from the tuples
-                actual_ids = [id_tuple[0] for id_tuple in ids]
-                # Get last chapter read if available, else set to "Unknown"
-                last_chapter_read = ids[0][1] if len(ids[0]) > 1 else "Unknown"
-                # Append manga name, IDs, and last chapter read to lines
-                formatted_ids = ", ".join(map(str, actual_ids))
-                lines.append(
-                    f"{manga_name} ID's: {formatted_ids}, "
-                    f"Last Chapter Read: {last_chapter_read}\n"
-                )
-                # Append Anilist URLs for each ID to lines
-                lines.extend(
-                    [
-                        f"Anilist URL: https://anilist.co/manga/{manga_id}\n"
-                        for manga_id in actual_ids
-                    ]
-                )
-                # Append a newline to separate each manga
-                lines.append("\n")
-        # Write all lines to the file
-        multiple_file.writelines(lines)
-    Logger.INFO("Finished writing to file.")
-    # Manage files in the directory
-    manage_files(directory, "multiple_ids")
-    Logger.INFO("Managed files in directory.")
+    # Initialize lines list with header
+    lines = ["Duplicate Manga Names and IDs:\n"]
+    # If no multiple ID manga names, append message to lines
+    if not multiple_id_manga_names:
+        lines.append("No Manga Names with Multiple IDs Found\n")
+    else:
+        # Loop through each manga name and its IDs
+        for manga_name, ids in multiple_id_manga_names.items():
+            # Get actual IDs from the tuples
+            actual_ids = [id_tuple[0] for id_tuple in ids]
+            # Get last chapter read if available, else set to "Unknown"
+            last_chapter_read = ids[0][1] if len(ids[0]) > 1 else "Unknown"
+            # Append manga name, IDs, and last chapter read to lines
+            formatted_ids = ", ".join(map(str, actual_ids))
+            lines.append(
+                f"{manga_name} ID's: {formatted_ids}, "
+                f"Last Chapter Read: {last_chapter_read}\n"
+            )
+            # Append Anilist URLs for each ID to lines
+            lines.extend(
+                [
+                    f"Anilist URL: https://anilist.co/manga/{manga_id}\n"
+                    for manga_id in actual_ids
+                ]
+            )
+            # Append a newline to separate each manga
+            lines.append("\n")
+    return lines
 
-
-# Function to write the number of chapters updated to a file
-def Write_Chapters_Updated(chapters_updated):
+def write_chapters_updated_to_file(filename, data):
     """
-    Writes the number of chapters updated to a file.
-
-    This function checks if the directory exists, if not, it creates it. Then it
-    opens a file to append the current timestamp and the number of chapters updated.
+    Appends data to a chapters updated file.
 
     Parameters:
-    chapters_updated (int): The number of chapters updated.
+    filename (str): The name of the file to append to.
+    data (int): The number of updated chapters.
+    formatter (function): A function that formats the data into a string.
 
     Returns:
     None
     """
-    Logger.INFO("Function Write_Chapters_Updated called.")
-    # Define the directory path
-    dir_path = "Chapters-Updated"
-    # If the directory does not exist, create it
-    if not os.path.isdir(dir_path):
-        Logger.WARNING(f"Directory {dir_path} does not exist. Creating it now.")
-        os.makedirs(dir_path)
-
-    # Get the current timestamp
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    Logger.DEBUG(f"Current timestamp: {timestamp}")
-    # Define the file path
-    file_path = f"{dir_path}/chapters_updated.txt"
-    # Open the file in append mode
-    with open(file_path, "a+", encoding="utf-8") as chapters_updated_file:
-        Logger.DEBUG(f"Writing to file: {file_path}")
-        # Write the timestamp and the number of chapters updated to the file
-        chapters_updated_file.write(
-            f"\n{timestamp} | Chapters Updated: {chapters_updated}"
-            if os.path.exists(file_path)
-            else f"{timestamp} | Chapters Updated: {chapters_updated}"
-        )
-    Logger.INFO("Finished writing to file.")
+    Logger.INFO(f"Function write_chapters_updated_to_file called with filename: {filename}")
+    # Check if directory exists, if not, create it
+    create_directory_if_not_exists('Chapters-Updated')
+    # Open a file to append
+    with open(f"Chapters-Updated/{filename}.txt", "a", encoding="utf-8") as file:
+        Logger.DEBUG(f"Appending to file: Chapters-Updated/{filename}.txt")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        file.write(f"{timestamp} | Chapters Updated: {data}\n")
+    Logger.INFO("Finished appending to file.")

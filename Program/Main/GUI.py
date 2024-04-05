@@ -85,7 +85,7 @@ class AccessTokenThread(threading.Thread):
         Run the Get_Access_Token function in the thread.
         """
         Logger.INFO("AccessTokenThread started.")
-        Get_Access_Token(self, app)  # pylint: disable=E0601
+        Get_Access_Token(app)  # pylint: disable=E0601
         Logger.INFO("AccessTokenThread finished.")
 
     def stop_thread(self):
