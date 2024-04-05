@@ -84,6 +84,7 @@ def Update_Manga(manga, app, chapter_anilist, manga_status):
     Logger.DEBUG("Updated the progress of the manga.")
     return updated
 
+
 def update_status(manga):
     """
     Updates the status of the given manga.
@@ -128,9 +129,11 @@ def update_variables(manga, chapter_anilist, manga_status):
         manga.last_chapter_read = (
             0 if manga.status == "PLANNING" else manga.last_chapter_read
         )
-        chapter_anilist = 0 if manga.status == "PLANNING" else chapter_anilist
         first_variables = update_manga_variables(
-            manga.id, status=manga.status, private=manga.private_bool
+            manga.id,
+            status=manga.status,
+            progress=(0 if manga.status == "PLANNING" else chapter_anilist),
+            private=manga.private_bool,
         )
         variables_list.append(first_variables)
     elif manga.last_chapter_read > chapter_anilist or chapter_anilist is None:
