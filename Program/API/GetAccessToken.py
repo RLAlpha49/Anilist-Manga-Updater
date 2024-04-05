@@ -17,15 +17,14 @@ import platform
 import time
 import webbrowser
 
-from Utils.log import Logger  # pylint: disable=E0401
-
 # Define the authorization URL for AniList OAuth
 authorization_url = "https://anilist.co/api/v2/oauth/authorize"
 
 
 def Get_Access_Token(app):
     """
-    Retrieves the AniList API access token from environment variables or opens the authorization URL in the web browser.
+    Retrieves the AniList API access token from environment variables
+    or opens the authorization URL in the web browser.
 
     Parameters:
     app (object): The application object.

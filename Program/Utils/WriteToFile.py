@@ -241,6 +241,7 @@ def formatter_multiple_ids(multiple_id_manga_names):
             lines.append("\n")
     return lines
 
+
 def write_chapters_updated_to_file(filename, data):
     """
     Appends data to a chapters updated file.
@@ -253,9 +254,11 @@ def write_chapters_updated_to_file(filename, data):
     Returns:
     None
     """
-    Logger.INFO(f"Function write_chapters_updated_to_file called with filename: {filename}")
+    Logger.INFO(
+        f"Function write_chapters_updated_to_file called with filename: {filename}"
+    )
     # Check if directory exists, if not, create it
-    create_directory_if_not_exists('Chapters-Updated')
+    create_directory_if_not_exists("Chapters-Updated")
     # Open a file to append
     with open(f"Chapters-Updated/{filename}.txt", "a", encoding="utf-8") as file:
         Logger.DEBUG(f"Appending to file: Chapters-Updated/{filename}.txt")

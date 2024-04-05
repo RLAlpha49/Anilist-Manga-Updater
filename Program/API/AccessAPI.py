@@ -134,7 +134,7 @@ def Get_Format(media_id, app):
     return None
 
 
-class Manga:  # pylint: disable=R0913
+class Manga:  # pylint: disable=R0903
     """
     Represents a Manga with its details.
 

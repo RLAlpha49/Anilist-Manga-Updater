@@ -84,48 +84,6 @@ def Update_Manga(manga, app, chapter_anilist, manga_status):
     Logger.DEBUG("Updated the progress of the manga.")
     return updated
 
-
-def update_status(manga):
-    """
-    Updates the status of the given manga.
-
-    This function checks the current status of the manga. If the status is not
-    "plan_to_read" and the last read date is more than a certain number of months
-    ago, the status is updated to "PAUSED". Otherwise, the status is mapped using
-    the status_mapping dictionary.
-
-    Args:
-    manga: The manga object whose status is to be updated. The manga object should
-    have 'status', 'months', and 'last_read_at' attributes.
-
-    Returns:
-    str: The updated status of the manga.
-    """
-    Logger.INFO("Function update_status called.")
-    if manga.status != "plan_to_read":
-        Logger.DEBUG("The manga status is not 'plan_to_read'.")
-        # Check if last_read_at is more than # months ago
-        if int(manga.months) != 0:
-            Logger.DEBUG("The manga has been read in the past.")
-            if datetime.now() - manga.last_read_at >= timedelta(
-                days=30 * int(manga.months)
-            ):
-                Logger.INFO(
-                    "The last read date is more than a certain number "
-                    "of months ago. Updating the status to 'PAUSED'."
-                )
-                return "PAUSED"
-            Logger.DEBUG(
-                "The last read date is not more than a certain number "
-                "of months ago. Mapping the status."
-            )
-            return status_mapping.get(manga.status.lower(), manga.status)
-        Logger.DEBUG("The manga has not been read in the past. Mapping the status.")
-        return status_mapping.get(manga.status.lower(), manga.status)
-    Logger.DEBUG("The manga status is 'plan_to_read'. Mapping the status.")
-    return status_mapping.get(manga.status.lower(), manga.status)
-
-
 def update_status(manga):
     """
     Updates the status of the given manga.

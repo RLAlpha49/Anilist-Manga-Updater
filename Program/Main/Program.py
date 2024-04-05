@@ -480,7 +480,7 @@ class Program:  # pylint: disable=R0903, C0115
         Logger.INFO(f"\nTotal chapters updated: {chapters_updated}")
         self.app.update_terminal(f"\nTotal chapters updated: {chapters_updated}")
         # Write the number of chapters updated to a file
-        write_chapters_updated_to_file('chapters_updated', chapters_updated)
+        write_chapters_updated_to_file("chapters_updated", chapters_updated)
 
         time.sleep(0.3)
 

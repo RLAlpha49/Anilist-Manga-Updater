@@ -5,9 +5,9 @@ This is the titles module. This module is responsible for the list of alternativ
 # pylint: disable=C0301, C0302
 # flake8: noqa: E501
 
+import json
 import os
 import sys
-import json
 
 # Define the base path
 base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))

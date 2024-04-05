@@ -19,7 +19,7 @@ Functions:
 import string
 
 from Utils.log import Logger
-from Utils.WriteToFile import write_to_file, formatter_multiple_ids, formatter_not_found
+from Utils.WriteToFile import formatter_multiple_ids, formatter_not_found, write_to_file
 
 # Initialize an empty list to store names of manga that are not found
 no_manga_found = []
@@ -130,7 +130,7 @@ def Clean_Manga_IDs(manga_names_ids, app):
         "Writing multiple ID's file...", ((5.5 + (0.5 / 3)) / 10)
     )
     Logger.INFO("Writing multiple ID's file.")
-    write_to_file('multiple_ids', multiple_id_manga_names, formatter_multiple_ids)
+    write_to_file("multiple_ids", multiple_id_manga_names, formatter_multiple_ids)
     # Return the cleaned manga names and IDs
     Logger.INFO("Returning cleaned manga names and IDs.")
     return cleaned_manga_names_ids
@@ -151,7 +151,7 @@ def Get_No_Manga_Found(app):
     """
     Logger.INFO("Function Get_No_Manga_Found called.")
     # Write the manga not found to a file
-    write_to_file('not_found', no_manga_found, formatter_not_found)
+    write_to_file("not_found", no_manga_found, formatter_not_found)
     Logger.DEBUG("Wrote the list of manga not found to a file.")
     # Print the manga not found
     app.update_terminal("\nNot Found Manga:")

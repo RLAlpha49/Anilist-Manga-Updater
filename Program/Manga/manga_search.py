@@ -336,7 +336,7 @@ class MangaSearch:  # pylint: disable=R0902
                 self.print_details()
                 self.handle_no_ids_found()
                 if self.id_list:
-                    result = [id for id in self.id_list]
+                    result = [self.id_list]
                     Logger.DEBUG(f"Got list of IDs: {result}.")
                     # Add the manga ID to the cache
                     self.cache.set(self.name, result)
