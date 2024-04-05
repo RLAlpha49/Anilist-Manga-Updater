@@ -280,12 +280,12 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
                     Logger.DEBUG(f"Updated chapters_updated to: {chapters_updated}")
                     update_sent = True
             else:
-                Logger.DEBUG(
-                    "Last read chapter is less than or equal to AniList chapter."
+                message = (
+                    f"Manga: {manga.name}({manga.id}) Has been set to chapter "
+                    f"{manga.last_chapter_read}\n"
                 )
-                app.update_terminal(
-                    f"Manga: {manga.name}({manga.id}) Has less than or equal chapter progress\n"
-                )
+                Logger.DEBUG(message)
+                app.update_terminal(message)
                 break
         else:
             Logger.ERROR("Response is not successful.")
