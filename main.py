@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 
-from Program.Utils.log import Logger  # pylint: disable=E0401, E0611
+from AnilistMangaUpdater.Utils.log import Logger  # pylint: disable=E0401, E0611
 
 # Check if we're running in a PyInstaller bundle
 if getattr(sys, "frozen", False):
@@ -19,7 +19,9 @@ else:
     application_path = os.path.dirname(os.path.abspath(__file__))
     Logger.INFO("Running in a normal Python environment.")
 
-gui_script_path = os.path.join(application_path, "Program", "Main", "GUI.py")
+gui_script_path = os.path.join(
+    application_path, "AnilistMangaUpdater", "Main", "GUI.py"
+)
 Logger.DEBUG(
     f"Application path: {application_path}\nGUI script path: {gui_script_path}"
 )

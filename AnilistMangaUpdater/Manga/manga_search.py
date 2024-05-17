@@ -4,7 +4,7 @@ This module contains the MangaSearch class which is used to search for a manga o
 
 import time
 
-import pymoe  # pylint: disable=E0401
+import pymoe  # type: ignore
 from Manga.GetID import Check_Title_Match, no_manga_found  # pylint: disable=E0401
 from Utils.cache import Cache  # pylint: disable=E0401
 from Utils.log import Logger  # pylint: disable=E0401

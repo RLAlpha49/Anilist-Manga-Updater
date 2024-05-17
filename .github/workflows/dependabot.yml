@@ -1,0 +1,16 @@
+name: Check for dependency updates
+on:
+  push:
+    paths:
+      - 'pyproject.toml'
+      - 'poetry.lock'
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for updates
+        run: |
+          curl -X POST -H "Content-Type: application/json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/dispatches \
+          -d '{"event_type": "dependabot"}'

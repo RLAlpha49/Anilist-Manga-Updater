@@ -31,12 +31,16 @@ def api_request(query, app, variables=None, retries=3):
     Returns:
         dict: The JSON response from the API if the request is successful, None otherwise.
     """
+    global headers
+    if "headers" not in globals():
+        headers = {}
+
     Logger.INFO("Function api_request called.")
     for _ in range(retries):
         response = requests.post(
             url,
             json={"query": query, "variables": variables},
-            headers=headers,
+            headers=headers,  # pylint: disable=E0606
             timeout=10,
         )
 
@@ -112,7 +116,6 @@ def Set_Access_Token(app):
     except TypeError:
         Logger.ERROR("No config file found.")
         app.update_terminal("No config file found")
-        return
 
 
 def needs_refresh(app):

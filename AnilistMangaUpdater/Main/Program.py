@@ -44,7 +44,7 @@ class Program:  # pylint: disable=R0903, C0115
         Logger.DEBUG("Updated terminal with time taken.")
         return time_taken
 
-    # Initialize the Program class
+    # Initialize the AnilistMangaUpdater class
     def __init__(self, app):  # pylint: disable=R0912, R0914, R0915
         Logger.INFO("Initializing the class.")
         self.app = app

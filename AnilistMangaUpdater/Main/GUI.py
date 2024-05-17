@@ -84,8 +84,11 @@ class AccessTokenThread(threading.Thread):
         """
         Run the Get_Access_Token function in the thread.
         """
+        if app is None:  # pylint: disable=E0606
+            Logger.ERROR("App object not found.")
+            return
         Logger.INFO("AccessTokenThread started.")
-        Get_Access_Token(app)  # pylint: disable=E0601
+        Get_Access_Token(app)  # pylint: disable=E0601, E0606
         Logger.INFO("AccessTokenThread finished.")
 
     def stop_thread(self):
@@ -367,7 +370,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.start_button,
             (
                 "Starts the program.\n"
-                "The only way to stop this is to exit the Program with the exit button.",
+                "The only way to stop this is to exit the AnilistMangaUpdater with the exit button.",
             ),
         )
         Logger.INFO("Created tooltip for 'Start' button.")
@@ -643,7 +646,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         else:
             # If the thread is not running, set progress to 0 and stop the function
             Logger.WARNING(
-                "Program thread is not running. Stopping progress bar update."
+                "AnilistMangaUpdater thread is not running. Stopping progress bar update."
             )
             return
         self.after(50, self.update_progress_bar)
@@ -653,7 +656,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         This method updates the progress and status of the program.
 
         It updates the global variables `progress` and `progress_status` that were
-        updated in the Program.py file. If the `program_progress` is different from
+        updated in the AnilistMangaUpdater.py file. If the `program_progress` is different from
         `progress`, it updates the objects associated with it.
 
         Parameters:
@@ -661,7 +664,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         program_progress (float, optional): The progress of the program.
         Defaults to None.
         """
-        # Update the global variables that were updated in the Program.py file
+        # Update the global variables that were updated in the AnilistMangaUpdater.py file
         global progress, progress_status  # pylint: disable=W0603
         if program_progress is None:
             Logger.INFO("No program progress provided. Using global progress.")
@@ -669,7 +672,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         if program_progress != progress:
             # If progress is different update objects associated with it
             Logger.INFO(
-                "Program progress is different from global progress. Updating progress and status."
+                "AnilistMangaUpdater progress is different from global progress. Updating progress and status."
             )
             progress = program_progress
             progress_status = status
@@ -976,11 +979,13 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         # Check if the thread is already running
         Logger.INFO("Checking if the program thread is already running.")
         if program_thread is not None and program_thread.is_alive():
-            Logger.WARNING("Program thread is already running. Returning immediately.")
+            Logger.WARNING(
+                "AnilistMangaUpdater thread is already running. Returning immediately."
+            )
             return
 
-        # Import the Program class
-        Logger.INFO("Importing the Program class.")
+        # Import the AnilistMangaUpdater class
+        Logger.INFO("Importing the AnilistMangaUpdater class.")
         from Main.Program import Program  # pylint: disable=C0415, E0611
 
         # Create a new thread for the program

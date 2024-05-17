@@ -1,6 +1,0 @@
-Pillow
-customtkinter
-CTkToolTip
-requests
-pymoe
-pandas==2.2.0
