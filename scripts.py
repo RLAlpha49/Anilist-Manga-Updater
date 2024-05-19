@@ -95,6 +95,7 @@ def clean(auto_fix=True):
             "mypy",
             "--install-types",
             "--non-interactive",
+            "--check-untyped-defs",
             path,
         ],
         auto_fix,

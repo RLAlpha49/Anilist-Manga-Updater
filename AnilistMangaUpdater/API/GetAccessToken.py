@@ -16,12 +16,13 @@ import os
 import platform
 import time
 import webbrowser
+from typing import Union
 
 # Define the authorization URL for AniList OAuth
 authorization_url = "https://anilist.co/api/v2/oauth/authorize"
 
 
-def Get_Access_Token(app):
+def Get_Access_Token(app: object) -> Union[str, None]:
     """
     Retrieves the AniList API access token from environment variables
     or opens the authorization URL in the web browser.
@@ -52,7 +53,7 @@ def Get_Access_Token(app):
     return Get_Authentication_Code()
 
 
-def Get_Authentication_Code():
+def Get_Authentication_Code() -> Union[str, None]:
     """
     Checks for the presence of the access token in the environment variables in a loop.
 

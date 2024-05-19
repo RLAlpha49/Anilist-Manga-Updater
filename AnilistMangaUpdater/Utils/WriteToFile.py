@@ -11,13 +11,14 @@ import datetime
 import glob
 import json
 import os
+from typing import Optional, Union
 
 from Utils.log import Logger  # pylint: disable=E0401
 
-directory = "Manga_Data"
+directory: str = "Manga_Data"
 
 
-def create_directory_if_not_exists(dir_path):
+def create_directory_if_not_exists(dir_path: str) -> None:
     """
     Checks if the given directory exists, creates it if it doesn't.
 
@@ -29,7 +30,7 @@ def create_directory_if_not_exists(dir_path):
         os.makedirs(dir_path)
 
 
-def create_directory_and_get_timestamp(dir_path):
+def create_directory_and_get_timestamp(dir_path: str) -> str:
     """
     Checks if the given directory exists, creates it if it doesn't,
     and then returns the current timestamp.
@@ -48,7 +49,7 @@ def create_directory_and_get_timestamp(dir_path):
     return timestamp
 
 
-def Save_Alt_Titles_To_File(alternative_titles_dict):
+def Save_Alt_Titles_To_File(alternative_titles_dict: dict) -> None:
     """
     Saves alternative titles to a file.
 
@@ -71,7 +72,7 @@ def Save_Alt_Titles_To_File(alternative_titles_dict):
     Logger.INFO("Finished writing to file.")
 
 
-def Get_Alt_Titles_From_File(alternative_titles_dict):
+def Get_Alt_Titles_From_File(alternative_titles_dict: dict) -> dict:
     """
     Retrieves alternative titles from a file.
 
@@ -115,7 +116,7 @@ def Get_Alt_Titles_From_File(alternative_titles_dict):
 
 
 # Function to manage files
-def manage_files(dir_path, file_type):
+def manage_files(dir_path: str, file_type: str) -> None:
     """
     Manages files in a directory by deleting the oldest file if there are more than 5.
 
@@ -143,7 +144,7 @@ def manage_files(dir_path, file_type):
         Logger.INFO("No files to delete.")
 
 
-def write_to_file(filename, data, formatter):
+def write_to_file(filename: str, data: Optional[Union[list, dict]], formatter) -> None:
     """
     Writes data to a file.
 
@@ -168,7 +169,7 @@ def write_to_file(filename, data, formatter):
     Logger.INFO("Managed files in directory.")
 
 
-def formatter_not_found(not_found_manga_names):
+def formatter_not_found(not_found_manga_names: list) -> list:
     """
     Formats not found manga names for writing to a file.
 
@@ -201,7 +202,7 @@ def formatter_not_found(not_found_manga_names):
     return lines
 
 
-def formatter_multiple_ids(multiple_id_manga_names):
+def formatter_multiple_ids(multiple_id_manga_names: dict) -> list:
     """
     Formats manga names with multiple IDs for writing to a file.
 
@@ -242,14 +243,13 @@ def formatter_multiple_ids(multiple_id_manga_names):
     return lines
 
 
-def write_chapters_updated_to_file(filename, data):
+def write_chapters_updated_to_file(filename: str, data: int) -> None:
     """
     Appends data to a chapters updated file.
 
     Parameters:
     filename (str): The name of the file to append to.
     data (int): The number of updated chapters.
-    formatter (function): A function that formats the data into a string.
 
     Returns:
     None

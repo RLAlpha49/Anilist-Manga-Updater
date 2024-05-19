@@ -2,7 +2,9 @@
 This module contains the MangaSearch class which is used to search for a manga on Anilist.
 """
 
+import json
 import time
+from typing import List, Optional, Union
 
 import pymoe  # type: ignore
 from Manga.GetID import Check_Title_Match, no_manga_found  # pylint: disable=E0401
@@ -36,9 +38,14 @@ class MangaSearch:  # pylint: disable=R0902
     get_manga_id(): Retrieves the ID of the manga.
     """
 
-    def __init__(
-        self, name, last_chapter_read, app, max_retries=3, delay=60
-    ):  # pylint: disable=R0913
+    def __init__(  # pylint: disable=R0913
+        self,
+        name: str,
+        last_chapter_read: Union[int, None],
+        app: object,
+        max_retries: int = 3,
+        delay: float = 60,
+    ) -> None:
         """
         Initializes the MangaSearch object.
 
@@ -47,7 +54,11 @@ class MangaSearch:  # pylint: disable=R0902
         last_chapter_read (int): The last chapter read of the manga.
         app: The application object used to update the terminal and progress.
         max_retries (int, optional): The maximum number of retries. Defaults to 5.
-        delay (int, optional): The delay between retries in seconds. Defaults to 15.
+        delay (float, optional): The delay between retries in seconds. Defaults to 15.
+        retry_count (int): The current number of retries.
+        matches (list): The list of matches from the search results.
+        id_list (list): The list of IDs for the matches.
+        cache: The cache object used to store the manga data.
         """
         Logger.INFO("Function __init__ called.")
         Logger.DEBUG(
@@ -56,14 +67,14 @@ class MangaSearch:  # pylint: disable=R0902
             f"max_retries: {max_retries}, "
             f"delay: {delay}"
         )
-        self.name = name
-        self.last_chapter_read = last_chapter_read
-        self.app = app
-        self.max_retries = max_retries
-        self.delay = delay
-        self.retry_count = 0
-        self.matches = []
-        self.id_list = []
+        self.name: str = name
+        self.last_chapter_read: Union[int, None] = last_chapter_read
+        self.app: object = app
+        self.max_retries: int = max_retries
+        self.delay: float = delay
+        self.retry_count: int = 0
+        self.matches: list = []
+        self.id_list: list = []
         self.cache = Cache("Manga_Data/title_cache.json")
         Logger.DEBUG("MangaSearch object initialized.")
 
@@ -109,7 +120,7 @@ class MangaSearch:  # pylint: disable=R0902
         )
         Logger.ERROR(f"Failed to search for {self.name} after {max_retries} attempts.")
 
-    def process_manga_item(self, manga_item):
+    def process_manga_item(self, manga_item: dict) -> None:
         """
         Processes a manga item from the search results.
 
@@ -141,7 +152,7 @@ class MangaSearch:  # pylint: disable=R0902
             Logger.INFO("Match found. Added to matches.")
 
     @staticmethod
-    def process_title(title):
+    def process_title(title: str) -> str:
         """
         Processes the title by replacing certain characters.
 
@@ -159,7 +170,7 @@ class MangaSearch:  # pylint: disable=R0902
         Logger.DEBUG(f"Processed title: {title}")
         return title
 
-    def check_title_match(self, title):
+    def check_title_match(self, title: str) -> bool:
         """
         Checks if the title matches the name.
 
@@ -175,7 +186,7 @@ class MangaSearch:  # pylint: disable=R0902
         Logger.DEBUG(f"Match result: {match}")
         return match
 
-    def get_id_list(self):
+    def get_id_list(self) -> None:
         """
         Gets the list of IDs from the matches.
 
@@ -188,7 +199,7 @@ class MangaSearch:  # pylint: disable=R0902
         self.id_list = [manga_item["id"] for match, manga_item in self.matches if match]
         Logger.DEBUG(f"Got list of IDs from matches: {self.id_list}")
 
-    def print_details(self):
+    def print_details(self) -> None:
         """
         Prints the details of the matches.
 
@@ -210,7 +221,7 @@ class MangaSearch:  # pylint: disable=R0902
                     self.app.update_terminal(f"Anilist URL: {manga_item['siteUrl']}")
                     Logger.DEBUG(f"Printed Anilist URL: {manga_item['siteUrl']}.")
 
-    def handle_no_ids_found(self):
+    def handle_no_ids_found(self) -> None:
         """
         Handles the case where no IDs are found.
 
@@ -224,7 +235,7 @@ class MangaSearch:  # pylint: disable=R0902
             no_manga_found.append((self.name, self.last_chapter_read))
             Logger.DEBUG(f"Added '{self.name}' to the list of manga not found.")
 
-    def handle_server_error(self, e):
+    def handle_server_error(self, e: Exception) -> None:
         """
         Handles server errors.
 
@@ -250,7 +261,7 @@ class MangaSearch:  # pylint: disable=R0902
             )
             Logger.ERROR(f"An unexpected server error occurred for {self.name}: {e}")
 
-    def search_and_process_manga(self):
+    def search_and_process_manga(self) -> bool:
         """
         Searches for a manga and processes the search results.
 
@@ -269,7 +280,7 @@ class MangaSearch:  # pylint: disable=R0902
         Logger.DEBUG("Reset retry count after a successful search.")
         return True
 
-    def handle_search_errors(self, error):
+    def handle_search_errors(self, error: Exception) -> None:
         """
         Handles errors that occur during the search.
 
@@ -291,7 +302,7 @@ class MangaSearch:  # pylint: disable=R0902
             self.retry_count += 1 if "Too Many Requests" in str(error) else 0
             Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
 
-    def get_manga_id(self):
+    def get_manga_id(self) -> list[int]:
         """
         Gets the ID of the manga.
 
@@ -299,10 +310,16 @@ class MangaSearch:  # pylint: disable=R0902
         list: A list of manga IDs.
         """
         Logger.INFO("Function get_manga_id called.")
-        result = []
+        result: list = []
 
         # Check if the manga ID is in the cache
-        cached_result = self.cache.get(self.name)
+        cached_result_str: Optional[str] = self.cache.get(self.name)
+        if cached_result_str is not None:
+            if isinstance(cached_result_str, list):
+                cached_result_str = json.dumps(cached_result_str)
+            cached_result: Optional[List[int]] = json.loads(cached_result_str)
+        else:
+            cached_result = None
         if cached_result is not None:
             self.app.update_terminal(f"\nFound manga: {self.name} in cache.")
             Logger.INFO(f"Found manga: {self.name} in cache.")

@@ -4,9 +4,10 @@ It includes functions to handle rate limits, set the access token, and check if
 the access token needs to be refreshed.
 """
 
-# pylint: disable=C0103, W0601, E0401
+# pylint: disable=C0103, W0601, E0401, W0603
 
 import time
+from typing import Optional, Union
 
 import API.queries as Queries
 import requests
@@ -16,8 +17,15 @@ from Utils.log import Logger
 # Define the API endpoint
 url = "https://graphql.anilist.co"
 
+headers: dict[str, str] = {}
 
-def api_request(query, app, variables=None, retries=3):
+
+def api_request(
+    query: str,
+    app: object,
+    variables: Optional[Union[dict, None]] = None,
+    retries: int = 3,
+) -> Optional[Union[dict, None]]:
     """
     Send a POST request to the API endpoint and handle rate limits.
 
@@ -82,7 +90,7 @@ def api_request(query, app, variables=None, retries=3):
     return None
 
 
-def Set_Access_Token(app):
+def Set_Access_Token(app: object) -> None:
     """
     Set the access token for the API requests.
 
@@ -101,24 +109,28 @@ def Set_Access_Token(app):
     Logger.INFO("Function Set_Access_Token called.")
     config = load_config("config.json")
     Logger.DEBUG("Loaded the configuration from config.json.")
-    try:
-        if config["ACCESS_TOKEN"] is not None:
-            Logger.INFO("Access token found in the configuration.")
-            # Get the access token
-            access_token = config["ACCESS_TOKEN"]
+    if config is not None:
+        try:
+            if config["ACCESS_TOKEN"] is not None:
+                Logger.INFO("Access token found in the configuration.")
+                # Get the access token
+                access_token = config["ACCESS_TOKEN"]
 
-            # Define the headers for the API request
-            headers = {"Authorization": f"Bearer {access_token}"}
-            Logger.DEBUG("Defined the headers for the API request.")
-        else:
-            Logger.WARNING("No access token found in the configuration.")
-            app.update_terminal("No access token found.")
-    except TypeError:
+                # Define the headers for the API request
+                headers = {"Authorization": f"Bearer {access_token}"}
+                Logger.DEBUG("Defined the headers for the API request.")
+            else:
+                Logger.WARNING("No access token found in the configuration.")
+                app.update_terminal("No access token found.")
+        except KeyError:
+            Logger.ERROR("No 'ACCESS_TOKEN' key in the configuration.")
+            app.update_terminal("No 'ACCESS_TOKEN' key in the configuration.")
+    else:
         Logger.ERROR("No config file found.")
-        app.update_terminal("No config file found")
+        app.update_terminal("No config file found.")
 
 
-def needs_refresh(app):
+def needs_refresh(app: object) -> Optional[Union[bool, None]]:
     """
     Check if the access token needs to be refreshed.
 

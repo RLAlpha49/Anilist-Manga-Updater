@@ -7,20 +7,22 @@ represents a manga with its details.
 
 # pylint: disable=C0103, W0601, W0603, E0401
 
+import math
 from datetime import datetime
+from typing import Union
 
 import API.queries as Queries
 from API.APIRequests import api_request
 from Utils.log import Logger
 
 # Initialize the counter for the number of chapters updated
-chapters_updated = 0
+chapters_updated: int = 0
 
 # Initialize userId
-userId = None
+userId: Union[int, None] = None
 
 # Initialize the dictionary for the status mapping
-status_mapping = {
+status_mapping: dict[str, str] = {
     "reading": "CURRENT",
     "completed": "COMPLETED",
     "on_hold": "PAUSED",
@@ -30,7 +32,7 @@ status_mapping = {
 
 
 # Function to get the user ID
-def Get_User(app):
+def Get_User(app: object) -> Union[int, None]:
     """
     Retrieves the user ID from the Viewer object.
 
@@ -54,7 +56,7 @@ def Get_User(app):
     return None
 
 
-def Get_User_Manga_List(app):
+def Get_User_Manga_List(app: object) -> list[dict[str, Union[int, str]]]:
     """
     Retrieves the entire manga list of a user from AniList.
 
@@ -66,11 +68,11 @@ def Get_User_Manga_List(app):
     'progress', and 'status' keys.
     """
     Logger.INFO("Function Get_User_Manga_List called.")
-    query = Queries.MANGALIST
-    chunk = 0
-    per_chunk = 500
-    manga_list = []
-    user_Id = Get_User(app)
+    query: str = Queries.MANGALIST
+    chunk: int = 0
+    per_chunk: int = 500
+    manga_list: list = []
+    user_Id: Union[int, None] = Get_User(app)
 
     while True:
         variables = {"userId": user_Id, "chunk": chunk, "perChunk": per_chunk}
@@ -103,7 +105,7 @@ def Get_User_Manga_List(app):
 
 
 # Function to get the format of the manga
-def Get_Format(media_id, app):
+def Get_Format(media_id: int, app: object) -> Union[str, None]:
     """
     Retrieves the format of a media item from AniList.
 
@@ -150,20 +152,26 @@ class Manga:  # pylint: disable=R0903
 
     def __init__(  # pylint: disable=R0913
         self,
-        name,
-        manga_id,
-        last_chapter_read,
-        private_bool,
-        status,
-        last_read_at,
-        months,
+        name: str,
+        manga_id: int,
+        last_chapter_read: int,
+        private_bool: str,
+        status: str,
+        last_read_at: str,
+        months: str,
     ):
-        self.name = name
-        self.id = manga_id
-        self.last_chapter_read = last_chapter_read
-        self.private_bool = (
+        self.name: str = name
+        self.id: int = manga_id
+        self.last_chapter_read: int = last_chapter_read
+        self.private_bool: Union[bool, None] = (
             True if private_bool == "Yes" else False if private_bool == "No" else None
         )
-        self.status = status
-        self.last_read_at = datetime.strptime(last_read_at, "%Y-%m-%d %H:%M:%S UTC")
-        self.months = months
+        self.status: str = status
+        self.last_read_at: Union[datetime, None]
+        if last_read_at is None or (
+            isinstance(last_read_at, float) and math.isnan(last_read_at)
+        ):
+            self.last_read_at = None
+        else:
+            self.last_read_at = datetime.strptime(last_read_at, "%Y-%m-%d %H:%M:%S UTC")
+        self.months: str = months

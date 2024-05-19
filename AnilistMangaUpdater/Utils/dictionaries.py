@@ -14,12 +14,12 @@ base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 base_path = os.path.dirname(os.path.dirname(base_path))
 
 # Define the path to the Resources folder
-resources_path = os.path.join(base_path, "Resources")
+resources_path: str = os.path.join(base_path, "Resources")
 
 # Define the names of the JSON files
-alternative_titles_file = os.path.join(resources_path, "alternative_titles.json")
-format_cache_file = os.path.join(resources_path, "format_cache.json")
-title_cache_file = os.path.join(resources_path, "title_cache.json")
+alternative_titles_file: str = os.path.join(resources_path, "alternative_titles.json")
+format_cache_file: str = os.path.join(resources_path, "format_cache.json")
+title_cache_file: str = os.path.join(resources_path, "title_cache.json")
 
 # Load the JSON files into Python dictionaries
 with open(alternative_titles_file, "r", encoding="utf-8") as file:

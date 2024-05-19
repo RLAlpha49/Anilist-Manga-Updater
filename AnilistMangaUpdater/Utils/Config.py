@@ -15,12 +15,19 @@ Functions:
 # Import necessary modules
 import json
 import os
+from typing import Optional, Union
 
 from Utils.log import Logger  # pylint: disable=E0401
 
 
 # Function to create a configuration dictionary
-def create_config(client, secret, token=None, months=None, private=None):
+def create_config(
+    client: str,
+    secret: str,
+    token: Optional[str] = None,
+    months: Optional[int] = None,
+    private: Optional[bool] = None,
+) -> dict:
     """
     Creates a configuration dictionary.
 
@@ -49,7 +56,9 @@ def create_config(client, secret, token=None, months=None, private=None):
 
 
 # Function to save the configuration dictionary to a file
-def save_config(config, file_path):
+def save_config(
+    config: Union[dict[Union[str, None], None], None], file_path: str
+) -> None:
     """
     Saves the configuration dictionary to a file.
 
@@ -67,7 +76,7 @@ def save_config(config, file_path):
 
 
 # Function to get the configuration dictionary
-def Get_Config(app):
+def Get_Config(app: object) -> None:
     """
     Gets the configuration dictionary.
 
@@ -79,7 +88,7 @@ def Get_Config(app):
     """
     # Load the configuration dictionary from the file
     Logger.INFO("Function Get_Config called.")
-    config = load_config("config.json")
+    config: Optional[dict] = load_config("config.json")
 
     if config:
         # If the configuration dictionary is loaded successfully, print a message
@@ -101,7 +110,7 @@ def Get_Config(app):
 
 
 # Function to load the configuration dictionary from a file
-def load_config(file_path):
+def load_config(file_path: str) -> Optional[dict[Union[str, Union[str, None]], None]]:
     """
     Loads the configuration dictionary from a file.
 
@@ -130,7 +139,7 @@ def load_config(file_path):
 
 
 # Function to set the environment variables
-def Set_Environment_Variables(config):
+def Set_Environment_Variables(config: dict) -> None:
     """
     Sets the environment variables with the values from the configuration dictionary.
 

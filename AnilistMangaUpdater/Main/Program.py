@@ -2,6 +2,7 @@
 # Import necessary modules
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import Union
 
 from API.AccessAPI import Get_Format, Get_User_Manga_List, Manga
 from API.APIRequests import Set_Access_Token, needs_refresh
@@ -21,7 +22,7 @@ from Utils.WriteToFile import write_chapters_updated_to_file
 
 class Program:  # pylint: disable=R0903, C0115
     # Function to print the time taken for a task
-    def print_time_taken(self, start_time, task_name):
+    def print_time_taken(self, start_time: float, task_name: str) -> float:
         """
         Prints the time taken to perform a task and returns the time taken.
 
@@ -36,16 +37,16 @@ class Program:  # pylint: disable=R0903, C0115
         float: The time taken to perform the task, rounded to three decimal places.
         """
         Logger.DEBUG("Function print_time_taken called.")
-        end_time = time.time()
+        end_time: float = time.time()
         Logger.DEBUG(f"End time: {end_time}")
-        time_taken = round((end_time - start_time), 3)
+        time_taken: float = round((end_time - start_time), 3)
         Logger.INFO(f"Time taken to {task_name}: {time_taken} seconds")
         self.app.update_terminal(f"\nTime taken to {task_name}: {time_taken} seconds")
         Logger.DEBUG("Updated terminal with time taken.")
         return time_taken
 
     # Initialize the AnilistMangaUpdater class
-    def __init__(self, app):  # pylint: disable=R0912, R0914, R0915
+    def __init__(self, app: object) -> None:  # pylint: disable=R0912, R0914, R0915
         Logger.INFO("Initializing the class.")
         self.app = app
         self.cache = Cache("Manga_Data/format_cache.json")
@@ -55,8 +56,8 @@ class Program:  # pylint: disable=R0903, C0115
         Set_Chapters_Updated()
         Logger.DEBUG("Set_Chapters_Updated called.")
 
-        total_steps = 10  # Total number of steps in your program
-        current_step = 0  # Current step number
+        total_steps: int = 10  # Total number of steps in your program
+        current_step: float = 0  # Current step number
 
         # Update progress and status
         current_step += 0.5
@@ -70,7 +71,7 @@ class Program:  # pylint: disable=R0903, C0115
         Set_Access_Token(app)
         Logger.DEBUG("Set_Access_Token called.")
         # Check if the access token needs to be refreshed
-        refresh = needs_refresh(app)
+        refresh: Union[bool, None] = needs_refresh(app)
         Logger.DEBUG(f"needs_refresh returned: {refresh}")
         if refresh:
             app.update_terminal("Access Token needs to be refreshed")
@@ -81,7 +82,7 @@ class Program:  # pylint: disable=R0903, C0115
             return
 
         # Load the configuration from the config.json file
-        config = load_config("config.json")
+        config: Union[dict, None] = load_config("config.json")
         Logger.DEBUG(f"Loaded config: {config}")
         if config is None:
             # If the configuration is not loaded successfully, get the configuration
@@ -93,14 +94,14 @@ class Program:  # pylint: disable=R0903, C0115
 
         # If the configuration is loaded successfully, get the client ID, secret ID,
         # access token, months, and private from the configuration
-        client = config["ANILIST_CLIENT_ID"]
-        secret = config["ANILIST_CLIENT_SECRET"]
-        token = config["ACCESS_TOKEN"]
-        months = config["MONTHS"]
-        private = config["PRIVATE"]
+        client: str = config["ANILIST_CLIENT_ID"]
+        secret: str = config["ANILIST_CLIENT_SECRET"]
+        token: str = config["ACCESS_TOKEN"]
+        months: str = config["MONTHS"]
+        private: str = config["PRIVATE"]
 
         # Flag to indicate whether all values are set
-        all_values_set = True
+        all_values_set: bool = True
 
         # Check if any of the values are None and print a message if they are
         if client is None:
@@ -157,7 +158,7 @@ class Program:  # pylint: disable=R0903, C0115
         Logger.INFO("Manga found in CSV.")
 
         # Record the start time
-        manga_data_start_time = time.time()
+        manga_data_start_time: float = time.time()
         Logger.DEBUG(f"Start time for manga data: {manga_data_start_time}")
 
         # Update progress and status
@@ -168,25 +169,28 @@ class Program:  # pylint: disable=R0903, C0115
         Logger.INFO("Getting manga IDs...")
 
         # Call the function and get the list of IDs & Names
-        manga_names_ids = {}
-        manga_names = Get_Manga_Names(app, alternative_titles_dict)
+        manga_names_ids: dict = {}
+        manga_names: dict = Get_Manga_Names(app, alternative_titles_dict)
         Logger.DEBUG(f"Manga names: {manga_names}")
 
         # Before the loop, record the start time and initialize a list to store the times
-        start_time = time.time()
-        times = []
+        start_time: float = time.time()
+        times: list = []
         Logger.DEBUG(f"Start time for loop: {start_time}")
 
         # Initialize a counter for the number of manga processed
-        manga_processed = 0
+        manga_processed: int = 0
 
         # Iterate through the manga_names dictionary
+        manga_name: str
         for manga_name, manga_info in manga_names.items():
+            progress: float
             Logger.INFO(f"Processing manga: {manga_name}")
             try:
                 # noinspection PyUnboundLocalVariable
                 app.update_progress_and_status(
-                    f"Getting ID for {manga_name}...", progress  # noqa: F821
+                    f"Getting ID for {manga_name}...",
+                    progress,  # pylint: disable=E0601  # noqa: F821
                 )
                 Logger.DEBUG("Updated progress and status.")
             except UnboundLocalError:
@@ -196,7 +200,7 @@ class Program:  # pylint: disable=R0903, C0115
             Logger.DEBUG("Updated idle tasks.")
 
             # Record the time before finding the ID
-            time_before = time.time()
+            time_before: float = time.time()
             Logger.DEBUG(f"Time before finding ID: {time_before}")
 
             # Replace all occurrences of U+2019 with U+0060 in manga_name
@@ -205,24 +209,30 @@ class Program:  # pylint: disable=R0903, C0115
             manga_name = manga_name.replace("`", "'")
             Logger.DEBUG(f"Processed manga name: {manga_name}")
 
-            status = manga_info["status"]
+            status: str = manga_info["status"]
             Logger.DEBUG(f"Manga status: {status}")
 
             # Get the manga IDs regardless of the status
             if status != "plan_to_read":
-                last_chapter_read = manga_info["last_chapter_read"]
-                manga_search = MangaSearch(manga_name, last_chapter_read, app)
-                Logger.DEBUG("Created MangaSearch instance with last chapter read.")
+                if "last_chapter_read" in manga_info:
+                    last_chapter_read = manga_info["last_chapter_read"]
+                    manga_search = MangaSearch(manga_name, last_chapter_read, app)
+                    Logger.DEBUG("Created MangaSearch instance with last chapter read.")
+                else:
+                    manga_search = MangaSearch(manga_name, None, app)
+                    Logger.DEBUG(
+                        "Created MangaSearch instance without last chapter read."
+                    )
             else:
                 manga_search = MangaSearch(manga_name, None, app)
                 Logger.DEBUG("Created MangaSearch instance without last chapter read.")
 
-            manga_ids = manga_search.get_manga_id()
+            manga_ids: list = manga_search.get_manga_id()
             Logger.DEBUG(f"Got manga IDs: {manga_ids}")
 
             for manga_id in manga_ids:
                 # Check if the media format is in the cache
-                media_info = self.cache.get(f"{manga_id}_format")
+                media_info: Union[str, None] = self.cache.get(f"{manga_id}_format")
                 if media_info is None:
                     # Get the format of the manga regardless of the status
                     media_info = Get_Format(manga_id, app)
@@ -242,16 +252,21 @@ class Program:  # pylint: disable=R0903, C0115
 
                     # If the status is not 'plan_to_read', append additional information
                     if status != "plan_to_read":
-                        last_chapter_read = manga_info["last_chapter_read"]
-                        last_read_at = manga_info["last_read_at"]
-                        manga_names_ids[manga_name].append(
-                            (
-                                manga_id,
-                                last_chapter_read,
-                                manga_info["status"],
-                                last_read_at,
+                        if "last_chapter_read" in manga_info:
+                            last_chapter_read = manga_info["last_chapter_read"]
+                            last_read_at = manga_info["last_read_at"]
+                            manga_names_ids[manga_name].append(
+                                (
+                                    manga_id,
+                                    last_chapter_read,
+                                    manga_info["status"],
+                                    last_read_at,
+                                )
                             )
-                        )
+                        else:
+                            manga_names_ids[manga_name].append(
+                                (manga_id, None, manga_info["status"], None)
+                            )
                         Logger.DEBUG(
                             "Appended additional information to manga_names_ids."
                         )
@@ -262,7 +277,7 @@ class Program:  # pylint: disable=R0903, C0115
             time_after = time.time()
             Logger.DEBUG(f"Time after finding ID: {time_after}")
 
-            operation_time = time_after - time_before
+            operation_time: float = time_after - time_before
             Logger.DEBUG(f"Operation time: {operation_time}")
 
             # Append the operation time to the list
@@ -277,7 +292,7 @@ class Program:  # pylint: disable=R0903, C0115
             )
 
             # Calculate the estimated time remaining
-            time_elapsed = time.time() - start_time
+            time_elapsed: float = time.time() - start_time
             estimated_time_remaining = estimated_total_time - time_elapsed
             Logger.INFO(
                 f"Time elapsed: {time_elapsed}, "
@@ -316,7 +331,7 @@ class Program:  # pylint: disable=R0903, C0115
 
         with ThreadPoolExecutor(max_workers=1) as executor:
             # Create a list to store the futures
-            futures = []
+            futures: list = []
 
             for manga_name, ids in manga_names_ids.items():
                 for id_info in ids:
@@ -327,7 +342,7 @@ class Program:  # pylint: disable=R0903, C0115
                     futures.append(future)
 
             # Gather the results
-            messages = []
+            messages: list = []
             for future in futures:
                 messages.append(future.result())
 
@@ -343,7 +358,7 @@ class Program:  # pylint: disable=R0903, C0115
         Get_No_Manga_Found(app)
 
         # Calculate and print the time taken
-        manga_data_time_taken = self.print_time_taken(
+        manga_data_time_taken: float = self.print_time_taken(
             manga_data_start_time, "get Manga data"
         )
         Logger.INFO(f"Time taken to get manga data: {manga_data_time_taken}")
@@ -359,16 +374,16 @@ class Program:  # pylint: disable=R0903, C0115
         Logger.INFO("Updating manga...")
 
         # Before the loop, initialize a counter for the number of manga updated
-        manga_updated = 0
-        total_manga = sum(len(info_list) for info_list in manga_names_ids.values())
+        manga_updated: int = 0
+        total_manga: int = sum(len(info_list) for info_list in manga_names_ids.values())
         Logger.INFO(f"Total manga to update: {total_manga}")
 
         # Create a list to store the IDs of the manga that were not updated
-        skipped_ids = []
+        skipped_ids: list = []
         Logger.DEBUG("Created list for skipped IDs.")
 
         # Get the entire manga list from AniList
-        manga_list = Get_User_Manga_List(app)
+        manga_list: list[dict[str, Union[int, str]]] = Get_User_Manga_List(app)
         Logger.INFO("Got user manga list from AniList.")
 
         # Iterate over entries in the cleaned manga_names_ids dictionary
@@ -380,7 +395,7 @@ class Program:  # pylint: disable=R0903, C0115
                 manga_id, last_chapter_read, status, last_read_at = manga_info
                 Logger.DEBUG(f"Processing manga info: {manga_info}")
                 # Find the manga in the manga list
-                manga_entry = next(
+                manga_entry: Union[dict[str, Union[int, str]], None] = next(
                     (entry for entry in manga_list if entry["mediaId"] == manga_id),
                     None,
                 )
@@ -400,7 +415,11 @@ class Program:  # pylint: disable=R0903, C0115
                 else:
                     # Get the current progress and status of the manga from the manga entry
                     chapter_anilist, status_anilist = (
-                        manga_entry["progress"],
+                        (
+                            int(manga_entry["progress"])
+                            if isinstance(manga_entry["progress"], str)
+                            else manga_entry["progress"]
+                        ),
                         manga_entry["status"],
                     )
                     Logger.DEBUG(
@@ -408,6 +427,7 @@ class Program:  # pylint: disable=R0903, C0115
                     )
 
                 # If the progress or status has changed or the manga was not found in the manga list
+
                 if (
                     manga_entry is None
                     or chapter_anilist != last_chapter_read
@@ -519,7 +539,7 @@ class Program:  # pylint: disable=R0903, C0115
         )
 
     @staticmethod
-    def process_id_info(manga_name, id_info):
+    def process_id_info(manga_name: str, id_info: tuple) -> str:
         """
         Process the ID information of a manga.
 

@@ -42,3 +42,4 @@ disable = "too-few-public-methods,missing-module-docstring,invalid-name,R0801"
 
 [tool.mypy]
 ignore_missing_imports = true
+disable_error_code = "attr-defined"

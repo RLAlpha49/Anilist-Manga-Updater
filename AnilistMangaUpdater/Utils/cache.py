@@ -5,6 +5,7 @@ It stores key-value pairs in a JSON file located in the Manga_Data directory.
 
 import json
 import os
+from typing import Any, Union
 
 from Utils.dictionaries import (  # pylint: disable=E0401
     cache_format_dict,
@@ -22,13 +23,13 @@ class Cache:
     cache (dict): The cache data.
     """
 
-    def __init__(self, cache_file):
-        self.cache_file = cache_file
-        self.cache = {}  # Initialize cache as an empty dictionary
+    def __init__(self, cache_file: str) -> None:
+        self.cache_file: str = cache_file
+        self.cache: dict = {}  # Initialize cache as an empty dictionary
         Logger.INFO(f"Cache initialized with file: {self.cache_file}")
         self.load_cache()
 
-    def load_cache(self):
+    def load_cache(self) -> None:
         """
         Loads the cache from a file.
         """
@@ -48,7 +49,7 @@ class Cache:
                 self.cache.update(cache_title_dict)
             self.save_cache()
 
-    def save_cache(self):
+    def save_cache(self) -> None:
         """
         Saves the cache to a file.
         """
@@ -58,7 +59,7 @@ class Cache:
             json.dump(self.cache, f)
         Logger.INFO("Cache saved successfully.")
 
-    def get(self, key):
+    def get(self, key: str) -> Union[str, None]:
         """
         Gets a value from the cache.
 
@@ -76,7 +77,7 @@ class Cache:
             Logger.INFO(f"Found value in cache for key: {key}.")
         return value
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> None:
         """
         Sets a value in the cache and saves the cache to a file.
 

@@ -17,15 +17,16 @@ Functions:
 
 # Import necessary modules and functions
 import string
+from typing import Union
 
 from Utils.log import Logger
 from Utils.WriteToFile import formatter_multiple_ids, formatter_not_found, write_to_file
 
 # Initialize an empty list to store names of manga that are not found
-no_manga_found = []
+no_manga_found: list[tuple[str, Union[int, None]]] = []
 
 
-def Set_No_Manga_Found():
+def Set_No_Manga_Found() -> None:
     """
     Resets the global variable 'no_manga_found' to an empty list.
 
@@ -37,7 +38,7 @@ def Set_No_Manga_Found():
     Logger.DEBUG("Reset 'no_manga_found' to an empty list.")
 
 
-def Check_Title_Match(title, name):
+def Check_Title_Match(title: str, name: str) -> bool:
     """
     Checks if all words in the search name are in the title.
 
@@ -71,7 +72,7 @@ def Check_Title_Match(title, name):
 
 
 # Function to clean the manga IDs
-def Clean_Manga_IDs(manga_names_ids, app):
+def Clean_Manga_IDs(manga_names_ids: dict, app: object) -> dict:
     """
     Cleans the manga IDs by removing duplicates and separating manga with multiple unique IDs.
 
@@ -137,7 +138,7 @@ def Clean_Manga_IDs(manga_names_ids, app):
 
 
 # Function to get the manga not found
-def Get_No_Manga_Found(app):
+def Get_No_Manga_Found(app: object) -> None:
     """
     Retrieves and prints the list of manga not found.
 

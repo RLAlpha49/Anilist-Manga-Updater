@@ -7,6 +7,7 @@ getting the manga names and their details, and printing the manga found in the C
 # pylint: disable=C0103, W0602, W0603, E0401
 # Import necessary modules
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Union
 
 import pandas as pd
 from Utils.dictionaries import alternative_titles_dict
@@ -19,7 +20,7 @@ manga_names_chapters = {}
 alternative_titles_dict = Get_Alt_Titles_From_File(alternative_titles_dict)
 
 
-def Manga_Found_In_CSV(app):  # pylint: disable=R1710
+def Manga_Found_In_CSV(app: object) -> None:  # pylint: disable=R1710
     """
     Prints the manga found in the CSV file.
 
@@ -38,7 +39,7 @@ def Manga_Found_In_CSV(app):  # pylint: disable=R1710
 
     with ThreadPoolExecutor(max_workers=1) as executor:
         # Create a list to store the futures
-        futures = []
+        futures: list = []
 
         for title, details in manga_with_last_chapter.items():
             # Submit the task to the executor
@@ -46,7 +47,7 @@ def Manga_Found_In_CSV(app):  # pylint: disable=R1710
             futures.append(future)
 
         # Gather the results
-        messages = []
+        messages: list = []
         for future in as_completed(futures):
             messages.append(future.result())
 
@@ -54,7 +55,7 @@ def Manga_Found_In_CSV(app):  # pylint: disable=R1710
         app.update_terminal("\n".join(messages))
 
 
-def process_manga_details(title, details):
+def process_manga_details(title: str, details: dict) -> str:
     """
     Process the details of a manga.
 
@@ -71,7 +72,7 @@ def process_manga_details(title, details):
     return f"Title: {title}, Last Chapter Read: {last_chapter_read}, Last Read At: {last_read_at}"
 
 
-def get_alternative_title(title, alt_titles_dict):
+def get_alternative_title(title: str, alt_titles_dict: dict) -> str:
     """
     Gets the alternative title of a manga.
 
@@ -97,7 +98,7 @@ def get_alternative_title(title, alt_titles_dict):
 
 
 # Function to get manga names from a file
-def Get_Manga_Names(app, alt_titles_dict):
+def Get_Manga_Names(app: object, alt_titles_dict: dict):
     """
     Gets the manga names from a file and stores them in a dictionary.
 
@@ -118,40 +119,52 @@ def Get_Manga_Names(app, alt_titles_dict):
     global manga_names_chapters
     # Get the difference between the current and previous file
     file = Get_File_Diff(app)
-    try:
-        # Iterate through each row in the file
-        for row in file.itertuples():
-            # Get the title, last chapter read, status, and last read at from the row
-            title = row.title
-            # Get the alternative title
-            alt_title = get_alternative_title(title, alt_titles_dict)
-            last_chapter_read = row.last_chapter_read
-            status = row.status
-            last_read_at = row.last_read_at
-            Logger.DEBUG(
-                f"Processing row: {title}, {last_chapter_read}, {status}, {last_read_at}"
-            )
+    if file is not None:
+        try:
+            # Iterate through each row in the file
+            for row in file.itertuples():
+                # Get the title, last chapter read, status, and last read at from the row
+                title: str = str(row.title)
+                # Get the alternative title
+                alt_title: str = get_alternative_title(title, alt_titles_dict)
+                last_chapter_read = row.last_chapter_read
+                status = row.status
+                last_read_at = row.last_read_at
+                Logger.DEBUG(
+                    f"Processing row: {title}, {last_chapter_read}, {status}, {last_read_at}"
+                )
 
-            try:
-                # Add the alternative title and its details to the manga_names_chapters dictionary
-                manga_names_chapters[alt_title] = {
-                    "last_chapter_read": int(last_chapter_read),
-                    "status": status,
-                    "last_read_at": last_read_at,
-                }
-                Logger.DEBUG(f"Added {alt_title} to manga_names_chapters dictionary.")
-            except (ValueError, AttributeError):
-                # If no last chapter read, print a message and add the alternative title
-                app.update_terminal(f"Title: {alt_title}, Has no Last Chapter Read")
-                app.update_terminal(status)
-                if status == "plan_to_read":
-                    manga_names_chapters[alt_title] = {"status": status}
+                try:
+                    # Add the alternative title and its details to the manga_names_chapters dictionary
+                    manga_names_chapters[alt_title] = {
+                        "last_chapter_read": (
+                            int(last_chapter_read)
+                            if isinstance(last_chapter_read, (int, float, str))
+                            else None
+                        ),
+                        "status": status,
+                        "last_read_at": last_read_at,
+                    }
                     Logger.DEBUG(
-                        f"Added {alt_title} to manga_names_chapters dictionary "
-                        "with status plan_to_read."
+                        f"Added {alt_title} to manga_names_chapters dictionary."
                     )
-    except AttributeError:
-        Logger.ERROR("AttributeError encountered. Returning None.")
+                except (ValueError, AttributeError):
+                    # If no last chapter read, print a message and add the alternative title
+                    Logger.DEBUG(f"Title: {alt_title}, Has no Last Chapter Read")
+                    Logger.DEBUG(f"Title: {alt_title}, Status: {status}")
+                    app.update_terminal(f"Title: {alt_title}, Has no Last Chapter Read")
+                    app.update_terminal(status)
+                    if status in ("plan_to_read", "on_hold"):
+                        manga_names_chapters[alt_title] = {"status": status}
+                        Logger.DEBUG(
+                            f"Added {alt_title} to manga_names_chapters dictionary "
+                            f"with status {status}."
+                        )
+        except AttributeError:
+            Logger.ERROR("AttributeError encountered. Returning None.")
+            return None
+    else:
+        Logger.ERROR("File not found. Returning None.")
         return None
 
     # Return the manga_names_chapters dictionary
@@ -160,7 +173,7 @@ def Get_Manga_Names(app, alt_titles_dict):
 
 
 # Function to get the difference between the current and previous file
-def Get_File_Diff(app):
+def Get_File_Diff(app: object) -> Union[pd.DataFrame, None]:
     """
     Gets the difference between the current and previous file.
 

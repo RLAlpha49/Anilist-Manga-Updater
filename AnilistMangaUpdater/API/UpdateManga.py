@@ -8,6 +8,7 @@ and progress of the manga, and sending the update request to the Anilist API.
 # pylint: disable=C0103, W0601, W0603, E0401
 
 from datetime import datetime, timedelta
+from typing import Optional, Union
 
 from API.AccessAPI import (  # noqa: F401
     Get_User,
@@ -19,7 +20,12 @@ from API.APIRequests import api_request
 from Utils.log import Logger
 
 
-def update_manga_variables(manga_id, progress=None, status=None, private=None):
+def update_manga_variables(
+    manga_id: int,
+    progress: Optional[Union[int, None]] = None,
+    status: Optional[Union[str, None]] = None,
+    private: Optional[Union[bool, None]] = None,
+) -> dict:
     """
     Creates a dictionary of variables for updating a manga.
 
@@ -46,7 +52,12 @@ def update_manga_variables(manga_id, progress=None, status=None, private=None):
     return filtered_variables
 
 
-def Update_Manga(manga, app, chapter_anilist, manga_status):
+def Update_Manga(
+    manga: object,
+    app: object,
+    chapter_anilist: int,
+    manga_status: Union[int, str, None],
+) -> Optional[bool]:
     """
     Updates the manga in the user's list.
 
@@ -85,7 +96,7 @@ def Update_Manga(manga, app, chapter_anilist, manga_status):
     return updated
 
 
-def update_status(manga):
+def update_status(manga: object) -> str:
     """
     Updates the status of the given manga.
 
@@ -96,17 +107,25 @@ def update_status(manga):
     Returns:
     str: The updated status of the manga.
     """
+    if manga.last_read_at is None:
+        time_difference = timedelta.max
+    else:
+        time_difference = datetime.now() - manga.last_read_at
+
     return (
         "PAUSED"
         if manga.status != "plan_to_read"
         and int(manga.months) != 0
-        and datetime.now() - manga.last_read_at
-        >= timedelta(days=30 * int(manga.months))
+        and time_difference >= timedelta(days=30 * int(manga.months))
         else status_mapping.get(manga.status.lower(), manga.status)
     )
 
 
-def update_variables(manga, chapter_anilist, manga_status):
+def update_variables(
+    manga: object,
+    chapter_anilist: Union[str, int, None],
+    manga_status: Union[str, int, None],
+) -> list[dict]:
     """
     Updates the variables for the given manga.
 
@@ -120,11 +139,20 @@ def update_variables(manga, chapter_anilist, manga_status):
     list: A list of dictionaries, each containing the variables for the mutation request.
     """
     variables_list = []
+    manga.last_chapter_read = (
+        0
+        if manga.last_chapter_read is None and manga.last_chapter_read
+        else manga.last_chapter_read
+    )
     if manga_status == "COMPLETED":
         pass
     elif manga.status == "PLANNING" or (
         manga.status != manga_status
-        and (manga.last_chapter_read <= chapter_anilist or chapter_anilist is None)
+        and (
+            manga.last_chapter_read is None
+            or manga.last_chapter_read <= chapter_anilist
+            or chapter_anilist is None
+        )
     ):
         manga.last_chapter_read = (
             0 if manga.status == "PLANNING" else manga.last_chapter_read
@@ -132,14 +160,20 @@ def update_variables(manga, chapter_anilist, manga_status):
         first_variables = update_manga_variables(
             manga.id,
             status=manga.status,
-            progress=(0 if manga.status == "PLANNING" else chapter_anilist),
+            progress=(
+                0
+                if manga.status == "PLANNING"
+                else int(chapter_anilist) if chapter_anilist is not None else None
+            ),
             private=manga.private_bool,
         )
         variables_list.append(first_variables)
-    elif manga.last_chapter_read > chapter_anilist or chapter_anilist is None:
+    elif manga.last_chapter_read is not None and (
+        manga.last_chapter_read > chapter_anilist or chapter_anilist is None
+    ):
         first_variables = update_manga_variables(
             manga.id,
-            progress=((chapter_anilist if chapter_anilist is not None else 0) + 1),
+            progress=((int(chapter_anilist) if chapter_anilist is not None else 0) + 1),
             private=manga.private_bool,
         )
         third_variables = None
@@ -162,7 +196,9 @@ def update_variables(manga, chapter_anilist, manga_status):
     return variables_list
 
 
-def update_manga_progress(manga, app, variables_list, chapter_anilist):
+def update_manga_progress(
+    manga: object, app: object, variables_list: list, chapter_anilist: int
+) -> Optional[bool]:
     """
     Updates the progress of the given manga.
 
@@ -206,7 +242,9 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
         Logger.DEBUG(f"Received response: {response}")
         if response:
             Logger.INFO("Response is successful.")
-            if manga.last_chapter_read > chapter_anilist or chapter_anilist is None:
+            if manga.last_chapter_read is not None and (
+                manga.last_chapter_read > chapter_anilist or chapter_anilist is None
+            ):
                 Logger.DEBUG(
                     "Last read chapter is greater than AniList chapter or AniList chapter is None."
                 )
@@ -223,10 +261,16 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
                     Logger.DEBUG(f"Updated chapters_updated to: {chapters_updated}")
                     update_sent = True
             else:
-                message = (
-                    f"Manga: {manga.name}({manga.id}) Has been set to chapter "
-                    f"{manga.last_chapter_read}\n"
-                )
+                if manga.last_chapter_read is not None:
+                    message = (
+                        f"Manga: {manga.name}({manga.id}) Has been set to chapter "
+                        f"{manga.last_chapter_read}\n"
+                    )
+                else:
+                    message = (
+                        f"Manga: {manga.name}({manga.id}) Status has been set to "
+                        f"{manga.status}\n"
+                    )
                 Logger.DEBUG(message)
                 app.update_terminal(message)
                 break
@@ -240,7 +284,7 @@ def update_manga_progress(manga, app, variables_list, chapter_anilist):
     return True
 
 
-def Get_Chapters_Updated():
+def Get_Chapters_Updated() -> int:
     """
     Get the number of chapters updated.
 
@@ -255,7 +299,7 @@ def Get_Chapters_Updated():
     return chapters_updated
 
 
-def Set_Chapters_Updated():
+def Set_Chapters_Updated() -> None:
     """
     Set the number of chapters updated to zero.
 

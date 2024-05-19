@@ -7,7 +7,7 @@ Queries:
 - FORMAT: Fetches the format of a specific media item by ID.
 """
 
-VIEWER = """
+VIEWER: str = """
 query {
         Viewer {
             id
@@ -16,7 +16,7 @@ query {
     }
 """
 
-MANGALIST = """
+MANGALIST: str = """
 query ($userId: Int, $chunk: Int, $perChunk: Int) {
         MediaListCollection (userId: $userId, type: MANGA, chunk: $chunk, perChunk: $perChunk) {
             lists {
@@ -30,7 +30,7 @@ query ($userId: Int, $chunk: Int, $perChunk: Int) {
     }
 """
 
-FORMAT = """
+FORMAT: str = """
 query ($id: Int) {
         Media (id: $id) {
             id

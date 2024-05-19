@@ -6,7 +6,7 @@ It includes classes for the main window, buttons, and other GUI components,
 as well as methods for handling user input and updating the GUI.
 """
 
-# pylint: disable=C0103, W0604, E0401, C0413, C0302
+# pylint: disable=C0103, W0604, E0401, C0413, C0302, W0603
 # Import necessary modules
 import datetime
 import os
@@ -14,7 +14,9 @@ import platform
 import sys
 import threading
 import time
+import tkinter
 from tkinter import filedialog, messagebox, simpledialog
+from typing import Optional, Union
 
 import CTkToolTip
 import customtkinter
@@ -39,9 +41,10 @@ from Utils.WriteToFile import (  # noqa: E402
 )
 
 # Define a global variable for the progress
-global progress, progress_status
-progress = 0
+global progress, progress_status, program_thread
+progress: float = 0
 progress_status = "Waiting..."
+program_thread: Union[threading.Thread, None] = None
 
 # Set the appearance mode and color theme for the custom tkinter library
 if platform.system() == "Linux":
@@ -51,14 +54,14 @@ else:
 customtkinter.set_default_color_theme("blue")
 
 # Define the path for the configuration file
-config_path = "config.json"
+config_path: str = "config.json"
 
 # Define the base path and image directory for the application
 base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 base_path = os.path.dirname(os.path.dirname(base_path))
 
-image_directory = os.path.join(base_path, "Resources")
-image1dir = os.path.join(image_directory, "Anilist-Manga-Updater-Logo2.png")
+image_directory: str = os.path.join(base_path, "Resources")
+image1dir: str = os.path.join(image_directory, "Anilist-Manga-Updater-Logo2.png")
 
 
 # Define a class for the access token thread
@@ -72,15 +75,15 @@ class AccessTokenThread(threading.Thread):
         a flag used to stop the thread
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the thread and define a stop flag for the thread.
         """
         super().__init__()
-        self.stop = False
+        self.stop: bool = False
         Logger.DEBUG("AccessTokenThread initialized.")
 
-    def run(self):
+    def run(self) -> None:
         """
         Run the Get_Access_Token function in the thread.
         """
@@ -91,7 +94,7 @@ class AccessTokenThread(threading.Thread):
         Get_Access_Token(app)  # pylint: disable=E0601, E0606
         Logger.INFO("AccessTokenThread finished.")
 
-    def stop_thread(self):
+    def stop_thread(self) -> None:
         """
         Set the stop flag to True to stop the thread.
         """
@@ -99,15 +102,115 @@ class AccessTokenThread(threading.Thread):
         Logger.INFO("AccessTokenThread stopped.")
 
 
+def edit_alternative_title(alt_titles_dict, original_title) -> None:
+    """
+    Edit an alternative title.
+    """
+    Logger.INFO("Prompting user for new alternative title.")
+    new_alternative_title = simpledialog.askstring(
+        "Edit Alternative Title", "Enter the new alternative title:"
+    )
+    if new_alternative_title is None or new_alternative_title == "":
+        Logger.WARNING("No new alternative title provided. Exiting edit.")
+        return
+    Logger.INFO(f"New alternative title provided: {new_alternative_title}")
+    alt_titles_dict[original_title] = new_alternative_title
+    Save_Alt_Titles_To_File(alt_titles_dict)
+    Logger.INFO("Saved alternative titles to file.")
+
+
+def delete_alternative_title(alt_titles_dict, original_title) -> None:
+    """
+    Delete an alternative title.
+    """
+    Logger.INFO(f"Deleting alternative title: {original_title}")
+    alt_titles_dict.pop(original_title, None)
+    Save_Alt_Titles_To_File(alt_titles_dict)
+    Logger.INFO("Saved alternative titles to file.")
+
+
+def add_alternative_title(alt_titles_dict) -> None:
+    """
+    Add an alternative title.
+    """
+    Logger.INFO("Prompting user for original title.")
+    original_title = simpledialog.askstring(
+        "Add Alternative Title", "Enter the original title:"
+    )
+    if original_title is None or original_title == "":
+        Logger.WARNING("No original title provided. Exiting add.")
+        return
+    Logger.INFO(f"Original title provided: {original_title}")
+    Logger.INFO("Prompting user for alternative title.")
+    alternative_title = simpledialog.askstring(
+        "Add Alternative Title", "Enter the alternative title:"
+    )
+    if alternative_title is None or alternative_title == "":
+        Logger.WARNING("No alternative title provided. Exiting add.")
+        return
+    Logger.INFO(f"Alternative title provided: {alternative_title}")
+    alt_titles_dict[original_title] = alternative_title
+    Save_Alt_Titles_To_File(alt_titles_dict)
+    Logger.INFO("Saved alternative titles to file.")
+
+
+def change_appearance_mode_event(new_appearance_mode: str) -> None:
+    """
+    This method changes the appearance mode of the application.
+
+    Parameters:
+    new_appearance_mode (str): The new appearance mode.
+    """
+    # Log the new appearance mode
+    Logger.INFO(f"Changing appearance mode to: {new_appearance_mode}")
+
+    # Change the appearance mode of the application
+    customtkinter.set_appearance_mode(new_appearance_mode)
+
+    # Log the successful change
+    Logger.INFO("Appearance mode changed successfully.")
+
+
+def change_scaling_event(new_scaling: str) -> None:
+    """
+    This method changes the UI scaling of the application.
+
+    Parameters:
+    new_scaling (str): The new UI scaling.
+    """
+    # Log the new scaling
+    Logger.INFO(f"Changing UI scaling to: {new_scaling}")
+
+    # Change the UI scaling of the application
+    new_scaling_float = int(new_scaling.replace("%", "")) / 100
+    customtkinter.set_widget_scaling(new_scaling_float)
+
+    # Log the successful change
+    Logger.INFO("UI scaling changed successfully.")
+
+
+def on_close() -> None:
+    """
+    This method is called when the application is closed.
+
+    It exits the application.
+    """
+    # Log the application closing
+    Logger.INFO("Closing the application.")
+
+    # Exit the application
+    sys.exit(0)
+
+
 class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
-    def __init__(self):  # pylint: disable=R0915
+    def __init__(self) -> None:  # pylint: disable=R0915
         super().__init__()
 
         global program_thread  # pylint: disable=W0601
         program_thread = None
         self.after_id = None
-        self.start_time = None
-        self.thread1 = None
+        self.start_time: float = 0
+        self.thread1: Union[AccessTokenThread, None] = None
         Logger.DEBUG("Initialized GUI.")
 
         # Load the application logo
@@ -204,7 +307,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(
             self.sidebar_frame,
             values=["Light", "Dark", "System"],
-            command=self.change_appearance_mode_event,
+            command=change_appearance_mode_event,
         )
         self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 0))
         Logger.INFO("Created 'Appearance Mode' option menu.")
@@ -219,14 +322,14 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.scaling_optionemenu = customtkinter.CTkOptionMenu(
             self.sidebar_frame,
             values=["80%", "90%", "100%", "110%", "120%"],
-            command=self.change_scaling_event,
+            command=change_scaling_event,
         )
         self.scaling_optionemenu.grid(row=11, column=0, padx=20, pady=(10, 15))
         Logger.INFO("Created 'UI Scaling' option menu.")
 
         # Create an exit button
         self.exit_button = customtkinter.CTkButton(
-            self.sidebar_frame, command=self.on_close, text="Exit"
+            self.sidebar_frame, command=on_close, text="Exit"
         )
         self.exit_button.grid(row=12, column=0, padx=20, pady=(5, 15))
         Logger.INFO("Created 'Exit' button.")
@@ -356,7 +459,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Disabled terminal.")
 
         # Set the protocol for the window close button to call the on_close function
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.protocol("WM_DELETE_WINDOW", on_close)
         Logger.INFO("Set window close button protocol to call 'on_close' function.")
 
         # Initialize the file path variables
@@ -370,7 +473,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.start_button,
             (
                 "Starts the program.\n"
-                "The only way to stop this is to exit the AnilistMangaUpdater with the exit button.",
+                "The only way to stop this is to exit the AnilistMangaUpdater with the exit button."
             ),
         )
         Logger.INFO("Created tooltip for 'Start' button.")
@@ -391,7 +494,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                 "This checks when the last time you read a chapter was and if it was "
                 "after the number of months you set.\n"
                 "It will change the status to Paused.\n"
-                "If you want the program to ignore this set this to 0",
+                "If you want the program to ignore this set this to 0"
             ),
         )
         Logger.INFO("Created tooltip for 'Month' button.")
@@ -416,7 +519,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.scaling_optionemenu,
             (
                 "Changes the UI scaling of the application.\n"
-                "You may need to resize window to fit the new scaling.",
+                "You may need to resize window to fit the new scaling."
             ),
         )
         Logger.INFO("Created tooltip for 'UI Scaling' option menu.")
@@ -461,7 +564,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         )
         Logger.INFO("Created tooltip for progress bar.")
 
-    def manage_alternative_titles(self):
+    def manage_alternative_titles(self) -> None:
         """
         This method manages alternative titles.
         It allows the user to add, edit, or delete alternative titles.
@@ -487,19 +590,19 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             Logger.INFO(f"Original title selected: {original_title}")
             if action == "edit":
                 Logger.INFO("Starting to edit alternative title.")
-                self.edit_alternative_title(alt_titles_dict, original_title)
+                edit_alternative_title(alt_titles_dict, original_title)
                 Logger.INFO("Finished editing alternative title.")
             elif action == "delete":
                 Logger.INFO("Starting to delete alternative title.")
-                self.delete_alternative_title(alt_titles_dict, original_title)
+                delete_alternative_title(alt_titles_dict, original_title)
                 Logger.INFO("Finished deleting alternative title.")
         elif action == "add":
             Logger.INFO("Starting to add alternative title.")
-            self.add_alternative_title(alt_titles_dict)
+            add_alternative_title(alt_titles_dict)
             Logger.INFO("Finished adding alternative title.")
         Logger.INFO("Finished managing alternative titles.")
 
-    def get_action(self):
+    def get_action(self) -> Union[str, None]:
         """
         Get the action from the user.
         """
@@ -519,7 +622,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO(f"User selected action: {options[action_index - 1]}")
         return options[action_index - 1]
 
-    def get_original_title(self, alt_titles_dict):
+    def get_original_title(self, alt_titles_dict) -> Union[str, None]:
         """
         Get the original title from the user.
         """
@@ -537,56 +640,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO(f"User selected title: {titles[title_index - 1][0]}")
         return titles[title_index - 1][0]
 
-    def edit_alternative_title(self, alt_titles_dict, original_title):
-        """
-        Edit an alternative title.
-        """
-        Logger.INFO("Prompting user for new alternative title.")
-        new_alternative_title = simpledialog.askstring(
-            "Edit Alternative Title", "Enter the new alternative title:"
-        )
-        if new_alternative_title is None or new_alternative_title == "":
-            Logger.WARNING("No new alternative title provided. Exiting edit.")
-            return
-        Logger.INFO(f"New alternative title provided: {new_alternative_title}")
-        alt_titles_dict[original_title] = new_alternative_title
-        Save_Alt_Titles_To_File(alt_titles_dict)
-        Logger.INFO("Saved alternative titles to file.")
-
-    def delete_alternative_title(self, alt_titles_dict, original_title):
-        """
-        Delete an alternative title.
-        """
-        Logger.INFO(f"Deleting alternative title: {original_title}")
-        alt_titles_dict.pop(original_title, None)
-        Save_Alt_Titles_To_File(alt_titles_dict)
-        Logger.INFO("Saved alternative titles to file.")
-
-    def add_alternative_title(self, alt_titles_dict):
-        """
-        Add an alternative title.
-        """
-        Logger.INFO("Prompting user for original title.")
-        original_title = simpledialog.askstring(
-            "Add Alternative Title", "Enter the original title:"
-        )
-        if original_title is None or original_title == "":
-            Logger.WARNING("No original title provided. Exiting add.")
-            return
-        Logger.INFO(f"Original title provided: {original_title}")
-        Logger.INFO("Prompting user for alternative title.")
-        alternative_title = simpledialog.askstring(
-            "Add Alternative Title", "Enter the alternative title:"
-        )
-        if alternative_title is None or alternative_title == "":
-            Logger.WARNING("No alternative title provided. Exiting add.")
-            return
-        Logger.INFO(f"Alternative title provided: {alternative_title}")
-        alt_titles_dict[original_title] = alternative_title
-        Save_Alt_Titles_To_File(alt_titles_dict)
-        Logger.INFO("Saved alternative titles to file.")
-
-    def update_estimated_time_remaining(self, estimated_time_remaining):
+    def update_estimated_time_remaining(self, estimated_time_remaining: float) -> None:
         """
         This method updates the estimated time remaining label in the GUI.
 
@@ -595,7 +649,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         if there is still time remaining.
 
         Parameters:
-        estimated_time_remaining (int): The estimated time remaining in seconds.
+        estimated_time_remaining (float): The estimated time remaining in seconds.
         """
         # If estimated_time_remaining is less than 0, set it to 0
         estimated_time_remaining = max(estimated_time_remaining, 0)
@@ -620,7 +674,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                 1000, self.update_estimated_time_remaining, estimated_time_remaining - 1
             )
 
-    def update_progress_bar(self):
+    def update_progress_bar(self) -> None:
         """
         This method updates the progress bar and status label in the GUI.
 
@@ -630,13 +684,13 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
         This method is scheduled to be called every 100 milliseconds.
         """
-        if program_thread.is_alive():
+        if program_thread is not None and program_thread.is_alive():
             # If the thread is running, update the progress and status
             self.progress_bar.set(progress)
             self.status_label.configure(text=f"Status: {progress_status}")
 
             # Update the time taken
-            time_taken = time.time() - self.start_time
+            time_taken: float = time.time() - self.start_time
             minutes, seconds = divmod(time_taken, 60)
             hours, minutes = divmod(minutes, 60)
             self.time_taken_label.configure(
@@ -651,7 +705,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             return
         self.after(50, self.update_progress_bar)
 
-    def update_progress_and_status(self, status, program_progress=None):
+    def update_progress_and_status(
+        self, status: str, program_progress: Optional[Union[float, None]] = None
+    ) -> None:
         """
         This method updates the progress and status of the program.
 
@@ -682,7 +738,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             )
             Logger.INFO(f"Updated progress to: {progress} and status to: {status}")
 
-    def update_terminal(self, text: str):
+    def update_terminal(self, text: str) -> None:
         """
         This method updates the terminal in the GUI with the provided text.
 
@@ -710,7 +766,11 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         # Disable the terminal
         self.terminal.configure(state="disabled")
 
-    def browse_file(self, entry_widget, is_previous):
+    def browse_file(
+        self,
+        entry_widget: Union[tkinter.Entry, customtkinter.CTkEntry],
+        is_previous: bool,
+    ) -> None:
         """
         This method opens a file dialog for the user to select a file, and updates
         the entry widget with the selected file path.
@@ -720,7 +780,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         into the entry widget and stored in the appropriate variable.
 
         Parameters:
-        entry_widget (tkinter.Entry): The entry widget to update with the selected
+        entry_widget (Union[tkinter.Entry, customtkinter.CTkEntry]): The entry widget to update with the selected
         file path.
         is_previous (bool): A flag indicating whether the selected file is a previous
         Kenmei export file.
@@ -769,7 +829,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         entry_widget.configure(state="disabled")
         Logger.INFO("Disabled the entry widget.")
 
-    def open_input_dialog_event(self):
+    def open_input_dialog_event(self) -> None:
         """
         This method opens input dialogs for the client ID and secret ID.
 
@@ -805,7 +865,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             save_config(config, config_path)
             Logger.INFO("Configuration file saved.")
 
-    def open_token_dialog_event(self):
+    def open_token_dialog_event(self) -> None:
         """
         This method opens an input dialog for the access token.
 
@@ -827,7 +887,8 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             Logger.INFO("Loading configuration file.")
             config = load_config(config_path)
             Logger.INFO("Adding Access Token to configuration file.")
-            config["ACCESS_TOKEN"] = token_value
+            if config is not None and isinstance(config, dict):
+                config["ACCESS_TOKEN"] = token_value
             Logger.INFO("Saving configuration file.")
             save_config(config, config_path)
             Logger.INFO("Configuration file saved.")
@@ -835,7 +896,8 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             Logger.INFO("Access Token set.")
             Set_Access_Token(app)
             Logger.INFO("Set Access Token in app.")
-            self.thread1.stop_thread()
+            if self.thread1 is not None:
+                self.thread1.stop_thread()
             Logger.INFO("Stopped thread1.")
         except TypeError:
             # If the user cancels the dialog, show an error message
@@ -843,43 +905,11 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             messagebox.showerror("Error", "Canceled")
             self.update_terminal("Canceled")
             Logger.INFO("Updated terminal with cancellation message.")
-            self.thread1.stop_thread()
+            if self.thread1 is not None:
+                self.thread1.stop_thread()
             Logger.INFO("Stopped thread1.")
 
-    def change_appearance_mode_event(self, new_appearance_mode: str):
-        """
-        This method changes the appearance mode of the application.
-
-        Parameters:
-        new_appearance_mode (str): The new appearance mode.
-        """
-        # Log the new appearance mode
-        Logger.INFO(f"Changing appearance mode to: {new_appearance_mode}")
-
-        # Change the appearance mode of the application
-        customtkinter.set_appearance_mode(new_appearance_mode)
-
-        # Log the successful change
-        Logger.INFO("Appearance mode changed successfully.")
-
-    def change_scaling_event(self, new_scaling: str):
-        """
-        This method changes the UI scaling of the application.
-
-        Parameters:
-        new_scaling (str): The new UI scaling.
-        """
-        # Log the new scaling
-        Logger.INFO(f"Changing UI scaling to: {new_scaling}")
-
-        # Change the UI scaling of the application
-        new_scaling_float = int(new_scaling.replace("%", "")) / 100
-        customtkinter.set_widget_scaling(new_scaling_float)
-
-        # Log the successful change
-        Logger.INFO("UI scaling changed successfully.")
-
-    def access_token_button_clicked(self):
+    def access_token_button_clicked(self) -> None:
         """
         This method is called when the access token button is clicked.
 
@@ -912,7 +942,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.thread1.join()
         Logger.INFO("Access token thread finished.")
 
-    def month_button_clicked(self):
+    def month_button_clicked(self) -> None:
         """
         This method is called when the month button is clicked.
 
@@ -963,7 +993,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.update_terminal("Canceled")
             Logger.INFO("Updated terminal with cancellation message.")
 
-    def start_button_clicked(self):
+    def start_button_clicked(self) -> None:
         """
         This method is called when the start button is clicked.
 
@@ -1008,7 +1038,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Resetting the progress to 0.")
         progress = 0
 
-    def private_button_clicked(self):
+    def private_button_clicked(self) -> None:
         """
         This method is called when the private button is clicked.
 
@@ -1069,18 +1099,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                 messagebox.showerror("Error", "Canceled")
                 self.update_terminal("Canceled")
                 Logger.INFO("Updated terminal with cancellation message.")
-
-    def on_close(self):
-        """
-        This method is called when the application is closed.
-
-        It exits the application.
-        """
-        # Log the application closing
-        Logger.INFO("Closing the application.")
-
-        # Exit the application
-        sys.exit(0)
 
 
 if __name__ == "__main__":

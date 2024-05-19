@@ -15,6 +15,8 @@ import logging
 import os
 import sys
 from datetime import datetime
+from logging import Handler
+from typing import List
 
 # Create logs directory if it doesn't exist
 if not os.path.exists("logs"):
@@ -51,14 +53,14 @@ class Logger:
     """
 
     @staticmethod
-    def setup(max_logs=15):
+    def setup(max_logs: int = 15) -> None:
         """
         Sets up the logger to print to both the terminal and a file.
 
         Parameters:
         max_logs (int): The maximum number of log files to keep.
         """
-        handlers = [
+        handlers: List[Handler] = [
             logging.FileHandler("logs/latest.log", encoding="utf-8"),
             logging.StreamHandler(stream=sys.stdout),
         ]
@@ -70,7 +72,7 @@ class Logger:
         Logger.manage_log_files(max_logs)
 
     @staticmethod
-    def manage_log_files(max_logs):
+    def manage_log_files(max_logs: int) -> None:
         """
         Manages the number of log files in the logs directory.
 
@@ -84,7 +86,7 @@ class Logger:
             os.remove(log_files.pop(0))
 
     @staticmethod
-    def INFO(message: str):
+    def INFO(message: str) -> None:
         """
         Logs an informational message.
 
@@ -94,7 +96,7 @@ class Logger:
         Logger.log(message, logging.INFO)
 
     @staticmethod
-    def DEBUG(message: str):
+    def DEBUG(message: str) -> None:
         """
         Logs a debug message.
 
@@ -104,7 +106,7 @@ class Logger:
         Logger.log(message, logging.DEBUG)
 
     @staticmethod
-    def WARNING(message: str):
+    def WARNING(message: str) -> None:
         """
         Logs a warning message.
 
@@ -114,7 +116,7 @@ class Logger:
         Logger.log(message, logging.WARNING)
 
     @staticmethod
-    def ERROR(message: str):
+    def ERROR(message: str) -> None:
         """
         Logs an error message.
 
@@ -124,7 +126,7 @@ class Logger:
         Logger.log(message, logging.ERROR)
 
     @staticmethod
-    def CRITICAL(message: str):
+    def CRITICAL(message: str) -> None:
         """
         Logs a critical message.
 
@@ -134,7 +136,7 @@ class Logger:
         Logger.log(message, logging.CRITICAL)
 
     @staticmethod
-    def log(message: str, level: int):
+    def log(message: str, level: int) -> None:
         """
         Logs a message with the current time, file name, function name, and line number.
 
