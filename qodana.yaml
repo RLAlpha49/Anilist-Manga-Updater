@@ -10,3 +10,6 @@ exclude:
     paths:
       - Program/Main/GUI.py
       - Program/Utils/dictionaries.py
+      - scripts.py
+  - name: PyMethodMayBeStaticInspection
+  - name: PyRedeclarationInspection
