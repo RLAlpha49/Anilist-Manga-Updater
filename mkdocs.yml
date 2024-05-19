@@ -15,7 +15,7 @@ extra:
       link: https://discordapp.com/users/251479989378220044
   analytics:
     provider: google
-    property:
+    property: G-D5XNSQW23M
     feedback:
       title: Was this page helpful?
       ratings:
