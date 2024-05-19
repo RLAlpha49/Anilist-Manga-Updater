@@ -1,5 +1,5 @@
 """
-This is the titles module. This module is responsible for the list of alternative titles.
+This file contains the Python dictionaries that are used to store the alternative titles, format cache, and title cache.
 """
 
 # pylint: disable=C0301, C0302

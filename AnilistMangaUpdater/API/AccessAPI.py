@@ -37,10 +37,10 @@ def Get_User(app: object) -> Union[int, None]:
     Retrieves the user ID from the Viewer object.
 
     Parameters:
-    app: The application object used to send the API request.
+        app: The application object used to send the API request.
 
     Returns:
-    int: The user ID if the request was successful and the user ID is not None, otherwise None.
+        int: The user ID if the request was successful and the user ID is not None, otherwise None.
     """
     Logger.INFO("Function Get_User called.")
     query = Queries.VIEWER
@@ -61,11 +61,11 @@ def Get_User_Manga_List(app: object) -> list[dict[str, Union[int, str]]]:
     Retrieves the entire manga list of a user from AniList.
 
     Parameters:
-    app: The application object used to send the API request.
+        app: The application object used to send the API request.
 
     Returns:
-    list: The list of manga, each represented as a dictionary with 'mediaId',
-    'progress', and 'status' keys.
+        list: The list of manga, each represented as a dictionary with 'mediaId',
+        'progress', and 'status' keys.
     """
     Logger.INFO("Function Get_User_Manga_List called.")
     query: str = Queries.MANGALIST
@@ -110,12 +110,12 @@ def Get_Format(media_id: int, app: object) -> Union[str, None]:
     Retrieves the format of a media item from AniList.
 
     Parameters:
-    media_id (int): The ID of the media item.
-    app: The application object used to send the API request.
+        media_id (int): The ID of the media item.
+        app: The application object used to send the API request.
 
     Returns:
-    str: The format of the media item if the request was successful and
-    the format is not None, otherwise None.
+        str: The format of the media item if the request was successful and
+        the format is not None, otherwise None.
     """
     Logger.INFO(f"Function Get_Format called with media_id: {media_id}")
     # Define the query to get the format of the manga
@@ -141,13 +141,13 @@ class Manga:  # pylint: disable=R0903
     Represents a Manga with its details.
 
     Attributes:
-    name: The name of the manga.
-    id: The ID of the manga.
-    last_chapter_read: The last chapter of the manga that was read.
-    private_bool: A boolean indicating whether the manga is private.
-    status: The status of the manga.
-    last_read_at: The date and time when the manga was last read.
-    months: The number of months since the manga was last read.
+        name: The name of the manga.
+        id: The ID of the manga.
+        last_chapter_read: The last chapter of the manga that was read.
+        private_bool: A boolean indicating whether the manga is private.
+        status: The status of the manga.
+        last_read_at: The date and time when the manga was last read.
+        months: The number of months since the manga was last read.
     """
 
     def __init__(  # pylint: disable=R0913

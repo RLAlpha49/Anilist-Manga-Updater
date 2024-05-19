@@ -67,17 +67,30 @@ image1dir: str = os.path.join(image_directory, "Anilist-Manga-Updater-Logo2.png"
 # Define a class for the access token thread
 class AccessTokenThread(threading.Thread):
     """
-    A class used to create a thread for getting the access token.
+    A class that extends the threading.Thread class in Python. This class is used to create a separate thread for
+    obtaining the access token from the Anilist API.
 
-    Attributes
-    ----------
-    stop : bool
-        a flag used to stop the thread
+    Attributes:
+        stop : bool
+            A flag used to stop the thread. It is initially set to False.
+
+    Methods:
+        __init__():
+            Initializes the AccessTokenThread. Sets the stop flag to False.
+
+        run():
+            Overrides the run method of threading.Thread. It checks if the global 'app' variable is None. If it is,
+            it logs an error and returns. Otherwise, it calls the Get_Access_Token function with 'app' as the argument.
+
+        stop_thread():
+            Sets the stop flag to True, indicating that the thread should stop running.
     """
 
     def __init__(self) -> None:
         """
         Initialize the thread and define a stop flag for the thread.
+
+        The stop flag is initially set to False, indicating that the thread should not be stopped.
         """
         super().__init__()
         self.stop: bool = False
@@ -86,6 +99,10 @@ class AccessTokenThread(threading.Thread):
     def run(self) -> None:
         """
         Run the Get_Access_Token function in the thread.
+
+        This method is called when the thread's start() method is invoked.
+        It checks if the global 'app' variable is None. If it is, it logs an error and returns.
+        Otherwise, it calls the Get_Access_Token function with 'app' as the argument.
         """
         if app is None:  # pylint: disable=E0606
             Logger.ERROR("App object not found.")
@@ -97,6 +114,9 @@ class AccessTokenThread(threading.Thread):
     def stop_thread(self) -> None:
         """
         Set the stop flag to True to stop the thread.
+
+        This method can be called to stop the thread. It sets the stop flag to True,
+        which indicates that the thread should stop running.
         """
         self.stop = True
         Logger.INFO("AccessTokenThread stopped.")
@@ -104,7 +124,18 @@ class AccessTokenThread(threading.Thread):
 
 def edit_alternative_title(alt_titles_dict, original_title) -> None:
     """
-    Edit an alternative title.
+    Edits an alternative title in the alternative titles dictionary.
+
+    This function prompts the user to input a new alternative title for a given original title.
+    If the user provides a valid new alternative title, it updates the alternative titles dictionary
+    and saves it to a file.
+
+    Parameters:
+        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative titles as values.
+        original_title (str): The original title for which the alternative title is to be edited.
+
+    Returns:
+        None
     """
     Logger.INFO("Prompting user for new alternative title.")
     new_alternative_title = simpledialog.askstring(
@@ -121,7 +152,17 @@ def edit_alternative_title(alt_titles_dict, original_title) -> None:
 
 def delete_alternative_title(alt_titles_dict, original_title) -> None:
     """
-    Delete an alternative title.
+    Deletes an alternative title from the alternative titles dictionary.
+
+    This function removes the alternative title associated with the given original title
+    from the alternative titles dictionary and saves the updated dictionary to a file.
+
+    Parameters:
+        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative titles as values.
+        original_title (str): The original title for which the alternative title is to be deleted.
+
+    Returns:
+        None
     """
     Logger.INFO(f"Deleting alternative title: {original_title}")
     alt_titles_dict.pop(original_title, None)
@@ -131,7 +172,17 @@ def delete_alternative_title(alt_titles_dict, original_title) -> None:
 
 def add_alternative_title(alt_titles_dict) -> None:
     """
-    Add an alternative title.
+    Adds an alternative title to the alternative titles dictionary.
+
+    This function prompts the user to input an original title and its corresponding alternative title.
+    If the user provides valid inputs, it updates the alternative titles dictionary with the new pair
+    and saves it to a file.
+
+    Parameters:
+        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative titles as values.
+
+    Returns:
+        None
     """
     Logger.INFO("Prompting user for original title.")
     original_title = simpledialog.askstring(
@@ -156,44 +207,55 @@ def add_alternative_title(alt_titles_dict) -> None:
 
 def change_appearance_mode_event(new_appearance_mode: str) -> None:
     """
-    This method changes the appearance mode of the application.
+    Changes the appearance mode of the application.
+
+    This function changes the appearance mode of the application based on the input parameter.
+    It logs the new appearance mode and the successful change of the appearance mode.
 
     Parameters:
-    new_appearance_mode (str): The new appearance mode.
+        new_appearance_mode (str): The new appearance mode to be set. This should be a string representing
+        the desired appearance mode.
+
+    Returns:
+        None
     """
-    # Log the new appearance mode
     Logger.INFO(f"Changing appearance mode to: {new_appearance_mode}")
-
-    # Change the appearance mode of the application
     customtkinter.set_appearance_mode(new_appearance_mode)
-
-    # Log the successful change
     Logger.INFO("Appearance mode changed successfully.")
 
 
 def change_scaling_event(new_scaling: str) -> None:
     """
-    This method changes the UI scaling of the application.
+    Changes the UI scaling of the application.
+
+    This function changes the UI scaling of the application based on the input parameter.
+    It logs the new UI scaling and the successful change of the UI scaling.
 
     Parameters:
-    new_scaling (str): The new UI scaling.
-    """
-    # Log the new scaling
-    Logger.INFO(f"Changing UI scaling to: {new_scaling}")
+        new_scaling (str): The new UI scaling to be set. This should be a string representing the desired UI
+        scaling in percentage format (e.g., "100%").
 
-    # Change the UI scaling of the application
+    Returns:
+        None
+    """
+    Logger.INFO(f"Changing UI scaling to: {new_scaling}")
     new_scaling_float = int(new_scaling.replace("%", "")) / 100
     customtkinter.set_widget_scaling(new_scaling_float)
-
-    # Log the successful change
     Logger.INFO("UI scaling changed successfully.")
 
 
 def on_close() -> None:
     """
-    This method is called when the application is closed.
+    Handles the event when the application is closed.
 
-    It exits the application.
+    This function is triggered when the application is being closed. It logs the closing event and then terminates
+    the application.
+
+    Parameters:
+        None
+
+    Returns:
+        None
     """
     # Log the application closing
     Logger.INFO("Closing the application.")
@@ -566,9 +628,17 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def manage_alternative_titles(self) -> None:
         """
-        This method manages alternative titles.
-        It allows the user to add, edit, or delete alternative titles.
-        The user interacts with the method through a series of dialog boxes and terminal prompts.
+        Manages alternative titles in the application.
+
+        This method allows the user to add, edit, or delete alternative titles. The user interacts with the method
+        through a series of dialog boxes and terminal prompts. The method retrieves the current alternative titles
+        from a file, prompts the user to select an action (add, edit, or delete), and performs the selected action.
+
+        Parameters:
+            None
+
+        Returns:
+            None
         """
         Logger.INFO("Starting to manage alternative titles.")
         alt_titles_dict = Get_Alt_Titles_From_File(alternative_titles_dict)
@@ -624,7 +694,19 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def get_original_title(self, alt_titles_dict) -> Union[str, None]:
         """
-        Get the original title from the user.
+        Prompts the user to select an original title from the alternative titles dictionary.
+
+        This method displays a list of original titles to the user and prompts them to select one.
+        The user's selection is returned. If the user cancels the dialog or enters an invalid selection,
+        the method returns None.
+
+        Parameters:
+            alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative
+            titles as values.
+
+        Returns:
+            str: The original title selected by the user, if a valid selection was made.
+            None: If the user cancelled the dialog or made an invalid selection.
         """
         titles = list(alt_titles_dict.items())
         for i, (title, _) in enumerate(titles, 1):
@@ -642,14 +724,21 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def update_estimated_time_remaining(self, estimated_time_remaining: float) -> None:
         """
-        This method updates the estimated time remaining label in the GUI.
+        Updates the estimated time remaining label in the GUI.
 
-        It converts the estimated time remaining from seconds to hours, minutes, and seconds,
-        updates the time remaining label, and schedules itself to be called again after 1 second
-        if there is still time remaining.
+        This method converts the estimated time remaining from seconds to a time format (hours, minutes,
+        and seconds), updates the time remaining label, and schedules itself to be called again after 1 second if
+        there is still time remaining.
+
+        If the estimated time remaining is less than 0, it is set to 0. If there is still time remaining,
+        and the function is already scheduled, the scheduled function is cancelled. Then, this function is scheduled
+        to be called again after 1 second.
 
         Parameters:
-        estimated_time_remaining (float): The estimated time remaining in seconds.
+            estimated_time_remaining (float): The estimated time remaining in seconds.
+
+        Returns:
+            None
         """
         # If estimated_time_remaining is less than 0, set it to 0
         estimated_time_remaining = max(estimated_time_remaining, 0)
@@ -676,13 +765,17 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def update_progress_bar(self) -> None:
         """
-        This method updates the progress bar and status label in the GUI.
+        Updates the progress bar, status label, and time taken label in the GUI.
 
-        If the program thread is running, it updates the progress and status,
-        as well as the time taken label. If the program thread is not running,
-        it stops the function.
+        This method is scheduled to be called every 100 milliseconds. If the program thread is running,
+        it updates the progress and status, as well as the time taken label. If the program thread is not running,
+        it logs a warning and stops the function.
 
-        This method is scheduled to be called every 100 milliseconds.
+        Parameters:
+            None
+
+        Returns:
+            None
         """
         if program_thread is not None and program_thread.is_alive():
             # If the thread is running, update the progress and status
@@ -698,7 +791,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             )
             self.update_idletasks()
         else:
-            # If the thread is not running, set progress to 0 and stop the function
+            # If the thread is not running, log a warning and stop the function
             Logger.WARNING(
                 "AnilistMangaUpdater thread is not running. Stopping progress bar update."
             )
@@ -706,19 +799,21 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.after(50, self.update_progress_bar)
 
     def update_progress_and_status(
-        self, status: str, program_progress: Optional[Union[float, None]] = None
+            self, status: str, program_progress: Optional[Union[float, None]] = None
     ) -> None:
         """
-        This method updates the progress and status of the program.
+        Updates the progress and status of the program.
 
-        It updates the global variables `progress` and `progress_status` that were
-        updated in the AnilistMangaUpdater.py file. If the `program_progress` is different from
-        `progress`, it updates the objects associated with it.
+        This method updates the global variables `progress` and `progress_status` that are used to track the progress
+        and status of the program. If the `program_progress` parameter is provided and is different from the current
+        `progress`, it updates the progress and status labels in the GUI.
 
         Parameters:
-        status (str): The status of the program.
-        program_progress (float, optional): The progress of the program.
-        Defaults to None.
+            status (str): The new status of the program. program_progress (float, optional): The new progress
+            of the program. If not provided, the current global progress is used.
+
+        Returns:
+            None
         """
         # Update the global variables that were updated in the AnilistMangaUpdater.py file
         global progress, progress_status  # pylint: disable=W0603
@@ -740,14 +835,17 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def update_terminal(self, text: str) -> None:
         """
-        This method updates the terminal in the GUI with the provided text.
+        Updates the terminal in the GUI with the provided text.
 
-        It first checks if the scrollbar is at the bottom. If it is, it will
-        automatically scroll to the end after inserting the text. The terminal is
-        temporarily enabled for the insertion of the text and then disabled again.
+        This method first checks if the scrollbar is at the bottom of the terminal. If it is, the method will
+        automatically scroll to the end after inserting the text. The terminal is temporarily enabled for the insertion
+        of the text and then disabled again to prevent manual edits.
 
         Parameters:
-        text (str): The text to be inserted into the terminal.
+            text (str): The text to be inserted into the terminal.
+
+        Returns:
+            None
         """
         # Check if the scrollbar is at the bottom
         at_bottom = self.terminal.yview()[1] == 1.0
@@ -772,18 +870,21 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         is_previous: bool,
     ) -> None:
         """
-        This method opens a file dialog for the user to select a file, and updates
-        the entry widget with the selected file path.
+        Opens a file dialog for the user to select a file, and updates the entry widget with the selected file path.
 
-        If the user cancels the file dialog, the text of the entry widget is restored
-        to its previous state. If the user selects a file, the file path is inserted
-        into the entry widget and stored in the appropriate variable.
+        This method prompts the user to select a file through a file dialog. The selected file path is then inserted
+        into the provided entry widget and stored in the appropriate variable. If the user cancels the file dialog,
+        the text of the entry widget is restored to its previous state.
 
         Parameters:
-        entry_widget (Union[tkinter.Entry, customtkinter.CTkEntry]): The entry widget to update with the selected
-        file path.
-        is_previous (bool): A flag indicating whether the selected file is a previous
-        Kenmei export file.
+            entry_widget (Union[tkinter.Entry, customtkinter.CTkEntry]): The entry widget to be updated with
+            the selected file path.
+            is_previous (bool): A flag indicating whether the selected file is a previous Kenmei
+            export file. If True, the selected file path is stored in the 'previous_file_path' variable. If False,
+            it is stored in the 'file_path' variable.
+
+        Returns:
+            None
         """
         # Store the current text of the entry widget
         current_text = entry_widget.get()
@@ -831,10 +932,17 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def open_input_dialog_event(self) -> None:
         """
-        This method opens input dialogs for the client ID and secret ID.
+        Opens input dialogs for the client ID and secret ID.
 
-        If the user cancels either dialog, it updates the terminal with a cancellation message.
-        If the user enters both IDs, it creates a configuration file and saves it.
+        This method prompts the user to input the client ID and secret ID through input dialogs. If the user cancels
+        either dialog, a cancellation message is updated in the terminal. If the user enters both IDs,
+        a configuration file is created and saved.
+
+        Parameters:
+            None
+
+        Returns:
+            None
         """
         # Open input dialogs for the client ID and secret ID
         Logger.INFO("Opening input dialog for the Client ID.")
@@ -867,12 +975,21 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def open_token_dialog_event(self) -> None:
         """
-        This method opens an input dialog for the access token.
+        Opens an input dialog for the user to enter the access token.
 
-        If the user cancels the dialog, it shows an error message and updates the
-        terminal with a cancellation message. If the user enters the access token,
-        it loads the configuration file, adds the access token, and saves the
-        configuration file.
+        This method prompts the user to input the access token through an input dialog. If the user cancels the dialog,
+        an error message is displayed and the terminal is updated with a cancellation message. If the user enters the
+        access token, the method loads the configuration file, adds the access token to it, and saves the updated
+        configuration file. If the thread for obtaining the access token is running, it is stopped.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Raises:
+            TypeError: If the user cancels the input dialog.
         """
         # Open an input dialog for the access token
         Logger.INFO("Opening input dialog for the Access Token.")
@@ -911,11 +1028,21 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def access_token_button_clicked(self) -> None:
         """
-        This method is called when the access token button is clicked.
+        Handles the event when the access token button is clicked.
 
-        It gets the configuration, pauses execution for 2 seconds, creates a new
-        thread for getting the access token, starts the access token thread, opens
-        the token dialog, and waits for the access token thread to finish.
+        This method is triggered when the user clicks on the access token button. It performs the following steps:\n
+        1. Retrieves the current configuration of the application.
+        2. Pauses the execution for 2 seconds.
+        3. Creates a new thread for obtaining the access token from the Anilist API.
+        4. Starts the newly created thread.
+        5. Opens an input dialog for the user to enter the access token.
+        6. Waits for the access token thread to finish.
+
+        Parameters:
+            None
+
+        Returns:
+            None
         """
         # Get the configuration
         Logger.INFO("Getting the configuration.")
@@ -944,13 +1071,20 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def month_button_clicked(self) -> None:
         """
-        This method is called when the month button is clicked.
+        Handles the event when the month button is clicked.
 
-        It opens an input dialog for the user to enter the number of months. If the
-        user input is a digit, it updates the number of months in the configuration
-        and saves it. If the configuration is not found, it shows an error message
-        and updates the terminal. If the user input is not a digit, it shows an error
-        message and updates the terminal.
+        This method is triggered when the user clicks on the month button. It performs the following steps:\n
+        1. Opens an input dialog for the user to enter the number of months.
+        2. If the user input is a digit, it loads the configuration, updates the number of months in the
+            configuration, and saves it.
+        3. If the configuration is not found, it displays an error message and updates the terminal.
+        4. If the user input is not a digit, it displays an error message and updates the terminal.
+
+        Parameters:
+        None
+
+        Returns:
+        None
         """
         while True:
             # Open an input dialog for the number of months
@@ -995,13 +1129,23 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def start_button_clicked(self) -> None:
         """
-        This method is called when the start button is clicked.
+        Handles the event when the start button is clicked.
 
-        It checks if the program thread is already running. If it is, it returns
-        immediately. If the program thread is not running, it creates a new thread
-        for the program, starts the program thread, sets the start time to the
-        current time, updates the time taken label, updates the progress bar,
-        and resets the progress to 0.
+        This method is triggered when the user clicks on the start button. It performs the following steps:\n
+            1. Checks if the program thread is already running. If it is, it returns immediately.
+            2. If the program thread is not running, it imports the AnilistMangaUpdater class.
+            3. Creates a new thread for the program.
+            4. Starts the newly created thread.
+            5. Sets the start time to the current time.
+            6. Updates the time taken label.
+            7. Updates the progress bar.
+            8. Resets the progress to 0.
+
+        Parameters:
+            None
+
+        Returns:
+            None
         """
         global progress  # pylint: disable=W0603
         global program_thread  # pylint: disable=W0601
@@ -1040,14 +1184,21 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def private_button_clicked(self) -> None:
         """
-        This method is called when the private button is clicked.
+        Handles the event when the private button is clicked.
 
-        It opens an input dialog for the user to enter the private value. If the user
-        input is "yes" or "no", it updates the private value in the configuration and
-        saves it. If the configuration is not found, it shows an error message and
-        updates the terminal. If the user input is not "yes" or "no", it shows an error
-        message and updates the terminal. If the user cancels the dialog, it shows an
-        error message and updates the terminal.
+        This method is triggered when the user clicks on the private button. It performs the following steps:\n
+        1. Opens an input dialog for the user to enter the private value.
+        2. If the user input is "yes" or "no", it loads the configuration, updates the private value in the
+            configuration, and saves it.
+        3. If the configuration is not found, it displays an error message and updates the terminal.
+        4. If the user input is not "yes" or "no", it displays an error message and updates the terminal.
+        5. If the user cancels the dialog, it displays an error message and updates the terminal.
+
+        Parameters:
+            None
+
+        Returns:
+            None
         """
         while True:
             # Open an input dialog for the private value

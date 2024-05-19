@@ -17,25 +17,25 @@ class MangaSearch:  # pylint: disable=R0902
     A class used to search for a manga on Anilist.
 
     Attributes:
-    name (str): The name of the manga to search for.
-    last_chapter_read (int): The last chapter read of the manga.
-    app: The application object used to update the terminal and progress.
-    max_retries (int, optional): The maximum number of retries. Defaults to 5.
-    delay (int, optional): The delay between retries in seconds. Defaults to 15.
-    retry_count (int): The current number of retries.
-    matches (list): The list of matches from the search results.
-    id_list (list): The list of IDs for the matches.
+        name (str): The name of the manga to search for.
+        last_chapter_read (int): The last chapter read of the manga.
+        app: The application object used to update the terminal and progress.
+        max_retries (int, optional): The maximum number of retries. Defaults to 5.
+        delay (int, optional): The delay between retries in seconds. Defaults to 15.
+        retry_count (int): The current number of retries.
+        matches (list): The list of matches from the search results.
+        id_list (list): The list of IDs for the matches.
 
     Methods:
-    search_manga(): Searches for the manga on Anilist.
-    process_manga_item(manga_item): Processes a manga item from the search results.
-    process_title(title): Processes the title by replacing certain characters.
-    check_title_match(title): Checks if the title matches the name.
-    get_id_list(): Gets the list of IDs from the matches.
-    print_details(): Prints the details of the matches.
-    handle_no_ids_found(): Handles the case where no IDs are found.
-    handle_server_error(e): Handles server errors.
-    get_manga_id(): Retrieves the ID of the manga.
+        search_manga(): Searches for the manga on Anilist.
+        process_manga_item(manga_item): Processes a manga item from the search results.
+        process_title(title): Processes the title by replacing certain characters.
+        check_title_match(title): Checks if the title matches the name.
+        get_id_list(): Gets the list of IDs from the matches.
+        print_details(): Prints the details of the matches.
+        handle_no_ids_found(): Handles the case where no IDs are found.
+        handle_server_error(e): Handles server errors.
+        get_manga_id(): Retrieves the ID of the manga.
     """
 
     def __init__(  # pylint: disable=R0913
@@ -50,15 +50,15 @@ class MangaSearch:  # pylint: disable=R0902
         Initializes the MangaSearch object.
 
         Parameters:
-        name (str): The name of the manga to search for.
-        last_chapter_read (int): The last chapter read of the manga.
-        app: The application object used to update the terminal and progress.
-        max_retries (int, optional): The maximum number of retries. Defaults to 5.
-        delay (float, optional): The delay between retries in seconds. Defaults to 15.
-        retry_count (int): The current number of retries.
-        matches (list): The list of matches from the search results.
-        id_list (list): The list of IDs for the matches.
-        cache: The cache object used to store the manga data.
+            name (str): The name of the manga to search for.
+            last_chapter_read (int): The last chapter read of the manga.
+            app: The application object used to update the terminal and progress.
+            max_retries (int, optional): The maximum number of retries. Defaults to 5.
+            delay (float, optional): The delay between retries in seconds. Defaults to 15.
+            retry_count (int): The current number of retries.
+            matches (list): The list of matches from the search results.
+            id_list (list): The list of IDs for the matches.
+            cache: The cache object used to store the manga data.
         """
         Logger.INFO("Function __init__ called.")
         Logger.DEBUG(
@@ -83,7 +83,7 @@ class MangaSearch:  # pylint: disable=R0902
         Searches for the manga on Anilist.
 
         Returns:
-        list: A list of manga items from the search results. If an error occurs, it returns None.
+            list: A list of manga items from the search results. If an error occurs, it returns None.
         """
         Logger.INFO("Function search_manga called.")
         max_retries = 5  # Maximum number of retries
@@ -129,7 +129,7 @@ class MangaSearch:  # pylint: disable=R0902
         If they do, it adds the manga item to the matches.
 
         Parameters:
-        manga_item (dict): The manga item to process.
+            manga_item (dict): The manga item to process.
         """
         Logger.INFO("Function process_manga_item called.")
         title = manga_item["title"]
@@ -157,10 +157,10 @@ class MangaSearch:  # pylint: disable=R0902
         Processes the title by replacing certain characters.
 
         Parameters:
-        title (str): The title to process.
+            title (str): The title to process.
 
         Returns:
-        str: The processed title.
+            str: The processed title.
         """
         Logger.INFO("Function process_title called.")
         Logger.DEBUG(f"Processing title: {title}")
@@ -175,10 +175,10 @@ class MangaSearch:  # pylint: disable=R0902
         Checks if the title matches the name.
 
         Parameters:
-        title (str): The title to check.
+            title (str): The title to check.
 
         Returns:
-        bool: True if the title matches the name, False otherwise.
+            bool: True if the title matches the name, False otherwise.
         """
         Logger.INFO("Function check_title_match called.")
         Logger.DEBUG(f"Checking if title: {title} matches name: {self.name}")
@@ -244,7 +244,7 @@ class MangaSearch:  # pylint: disable=R0902
         If the error is not a "Too Many Requests" error, it prints an error message.
 
         Parameters:
-        e (Exception): The server error to handle.
+            e (Exception): The server error to handle.
         """
         Logger.INFO("Function handle_server_error called.")
         if "Too Many Requests" in str(e):
@@ -266,7 +266,7 @@ class MangaSearch:  # pylint: disable=R0902
         Searches for a manga and processes the search results.
 
         Returns:
-        bool: True if the search was successful, False otherwise.
+            bool: True if the search was successful, False otherwise.
         """
         manga = self.search_manga()
         if manga:
@@ -285,7 +285,7 @@ class MangaSearch:  # pylint: disable=R0902
         Handles errors that occur during the search.
 
         Parameters:
-        error (Exception): The error that occurred.
+            error (Exception): The error that occurred.
         """
         if isinstance(error, pymoe.utils.errors.serverError):  # pylint: disable=E1101
             self.handle_server_error(error)
@@ -307,7 +307,7 @@ class MangaSearch:  # pylint: disable=R0902
         Gets the ID of the manga.
 
         Returns:
-        list: A list of manga IDs.
+            list: A list of manga IDs.
         """
         Logger.INFO("Function get_manga_id called.")
         result: list = []

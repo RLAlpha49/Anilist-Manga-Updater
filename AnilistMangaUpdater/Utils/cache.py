@@ -19,8 +19,8 @@ class Cache:
     A simple caching class that stores key-value pairs in a JSON file.
 
     Attributes:
-    cache_file (str): The path to the file where the cache is stored.
-    cache (dict): The cache data.
+        cache_file (str): The path to the file where the cache is stored.
+        cache (dict): The cache data.
     """
 
     def __init__(self, cache_file: str) -> None:
@@ -64,10 +64,10 @@ class Cache:
         Gets a value from the cache.
 
         Parameters:
-        key (str): The key to get the value for.
+            key (str): The key to get the value for.
 
         Returns:
-        The value for the key, or None if the key is not in the cache.
+            The value for the key, or None if the key is not in the cache.
         """
         Logger.INFO(f"Getting value for key: {key} from cache.")
         value = self.cache.get(key)
@@ -82,8 +82,8 @@ class Cache:
         Sets a value in the cache and saves the cache to a file.
 
         Parameters:
-        key (str): The key to set the value for.
-        value: The value to set.
+            key (str): The key to set the value for.
+            value: The value to set.
         """
         Logger.INFO(f"Setting value for key: {key} in cache.")
         self.cache[key] = value

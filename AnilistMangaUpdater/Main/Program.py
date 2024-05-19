@@ -30,11 +30,11 @@ class Program:  # pylint: disable=R0903, C0115
         It then updates the terminal with a message indicating the time taken to perform the task.
 
         Args:
-        start_time: The time when the task started.
-        task_name: The name of the task.
+            start_time: The time when the task started.
+            task_name: The name of the task.
 
         Returns:
-        float: The time taken to perform the task, rounded to three decimal places.
+            float: The time taken to perform the task, rounded to three decimal places.
         """
         Logger.DEBUG("Function print_time_taken called.")
         end_time: float = time.time()
@@ -47,6 +47,12 @@ class Program:  # pylint: disable=R0903, C0115
 
     # Initialize the AnilistMangaUpdater class
     def __init__(self, app: object) -> None:  # pylint: disable=R0912, R0914, R0915
+        """
+        Initializes the Program class. This goes through the entire process of the script.
+
+        Args:
+            app: The gui object.
+        """
         Logger.INFO("Initializing the class.")
         self.app = app
         self.cache = Cache("Manga_Data/format_cache.json")
@@ -544,12 +550,12 @@ class Program:  # pylint: disable=R0903, C0115
         Process the ID information of a manga.
 
         Args:
-        manga_name (str): The name of the manga.
-        id_info (tuple): A tuple containing the manga ID, last chapter read,
-                         status, and last read date.
+            manga_name (str): The name of the manga.
+            id_info (tuple): A tuple containing the manga ID, last chapter read,
+             status, and last read date.
 
         Returns:
-        str: A formatted string containing the processed information.
+            str: A formatted string containing the processed information.
         """
         manga_id, last_chapter_read, status, last_read_at = id_info
         message = (

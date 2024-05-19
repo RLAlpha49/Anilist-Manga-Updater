@@ -1,0 +1,1 @@
+::: AnilistMangaUpdater.Utils.GetFromFile

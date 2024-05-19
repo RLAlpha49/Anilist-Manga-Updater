@@ -28,10 +28,10 @@ def Manga_Found_In_CSV(app: object) -> None:  # pylint: disable=R1710
     prints the title, last chapter read, and last read at for each manga.
 
     Parameters:
-    app (App): The application object.
+        app (App): The application object.
 
     Returns:
-    None
+        None
     """
     Logger.INFO("Function Manga_Found_In_CSV called.")
     manga_with_last_chapter = Get_Manga_Names(app, alternative_titles_dict)
@@ -80,11 +80,11 @@ def get_alternative_title(title: str, alt_titles_dict: dict) -> str:
     If it is, it returns the alternative title. If it's not, it returns the original title.
 
     Parameters:
-    title (str): The title of the manga.
-    alt_titles_dict (dict): A dictionary of alternative titles.
+        title (str): The title of the manga.
+        alt_titles_dict (dict): A dictionary of alternative titles.
 
     Returns:
-    str: The alternative title if it exists, otherwise the original title.
+        str: The alternative title if it exists, otherwise the original title.
     """
     Logger.INFO("Function get_alternative_title called.")
     # Check if the title is in the dictionary
@@ -108,12 +108,12 @@ def Get_Manga_Names(app: object, alt_titles_dict: dict):
     adds it and its details to the manga_names_chapters dictionary.
 
     Parameters:
-    app (App): The application object.
-    alt_titles_dict (dict): A dictionary where keys are manga names and
-    values are alternative titles.
+        app (App): The application object.
+        alt_titles_dict (dict): A dictionary where keys are manga names and
+        values are alternative titles.
 
     Returns:
-    None
+        None
     """
     Logger.INFO("Function Get_Manga_Names called.")
     global manga_names_chapters
@@ -182,10 +182,10 @@ def Get_File_Diff(app: object) -> Union[pd.DataFrame, None]:
     an error message.
 
     Parameters:
-    app (App): The application object.
+        app (App): The application object.
 
     Returns:
-    None
+        None
     """
     Logger.INFO("Function Get_File_Diff called.")
     global manga_names_chapters

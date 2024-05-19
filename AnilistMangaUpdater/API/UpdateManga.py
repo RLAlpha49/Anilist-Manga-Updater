@@ -30,13 +30,13 @@ def update_manga_variables(
     Creates a dictionary of variables for updating a manga.
 
     Parameters:
-    manga_id (int): The ID of the manga to update.
-    progress (int): The progress of the manga. Default is None.
-    status (str): The status of the manga. Default is None.
-    private (bool): The privacy setting of the manga. Default is None.
+        manga_id (int): The ID of the manga to update.
+        progress (int): The progress of the manga. Default is None.
+        status (str): The status of the manga. Default is None.
+        private (bool): The privacy setting of the manga. Default is None.
 
     Returns:
-    dict: A dictionary of variables for updating a manga, excluding any parameters that are None.
+        dict: A dictionary of variables for updating a manga, excluding any parameters that are None.
     """
     Logger.INFO("Function update_manga_variables called.")
     variables = {
@@ -65,13 +65,13 @@ def Update_Manga(
     updates the variables for the manga, and updates the progress of the manga.
 
     Args:
-    manga: The manga to update.
-    app: The application instance.
-    chapter_anilist: The current progress of the manga in the user's list.
-    manga_status: The current status of the manga in the user's list.
+        manga: The manga to update.
+        app: The application instance.
+        chapter_anilist: The current progress of the manga in the user's list.
+        manga_status: The current status of the manga in the user's list.
 
     Returns:
-    None
+        None
     """
     global userId
 
@@ -101,11 +101,11 @@ def update_status(manga: object) -> str:
     Updates the status of the given manga.
 
     Args:
-    manga: The manga object whose status is to be updated. The manga object should
-    have 'status', 'months', and 'last_read_at' attributes.
+        manga: The manga object whose status is to be updated. The manga object should
+        have 'status', 'months', and 'last_read_at' attributes.
 
     Returns:
-    str: The updated status of the manga.
+        str: The updated status of the manga.
     """
     if manga.last_read_at is None:
         time_difference = timedelta.max
@@ -130,13 +130,13 @@ def update_variables(
     Updates the variables for the given manga.
 
     Args:
-    manga: The manga object whose variables are to be updated. The manga object should
-    have 'status', 'last_chapter_read', 'id', and 'private_bool' attributes.
-    chapter_anilist: The current chapter of the manga from Anilist.
-    manga_status: The current status of the manga in the user's list.
+        manga: The manga object whose variables are to be updated. The manga object should
+        have 'status', 'last_chapter_read', 'id', and 'private_bool' attributes.
+        chapter_anilist: The current chapter of the manga from Anilist.
+        manga_status: The current status of the manga in the user's list.
 
     Returns:
-    list: A list of dictionaries, each containing the variables for the mutation request.
+        list: A list of dictionaries, each containing the variables for the mutation request.
     """
     variables_list = []
     manga.last_chapter_read = (
@@ -209,14 +209,14 @@ def update_manga_progress(
     it prints an error message and returns.
 
     Args:
-    manga: The manga object whose progress is to be updated. The manga object should have 'name',
-    'id', and 'last_chapter_read' attributes.
-    app: The application instance.
-    variables_list: A list of dictionaries, each containing the variables for the mutation request.
-    chapter_anilist: The current chapter of the manga from Anilist.
+        manga: The manga object whose progress is to be updated. The manga object should have 'name',
+        'id', and 'last_chapter_read' attributes.
+        app: The application instance.
+        variables_list: A list of dictionaries, each containing the variables for the mutation request.
+        chapter_anilist: The current chapter of the manga from Anilist.
 
     Returns:
-    None
+     None
     """
     global chapters_updated
     variables_mediaId = None

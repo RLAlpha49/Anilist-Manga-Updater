@@ -1,14 +1,6 @@
 """
 This module contains functions for creating, saving, loading, and
 setting the configuration for the AniList API.
-
-Functions:
-- create_config: Creates a configuration dictionary.
-- save_config: Saves the configuration dictionary to a file.
-- Get_Config: Gets the configuration dictionary.
-- load_config: Loads the configuration dictionary from a file.
-- Set_Environment_Variables: Sets the environment variables with
-    the values from the configuration dictionary.
 """
 
 # pylint: disable=C0103
@@ -32,14 +24,14 @@ def create_config(
     Creates a configuration dictionary.
 
     Parameters:
-    client (str): The client ID for the AniList API.
-    secret (str): The client secret for the AniList API.
-    token (str): The access token for the AniList API. Default is None.
-    months (int): The number of months to consider for the manga updates. Default is None.
-    private (bool): The privacy setting for the manga updates. Default is None.
+        client (str): The client ID for the AniList API.
+        secret (str): The client secret for the AniList API.
+        token (str): The access token for the AniList API. Default is None.
+        months (int): The number of months to consider for the manga updates. Default is None.
+        private (bool): The privacy setting for the manga updates. Default is None.
 
     Returns:
-    dict: The configuration dictionary.
+        dict: The configuration dictionary.
     """
     # Create and return the configuration dictionary directly
     Logger.INFO("Function create_config called.")
@@ -63,8 +55,8 @@ def save_config(
     Saves the configuration dictionary to a file.
 
     Parameters:
-    config (dict): The configuration dictionary.
-    file_path (str): The path to the configuration file.
+        config (dict): The configuration dictionary.
+        file_path (str): The path to the configuration file.
     """
     # Open the configuration file in write mode with explicit encoding
     Logger.INFO("Function save_config called.")
@@ -84,7 +76,7 @@ def Get_Config(app: object) -> None:
     with the values from the configuration dictionary.
 
     Parameters:
-    app (App): The application object.
+        app (App): The application object.
     """
     # Load the configuration dictionary from the file
     Logger.INFO("Function Get_Config called.")
@@ -115,10 +107,10 @@ def load_config(file_path: str) -> Optional[dict[Union[str, Union[str, None]], N
     Loads the configuration dictionary from a file.
 
     Parameters:
-    file_path (str): The path to the configuration file.
+        file_path (str): The path to the configuration file.
 
     Returns:
-    dict: The configuration dictionary if the file is found, otherwise None.
+        dict: The configuration dictionary if the file is found, otherwise None.
     """
     Logger.INFO("Function load_config called.")
     Logger.DEBUG(f"Attempting to load config from file: {file_path}")
@@ -144,7 +136,7 @@ def Set_Environment_Variables(config: dict) -> None:
     Sets the environment variables with the values from the configuration dictionary.
 
     Parameters:
-    config (dict): The configuration dictionary.
+        config (dict): The configuration dictionary.
     """
     Logger.INFO("Function Set_Environment_Variables called.")
     # Set the environment variables with the values from the configuration dictionary

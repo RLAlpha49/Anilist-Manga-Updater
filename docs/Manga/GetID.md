@@ -1,0 +1,1 @@
+::: AnilistMangaUpdater.Manga.GetID

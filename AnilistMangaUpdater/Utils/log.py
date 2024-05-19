@@ -58,7 +58,7 @@ class Logger:
         Sets up the logger to print to both the terminal and a file.
 
         Parameters:
-        max_logs (int): The maximum number of log files to keep.
+            max_logs (int): The maximum number of log files to keep.
         """
         handlers: List[Handler] = [
             logging.FileHandler("logs/latest.log", encoding="utf-8"),
@@ -77,7 +77,7 @@ class Logger:
         Manages the number of log files in the logs directory.
 
         Parameters:
-        max_logs (int): The maximum number of log files to keep.
+            max_logs (int): The maximum number of log files to keep.
         """
         log_files = glob.glob("logs/*.log")
         log_files.sort(key=os.path.getctime)
@@ -91,7 +91,7 @@ class Logger:
         Logs an informational message.
 
         Parameters:
-        message (str): The message to log.
+            message (str): The message to log.
         """
         Logger.log(message, logging.INFO)
 
@@ -101,7 +101,7 @@ class Logger:
         Logs a debug message.
 
         Parameters:
-        message (str): The message to log.
+            message (str): The message to log.
         """
         Logger.log(message, logging.DEBUG)
 
@@ -121,7 +121,7 @@ class Logger:
         Logs an error message.
 
         Parameters:
-        message (str): The message to log.
+            message (str): The message to log.
         """
         Logger.log(message, logging.ERROR)
 
@@ -131,7 +131,7 @@ class Logger:
         Logs a critical message.
 
         Parameters:
-        message (str): The message to log.
+            message (str): The message to log.
         """
         Logger.log(message, logging.CRITICAL)
 
@@ -141,8 +141,8 @@ class Logger:
         Logs a message with the current time, file name, function name, and line number.
 
         Parameters:
-        message (str): The message to log.
-        level (int): The logging level of the message (e.g., logging.INFO, logging.DEBUG).
+            message (str): The message to log.
+            level (int): The logging level of the message (e.g., logging.INFO, logging.DEBUG).
         """
         # Get the current frame
         frame = inspect.currentframe()

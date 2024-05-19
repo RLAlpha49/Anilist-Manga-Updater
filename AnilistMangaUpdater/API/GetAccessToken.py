@@ -1,13 +1,6 @@
 """
 This module contains functions for getting the access token and
 authentication code for the AniList API.
-
-Functions:
-- Get_Access_Token: Gets the access token from the environment variables
-    or opens the authorization URL in the web browser.
-- Get_Authentication_Code: Opens the authorization URL in the web browser
-    with the parameters and checks if the access token is set in the
-    environment variables.
 """
 
 # pylint: disable=C0103
@@ -28,10 +21,10 @@ def Get_Access_Token(app: object) -> Union[str, None]:
     or opens the authorization URL in the web browser.
 
     Parameters:
-    app (object): The application object.
+        app (object): The application object.
 
     Returns:
-    str: The access token, or None if the client ID is not found.
+        str: The access token, or None if the client ID is not found.
     """
     client_id = os.environ.get("ANILIST_CLIENT_ID")
     if client_id is None:
@@ -58,7 +51,7 @@ def Get_Authentication_Code() -> Union[str, None]:
     Checks for the presence of the access token in the environment variables in a loop.
 
     Returns:
-    str: The access token once it's found.
+        str: The access token once it's found.
     """
     while True:
         if os.environ.get("ACCESS_TOKEN") is not None:

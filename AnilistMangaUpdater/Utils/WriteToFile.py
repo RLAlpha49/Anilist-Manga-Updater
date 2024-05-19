@@ -54,11 +54,11 @@ def Save_Alt_Titles_To_File(alternative_titles_dict: dict) -> None:
     Saves alternative titles to a file.
 
     Parameters:
-    alternative_titles_dict (dict): A dictionary of alternative titles.
-    directory (str): The directory where the file will be saved.
+        alternative_titles_dict (dict): A dictionary of alternative titles.
+        directory (str): The directory where the file will be saved.
 
     Returns:
-    None
+        None
     """
     Logger.INFO("Function Save_Alt_Titles_To_File called.")
     # Check if directory exists, if not, create it
@@ -82,11 +82,11 @@ def Get_Alt_Titles_From_File(alternative_titles_dict: dict) -> dict:
     file and then opens it to load the dictionary.
 
     Parameters:
-    alternative_titles_dict (dict): A dictionary of alternative titles.
-    directory (str): The directory where the file is located.
+        alternative_titles_dict (dict): A dictionary of alternative titles.
+        directory (str): The directory where the file is located.
 
     Returns:
-    dict: The dictionary of alternative titles loaded from the file.
+        dict: The dictionary of alternative titles loaded from the file.
     """
     Logger.INFO("Function Get_Alt_Titles_From_File called.")
     filename = f"{directory}/alternative_titles.json"
@@ -124,11 +124,11 @@ def manage_files(dir_path: str, file_type: str) -> None:
     sorted by modification time. If there are more than 5 files, it deletes the oldest file.
 
     Parameters:
-    dir_path (str): The directory where the files are located.
-    file_type (str): The type of the files to manage.
+        dir_path (str): The directory where the files are located.
+        file_type (str): The type of the files to manage.
 
     Returns:
-    None
+        None
     """
     Logger.INFO("Function manage_files called.")
     # Get a list of all files of the specified type in the directory sorted by modification time
@@ -149,12 +149,12 @@ def write_to_file(filename: str, data: Optional[Union[list, dict]], formatter) -
     Writes data to a file.
 
     Parameters:
-    filename (str): The name of the file to write to.
-    data (list or dict): The data to write to the file.
-    formatter (function): A function that formats the data into a string.
+        filename (str): The name of the file to write to.
+        data (list or dict): The data to write to the file.
+        formatter (function): A function that formats the data into a string.
 
     Returns:
-    None
+        None
     """
     Logger.INFO(f"Function write_to_file called with filename: {filename}")
     timestamp = create_directory_and_get_timestamp(directory)
@@ -174,11 +174,11 @@ def formatter_not_found(not_found_manga_names: list) -> list:
     Formats not found manga names for writing to a file.
 
     Parameters:
-    not_found_manga_names (list): A list of tuples, where each tuple contains a
-    manga name and the last chapter read.
+        not_found_manga_names (list): A list of tuples, where each tuple contains a
+        manga name and the last chapter read.
 
     Returns:
-    list: A list of strings formatted for writing to a file.
+        list: A list of strings formatted for writing to a file.
     """
     # Initialize lines list with header
     lines = ["Manga Names with No IDs Found:\n"]
@@ -207,11 +207,11 @@ def formatter_multiple_ids(multiple_id_manga_names: dict) -> list:
     Formats manga names with multiple IDs for writing to a file.
 
     Parameters:
-    multiple_id_manga_names (dict): A dictionary where keys are manga names and
-    values are lists of tuples, each containing an ID and the last chapter read.
+        multiple_id_manga_names (dict): A dictionary where keys are manga names and
+        values are lists of tuples, each containing an ID and the last chapter read.
 
     Returns:
-    list: A list of strings formatted for writing to a file.
+        list: A list of strings formatted for writing to a file.
     """
     # Initialize lines list with header
     lines = ["Duplicate Manga Names and IDs:\n"]
@@ -248,11 +248,11 @@ def write_chapters_updated_to_file(filename: str, data: int) -> None:
     Appends data to a chapters updated file.
 
     Parameters:
-    filename (str): The name of the file to append to.
-    data (int): The number of updated chapters.
+        filename (str): The name of the file to append to.
+        data (int): The number of updated chapters.
 
     Returns:
-    None
+        None
     """
     Logger.INFO(
         f"Function write_chapters_updated_to_file called with filename: {filename}"

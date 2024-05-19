@@ -47,11 +47,11 @@ def Check_Title_Match(title: str, name: str) -> bool:
     are in the title.
 
     Parameters:
-    title (str): The title to check.
-    name (str): The search name.
+        title (str): The title to check.
+        name (str): The search name.
 
     Returns:
-    bool: True if all words in the search name are in the title, False otherwise.
+        bool: True if all words in the search name are in the title, False otherwise.
     """
     Logger.INFO("Function Check_Title_Match called.")
     Logger.DEBUG(f"Checking if all words in '{name}' are in '{title}'.")
@@ -77,12 +77,12 @@ def Clean_Manga_IDs(manga_names_ids: dict, app: object) -> dict:
     Cleans the manga IDs by removing duplicates and separating manga with multiple unique IDs.
 
     Parameters:
-    manga_names_ids (dict): A dictionary mapping manga names to lists of IDs.
-    app: The application object used to update the terminal and progress.
+        manga_names_ids (dict): A dictionary mapping manga names to lists of IDs.
+        app: The application object used to update the terminal and progress.
 
     Returns:
-    dict: A dictionary mapping manga names to lists of unique IDs.
-    Manga with multiple unique IDs are not included.
+        dict: A dictionary mapping manga names to lists of unique IDs.
+        Manga with multiple unique IDs are not included.
     """
     Logger.INFO("Function Clean_Manga_IDs called.")
     # Initialize dictionaries to store cleaned manga names and IDs, manga names with multiple IDs
@@ -145,10 +145,10 @@ def Get_No_Manga_Found(app: object) -> None:
     This function writes the list of manga not found to a file and prints them to the terminal.
 
     Parameters:
-    app: The application object used to update the terminal.
+        app: The application object used to update the terminal.
 
     Returns:
-    None
+        None
     """
     Logger.INFO("Function Get_No_Manga_Found called.")
     # Write the manga not found to a file
