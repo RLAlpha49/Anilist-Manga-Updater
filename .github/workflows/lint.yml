@@ -35,4 +35,4 @@ jobs:
 
     - name: Run clean script on AnilistMangaUpdater directory
       run: |
-        poetry run python .\scripts.py .\AnilistMangaUpdater\
+        poetry run python ./scripts.py ./AnilistMangaUpdater/
