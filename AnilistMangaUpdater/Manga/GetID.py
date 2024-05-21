@@ -9,66 +9,17 @@ Classes:
 
 Functions:
     process_title(title): Processes the title by replacing certain characters.
-    check_title_match(title): Checks if the title matches the name.
     handle_server_error(e): Handles server errors.
 """
 
 # pylint: disable=C0103, W0602, W0603, E0401
 
 # Import necessary modules and functions
-import string
 from typing import Union
 
+from Manga.manga_search import return_no_manga_found
 from Utils.log import Logger
 from Utils.WriteToFile import formatter_multiple_ids, formatter_not_found, write_to_file
-
-# Initialize an empty list to store names of manga that are not found
-no_manga_found: list[tuple[str, Union[int, None]]] = []
-
-
-def Set_No_Manga_Found() -> None:
-    """
-    Resets the global variable 'no_manga_found' to an empty list.
-
-    This function does not take any parameters and does not return anything.
-    """
-    global no_manga_found
-    Logger.INFO("Function Set_No_Manga_Found called.")
-    no_manga_found = []
-    Logger.DEBUG("Reset 'no_manga_found' to an empty list.")
-
-
-def Check_Title_Match(title: str, name: str) -> bool:
-    """
-    Checks if all words in the search name are in the title.
-
-    This function removes punctuation from the title and the search name,
-    splits them into words, and checks if all words in the search name
-    are in the title.
-
-    Parameters:
-        title (str): The title to check.
-        name (str): The search name.
-
-    Returns:
-        bool: True if all words in the search name are in the title, False otherwise.
-    """
-    Logger.INFO("Function Check_Title_Match called.")
-    Logger.DEBUG(f"Checking if all words in '{name}' are in '{title}'.")
-    # Remove punctuation from the title and the search name
-    title = title.translate(str.maketrans("", "", string.punctuation))
-    name = name.translate(str.maketrans("", "", string.punctuation))
-    Logger.DEBUG(f"Removed punctuation from '{title}' and '{name}'.")
-
-    # Split the title and the search name into words
-    title_words = set(title.lower().split())
-    name_words = set(name.lower().split())
-    Logger.DEBUG(f"Split '{title}' and '{name}' into words.")
-
-    # Check if all words in the search name are in the title
-    match = name_words.issubset(title_words)
-    Logger.DEBUG(f"Match result: {match}")
-    return match
 
 
 # Function to clean the manga IDs
@@ -151,6 +102,7 @@ def Get_No_Manga_Found(app: object) -> None:
         None
     """
     Logger.INFO("Function Get_No_Manga_Found called.")
+    no_manga_found: list[tuple[str, Union[int, None]]] = return_no_manga_found()
     # Write the manga not found to a file
     write_to_file("not_found", no_manga_found, formatter_not_found)
     Logger.DEBUG("Wrote the list of manga not found to a file.")

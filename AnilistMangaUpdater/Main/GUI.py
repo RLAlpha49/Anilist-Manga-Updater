@@ -799,7 +799,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.after(50, self.update_progress_bar)
 
     def update_progress_and_status(
-            self, status: str, program_progress: Optional[Union[float, None]] = None
+        self, status: str, program_progress: Optional[Union[float, None]] = None
     ) -> None:
         """
         Updates the progress and status of the program.

@@ -3,13 +3,59 @@ This module contains the MangaSearch class which is used to search for a manga o
 """
 
 import json
+import string
 import time
 from typing import List, Optional, Union
 
 import pymoe  # type: ignore
-from Manga.GetID import Check_Title_Match, no_manga_found  # pylint: disable=E0401
 from Utils.cache import Cache  # pylint: disable=E0401
 from Utils.log import Logger  # pylint: disable=E0401
+
+no_manga_found: list[tuple[str, Union[int, None]]] = []
+
+
+def Check_Title_Match(title: str, name: str) -> bool:
+    """
+    Checks if all words in the search name are in the title.
+
+    This function removes punctuation from the title and the search name,
+    splits them into words, and checks if all words in the search name
+    are in the title.
+
+    Parameters:
+        title (str): The title to check.
+        name (str): The search name.
+
+    Returns:
+        bool: True if all words in the search name are in the title, False otherwise.
+    """
+    Logger.INFO("Function Check_Title_Match called.")
+    Logger.DEBUG(f"Checking if all words in '{name}' are in '{title}'.")
+    # Remove punctuation from the title and the search name
+    title = title.translate(str.maketrans("", "", string.punctuation))
+    name = name.translate(str.maketrans("", "", string.punctuation))
+    Logger.DEBUG(f"Removed punctuation from '{title}' and '{name}'.")
+
+    # Split the title and the search name into words
+    title_words = set(title.lower().split())
+    name_words = set(name.lower().split())
+    Logger.DEBUG(f"Split '{title}' and '{name}' into words.")
+
+    # Check if all words in the search name are in the title
+    match = name_words.issubset(title_words)
+    Logger.DEBUG(f"Match result: {match}")
+    return match
+
+
+def return_no_manga_found() -> list[tuple[str, Union[int, None]]]:
+    """
+    Returns the list of manga not found.
+
+    Returns:
+        list: A list of tuples containing the name and the last chapter read of the manga not found.
+    """
+    Logger.INFO("Function return_no_manga_found called.")
+    return no_manga_found
 
 
 class MangaSearch:  # pylint: disable=R0902

@@ -7,7 +7,7 @@ from typing import Union
 from API.AccessAPI import Get_Format, Get_User_Manga_List, Manga
 from API.APIRequests import Set_Access_Token, needs_refresh
 from API.UpdateManga import Get_Chapters_Updated, Set_Chapters_Updated, Update_Manga
-from Manga.GetID import Clean_Manga_IDs, Get_No_Manga_Found, Set_No_Manga_Found
+from Manga.GetID import Clean_Manga_IDs, Get_No_Manga_Found
 from Manga.manga_search import MangaSearch
 from Utils.cache import Cache
 from Utils.Config import Get_Config, load_config
@@ -57,8 +57,6 @@ class Program:  # pylint: disable=R0903, C0115
         self.app = app
         self.cache = Cache("Manga_Data/format_cache.json")
 
-        Set_No_Manga_Found()
-        Logger.DEBUG("Set_No_Manga_Found called.")
         Set_Chapters_Updated()
         Logger.DEBUG("Set_Chapters_Updated called.")
 
