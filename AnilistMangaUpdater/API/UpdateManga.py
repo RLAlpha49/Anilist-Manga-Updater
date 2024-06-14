@@ -177,12 +177,13 @@ def update_variables(
             private=manga.private_bool,
         )
         third_variables = None
-        if manga.status == "PLANNING":
+        second_variables = None
+        if manga.status == "PLANNING" and ((int(chapter_anilist) if chapter_anilist is not None else 0) + 1) != manga.last_chapter_read:
             second_variables = update_manga_variables(
                 manga.id, progress=manga.last_chapter_read
             )
             third_variables = update_manga_variables(manga.id, status=manga.status)
-        else:
+        elif ((int(chapter_anilist) if chapter_anilist is not None else 0) + 1) != manga.last_chapter_read:
             second_variables = update_manga_variables(
                 manga.id, status=manga.status, progress=manga.last_chapter_read
             )
