@@ -134,9 +134,7 @@ class MangaSearch:  # pylint: disable=R0902
         Logger.INFO("Function search_manga called.")
         max_retries = 5  # Maximum number of retries
         for attempt in range(max_retries):  # pylint: disable=W0612
-            Logger.DEBUG(
-                f"Attempt {attempt+1} of {max_retries} to search for manga: {self.name}"
-            )
+            Logger.DEBUG(f"Attempt {attempt+1} of {max_retries} to search for manga: {self.name}")
             try:
                 result = pymoe.manga.search.anilist.manga(self.name)
                 Logger.DEBUG(f"Search successful. Found {len(result)} results.")
@@ -148,22 +146,17 @@ class MangaSearch:  # pylint: disable=R0902
                 # Handle server error
                 Logger.ERROR(f"Error encountered: {e}")
                 if "Too Many Requests" in str(e):
-                    self.app.update_terminal(
-                        f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds..."
-                    )
+                    self.app.update_terminal(f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds...")
                     Logger.WARNING("Too many requests. Delaying next attempt.")
                     time.sleep(self.delay)
                     self.retry_count += 1
                 else:
                     self.app.update_terminal(
-                        f"\nAn unexpected error occurred for {self.name}: {e}. "
-                        "Retrying in 2 seconds..."
+                        f"\nAn unexpected error occurred for {self.name}: {e}. " "Retrying in 2 seconds..."
                     )
                     Logger.WARNING("Unexpected error. Retrying in 2 seconds.")
                     time.sleep(2)
-        self.app.update_terminal(
-            f"Failed to search for {self.name} after {max_retries} attempts."
-        )
+        self.app.update_terminal(f"Failed to search for {self.name} after {max_retries} attempts.")
         Logger.ERROR(f"Failed to search for {self.name} after {max_retries} attempts.")
 
     def process_manga_item(self, manga_item: dict) -> None:
@@ -294,17 +287,13 @@ class MangaSearch:  # pylint: disable=R0902
         """
         Logger.INFO("Function handle_server_error called.")
         if "Too Many Requests" in str(e):
-            self.app.update_terminal(
-                f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds..."
-            )
+            self.app.update_terminal(f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds...")
             Logger.WARNING("Too Many Requests For Pymoe. Retrying.")
             time.sleep(self.delay)
             self.retry_count += 1
             Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
         else:
-            self.app.update_terminal(
-                f"An unexpected server error occurred for {self.name}: {e}"
-            )
+            self.app.update_terminal(f"An unexpected server error occurred for {self.name}: {e}")
             Logger.ERROR(f"An unexpected server error occurred for {self.name}: {e}")
 
     def search_and_process_manga(self) -> bool:
@@ -341,9 +330,7 @@ class MangaSearch:  # pylint: disable=R0902
             no_manga_found.append((self.name, self.last_chapter_read))
             Logger.DEBUG(f"Added '{self.name}' to the list of manga not found.")
         elif isinstance(error, KeyError):
-            self.app.update_terminal(
-                f"\nFailed to get data for '{self.name}', retrying..."
-            )
+            self.app.update_terminal(f"\nFailed to get data for '{self.name}', retrying...")
             Logger.ERROR(f"Failed to get data for '{self.name}', retrying.")
             self.retry_count += 1 if "Too Many Requests" in str(error) else 0
             Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
@@ -372,9 +359,7 @@ class MangaSearch:  # pylint: disable=R0902
             return cached_result
 
         while self.retry_count < self.max_retries:
-            Logger.DEBUG(
-                f"Retry count: {self.retry_count}. Max retries: {self.max_retries}."
-            )
+            Logger.DEBUG(f"Retry count: {self.retry_count}. Max retries: {self.max_retries}.")
             if self.name != "Skipping Title":
                 Logger.INFO(f"Searching for manga: {self.name}.")
                 try:
@@ -388,9 +373,7 @@ class MangaSearch:  # pylint: disable=R0902
                     self.handle_search_errors(e)
                     continue
                 if not self.matches:
-                    self.app.update_terminal(
-                        f"\nNo search results found for '{self.name}'."
-                    )
+                    self.app.update_terminal(f"\nNo search results found for '{self.name}'.")
                     Logger.WARNING(f"No search results found for '{self.name}'.")
                     no_manga_found.append((self.name, self.last_chapter_read))
                     Logger.DEBUG(f"Added '{self.name}' to the list of manga not found.")
@@ -409,10 +392,6 @@ class MangaSearch:  # pylint: disable=R0902
                 Logger.INFO("Skipping a title.")
                 break
         else:
-            self.app.update_terminal(
-                f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries."
-            )
-            Logger.ERROR(
-                f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries."
-            )
+            self.app.update_terminal(f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries.")
+            Logger.ERROR(f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries.")
         return result

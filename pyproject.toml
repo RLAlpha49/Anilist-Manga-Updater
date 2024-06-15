@@ -15,30 +15,19 @@ CTkToolTip = "^0.8"
 requests = "^2.32.3"
 pymoe = "^2.2"
 pandas = "^2.2.2"
+ruff = "^0.4.9"
 
 [tool.poetry.dev-dependencies]
 types-requests = "^2.32.0.20240602"
-isort = "^5.13.2"
-black = "^24.4.2"
-pylint = "^3.2.3"
 mypy = "^1.10.0"
-flake8 = "^7.0.0"
 mkdocs = "^1.6.0"
 mkdocs-material = "^9.5.26"
 mkdocstrings = {extras = ["crystal", "python"], version = "^0.25.1"}
 mkdocs-git-revision-date-localized-plugin = "^1.2.6"
 mkdocs-git-committers-plugin-2 = "^2.3.0"
 
-[tool.isort]
-profile = "black"
-skip_gitignore = true
-
-[tool.flake8]
-max-line-length = 120
-
-[tool.pylint]
-max-line-length = 120
-disable = "too-few-public-methods,missing-module-docstring,invalid-name,R0801"
+[tool.ruff]
+line-length = 120
 
 [tool.mypy]
 ignore_missing_imports = true

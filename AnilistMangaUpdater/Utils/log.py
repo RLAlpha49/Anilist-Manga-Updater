@@ -33,9 +33,7 @@ if os.path.exists("logs/latest.log"):
     try:
         os.rename("logs/latest.log", f"logs/{timestamp}.log")
     except PermissionError:
-        print(
-            "Warning: Could not rename the log file because it is being used by another process."
-        )
+        print("Warning: Could not rename the log file because it is being used by another process.")
 
 
 # Define the main directory of your project
@@ -64,9 +62,7 @@ class Logger:
             logging.FileHandler("logs/latest.log", encoding="utf-8"),
             logging.StreamHandler(stream=sys.stdout),
         ]
-        logging.basicConfig(
-            level=logging.DEBUG, format="%(asctime)s, %(message)s", handlers=handlers
-        )
+        logging.basicConfig(level=logging.DEBUG, format="%(asctime)s, %(message)s", handlers=handlers)
 
         logging.getLogger().handlers = handlers
         Logger.manage_log_files(max_logs)

@@ -54,12 +54,8 @@ def clean(auto_fix=True):
     If auto_fix is True, isort and black will automatically fix problems.
     """
     parser = argparse.ArgumentParser(description="Clean a Python project.")
-    parser.add_argument(
-        "path", help="The path of the project to clean.", default=".", nargs="?"
-    )
-    parser.add_argument(
-        "--no-fix", help="Do not automatically fix problems.", action="store_true"
-    )
+    parser.add_argument("path", help="The path of the project to clean.", default=".", nargs="?")
+    parser.add_argument("--no-fix", help="Do not automatically fix problems.", action="store_true")
     args = parser.parse_args()
 
     path = args.path
@@ -67,23 +63,13 @@ def clean(auto_fix=True):
 
     errors = []
 
-    print("Running isort...")
-    error = run_and_handle_command(["poetry", "run", "isort", path], auto_fix)
+    print("Running ruff linter...")
+    error = run_and_handle_command(["ruff", "check", path], auto_fix)
     if error:
         errors.append(error)
 
-    print("\nRunning black...")
-    error = run_and_handle_command(["poetry", "run", "black", path], auto_fix)
-    if error:
-        errors.append(error)
-
-    print("\nRunning flake8...")
-    error = run_and_handle_command(["poetry", "run", "flake8", path], auto_fix)
-    if error:
-        errors.append(error)
-
-    print("\nRunning pylint...")
-    error = run_and_handle_command(["poetry", "run", "pylint", path], auto_fix)
+    print("\nRunning ruff formatter...")
+    error = run_and_handle_command(["ruff", "format", path], auto_fix)
     if error:
         errors.append(error)
 
@@ -106,9 +92,7 @@ def clean(auto_fix=True):
     if errors:
         print("\nErrors occurred during the cleaning process:")
         for error in errors:
-            print(
-                f"Command '{' '.join(error.args)}' returned non-zero exit status {error.returncode}."
-            )
+            print(f"Command '{' '.join(error.args)}' returned non-zero exit status {error.returncode}.")
         sys.exit(errors[0].returncode)
 
 

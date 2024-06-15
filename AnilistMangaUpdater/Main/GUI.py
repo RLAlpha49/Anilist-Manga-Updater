@@ -138,9 +138,7 @@ def edit_alternative_title(alt_titles_dict, original_title) -> None:
         None
     """
     Logger.INFO("Prompting user for new alternative title.")
-    new_alternative_title = simpledialog.askstring(
-        "Edit Alternative Title", "Enter the new alternative title:"
-    )
+    new_alternative_title = simpledialog.askstring("Edit Alternative Title", "Enter the new alternative title:")
     if new_alternative_title is None or new_alternative_title == "":
         Logger.WARNING("No new alternative title provided. Exiting edit.")
         return
@@ -185,17 +183,13 @@ def add_alternative_title(alt_titles_dict) -> None:
         None
     """
     Logger.INFO("Prompting user for original title.")
-    original_title = simpledialog.askstring(
-        "Add Alternative Title", "Enter the original title:"
-    )
+    original_title = simpledialog.askstring("Add Alternative Title", "Enter the original title:")
     if original_title is None or original_title == "":
         Logger.WARNING("No original title provided. Exiting add.")
         return
     Logger.INFO(f"Original title provided: {original_title}")
     Logger.INFO("Prompting user for alternative title.")
-    alternative_title = simpledialog.askstring(
-        "Add Alternative Title", "Enter the alternative title:"
-    )
+    alternative_title = simpledialog.askstring("Add Alternative Title", "Enter the alternative title:")
     if alternative_title is None or alternative_title == "":
         Logger.WARNING("No alternative title provided. Exiting add.")
         return
@@ -276,9 +270,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.DEBUG("Initialized GUI.")
 
         # Load the application logo
-        logo = customtkinter.CTkImage(
-            light_image=Image.open(image1dir), size=(100, 100)
-        )
+        logo = customtkinter.CTkImage(light_image=Image.open(image1dir), size=(100, 100))
         Logger.DEBUG("Loaded application logo.")
 
         # Set the window title and size
@@ -360,9 +352,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Added 'Manage Alt Titles' button to the sidebar.")
 
         # Create a label and option menu for the appearance mode
-        self.appearance_mode_label = customtkinter.CTkLabel(
-            self.sidebar_frame, text="Appearance Mode:", anchor="w"
-        )
+        self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=8, column=0, padx=20, pady=(10, 0))
         Logger.INFO("Created 'Appearance Mode' label.")
 
@@ -375,9 +365,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Created 'Appearance Mode' option menu.")
 
         # Create a label and option menu for the UI scaling
-        self.scaling_label = customtkinter.CTkLabel(
-            self.sidebar_frame, text="UI Scaling:", anchor="w"
-        )
+        self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
         self.scaling_label.grid(row=10, column=0, padx=20, pady=(5, 0))
         Logger.INFO("Created 'UI Scaling' label.")
 
@@ -390,9 +378,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Created 'UI Scaling' option menu.")
 
         # Create an exit button
-        self.exit_button = customtkinter.CTkButton(
-            self.sidebar_frame, command=on_close, text="Exit"
-        )
+        self.exit_button = customtkinter.CTkButton(self.sidebar_frame, command=on_close, text="Exit")
         self.exit_button.grid(row=12, column=0, padx=20, pady=(5, 15))
         Logger.INFO("Created 'Exit' button.")
 
@@ -410,59 +396,39 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Created terminal textbox.")
 
         # Create time remaining label
-        self.time_remaining_label = customtkinter.CTkLabel(
-            self, text="Estimated Time Remaining: NaN", anchor="w"
-        )
-        self.time_remaining_label.grid(
-            row=3, column=1, padx=(20, 20), pady=(5, 5), sticky="nsew"
-        )
+        self.time_remaining_label = customtkinter.CTkLabel(self, text="Estimated Time Remaining: NaN", anchor="w")
+        self.time_remaining_label.grid(row=3, column=1, padx=(20, 20), pady=(5, 5), sticky="nsew")
         Logger.INFO("Created 'Estimated Time Remaining' label.")
 
         # Create time taken label
-        self.time_taken_label = customtkinter.CTkLabel(
-            self, text="Time Taken: 0:00:00", anchor="e"
-        )
-        self.time_taken_label.grid(
-            row=3, column=3, padx=(20, 20), pady=(5, 5), sticky="nsew"
-        )
+        self.time_taken_label = customtkinter.CTkLabel(self, text="Time Taken: 0:00:00", anchor="e")
+        self.time_taken_label.grid(row=3, column=3, padx=(20, 20), pady=(5, 5), sticky="nsew")
         Logger.INFO("Created 'Time Taken' label.")
 
         # Create a progress bar
         self.progress_bar = customtkinter.CTkProgressBar(self, width=200, height=20)
-        self.progress_bar.grid(
-            row=4, column=1, columnspan=3, padx=(20, 20), sticky="nsew"
-        )
+        self.progress_bar.grid(row=4, column=1, columnspan=3, padx=(20, 20), sticky="nsew")
         self.progress_bar.set(0)
         Logger.INFO("Created progress bar.")
 
         # Create a percent label under the progress bar
         self.percent_label = customtkinter.CTkLabel(self, text="0%", anchor="center")
-        self.percent_label.grid(
-            row=5, column=1, columnspan=3, padx=(20, 20), sticky="nsew"
-        )
+        self.percent_label.grid(row=5, column=1, columnspan=3, padx=(20, 20), sticky="nsew")
         Logger.INFO("Created percent label under the progress bar.")
 
         # Create a status label under the progress bar
         self.status_label = customtkinter.CTkLabel(
             self,
-            text=(
-                f"Status: {progress_status[:37]}..."
-                if len(progress_status) > 40
-                else progress_status
-            ),
+            text=(f"Status: {progress_status[:37]}..." if len(progress_status) > 40 else progress_status),
         )
-        self.status_label.grid(
-            row=6, column=1, columnspan=3, padx=(20, 20), sticky="nsew"
-        )
+        self.status_label.grid(row=6, column=1, columnspan=3, padx=(20, 20), sticky="nsew")
         Logger.INFO("Created status label under the progress bar.")
 
         # Create an entry field and browse button for the previous Kenmei export file path
         self.previous_file_path_textbox = customtkinter.CTkEntry(
             self, placeholder_text="Previous Kenmei Export File Path"
         )
-        self.previous_file_path_textbox.grid(
-            row=7, column=1, columnspan=2, padx=(20, 0), pady=(15, 15), sticky="nsew"
-        )
+        self.previous_file_path_textbox.grid(row=7, column=1, columnspan=2, padx=(20, 0), pady=(15, 15), sticky="nsew")
         Logger.INFO("Created entry field for the previous Kenmei export file path.")
 
         self.previous_browse_button = customtkinter.CTkButton(
@@ -473,18 +439,12 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             text="Browse",
             command=lambda: self.browse_file(self.previous_file_path_textbox, True),
         )
-        self.previous_browse_button.grid(
-            row=7, column=3, padx=(20, 20), pady=(15, 15), sticky="nsew"
-        )
+        self.previous_browse_button.grid(row=7, column=3, padx=(20, 20), pady=(15, 15), sticky="nsew")
         Logger.INFO("Created browse button for the previous Kenmei export file path.")
 
         # Create an entry field and browse button for the Kenmei export file path
-        self.file_path_textbox = customtkinter.CTkEntry(
-            self, placeholder_text="Kenmei Export File Path"
-        )
-        self.file_path_textbox.grid(
-            row=8, column=1, columnspan=2, padx=(20, 0), pady=(5, 15), sticky="nsew"
-        )
+        self.file_path_textbox = customtkinter.CTkEntry(self, placeholder_text="Kenmei Export File Path")
+        self.file_path_textbox.grid(row=8, column=1, columnspan=2, padx=(20, 0), pady=(5, 15), sticky="nsew")
         Logger.INFO("Created entry field for the Kenmei export file path.")
 
         self.browse_button = customtkinter.CTkButton(
@@ -495,9 +455,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             text="Browse",
             command=lambda: self.browse_file(self.file_path_textbox, False),
         )
-        self.browse_button.grid(
-            row=8, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew"
-        )
+        self.browse_button.grid(row=8, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew")
         Logger.INFO("Created browse button for the Kenmei export file path.")
 
         # Set default values for the appearance mode, UI scaling, and file path textboxes
@@ -579,10 +537,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
         self.scaling_optionemenu_tooltip = CTkToolTip.CTkToolTip(
             self.scaling_optionemenu,
-            (
-                "Changes the UI scaling of the application.\n"
-                "You may need to resize window to fit the new scaling."
-            ),
+            ("Changes the UI scaling of the application.\n" "You may need to resize window to fit the new scaling."),
         )
         Logger.INFO("Created tooltip for 'UI Scaling' option menu.")
 
@@ -607,9 +562,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.previous_browse_button,
             "Opens a file dialog to select the previous Kenmei export file. (Optional)",
         )
-        Logger.INFO(
-            "Created tooltip for 'Previous Kenmei Export File Path' browse button."
-        )
+        Logger.INFO("Created tooltip for 'Previous Kenmei Export File Path' browse button.")
 
         self.file_path_textbox_tooltip = CTkToolTip.CTkToolTip(
             self.file_path_textbox, "Displays the path of the Kenmei export file."
@@ -621,9 +574,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         )
         Logger.INFO("Created tooltip for 'Kenmei Export File Path' browse button.")
 
-        self.progress_bar_tooltip = CTkToolTip.CTkToolTip(
-            self.progress_bar, f"{round((progress * 100), 1)}%"
-        )
+        self.progress_bar_tooltip = CTkToolTip.CTkToolTip(self.progress_bar, f"{round((progress * 100), 1)}%")
         Logger.INFO("Created tooltip for progress bar.")
 
     def manage_alternative_titles(self) -> None:
@@ -652,9 +603,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         if action in ["edit", "delete"]:
             original_title = self.get_original_title(alt_titles_dict)
             if original_title is None:
-                Logger.WARNING(
-                    "No original title selected. Exiting manage alternative titles."
-                )
+                Logger.WARNING("No original title selected. Exiting manage alternative titles.")
                 return
 
             Logger.INFO(f"Original title selected: {original_title}")
@@ -713,9 +662,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.update_terminal(f"{i}. {title}")
 
         Logger.INFO("Prompting user for title selection.")
-        title_index = simpledialog.askinteger(
-            "Select a title", "Enter the number of the title you want to select:"
-        )
+        title_index = simpledialog.askinteger("Select a title", "Enter the number of the title you want to select:")
         if title_index is None or title_index == 0 or title_index > len(titles):
             Logger.WARNING("Invalid or no title selected by user.")
             return None
@@ -747,9 +694,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         time_remaining = str(datetime.timedelta(seconds=int(estimated_time_remaining)))
 
         # Update the time remaining label
-        self.time_remaining_label.configure(
-            text=f"Estimated Time Remaining: {time_remaining}"
-        )
+        self.time_remaining_label.configure(text=f"Estimated Time Remaining: {time_remaining}")
         self.update_idletasks()
 
         # If there is still time remaining
@@ -759,9 +704,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                 self.after_cancel(self.after_id)
 
             # Schedule this function to be called again after 1 second and store the ID
-            self.after_id = self.after(
-                1000, self.update_estimated_time_remaining, estimated_time_remaining - 1
-            )
+            self.after_id = self.after(1000, self.update_estimated_time_remaining, estimated_time_remaining - 1)
 
     def update_progress_bar(self) -> None:
         """
@@ -786,21 +729,15 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             time_taken: float = time.time() - self.start_time
             minutes, seconds = divmod(time_taken, 60)
             hours, minutes = divmod(minutes, 60)
-            self.time_taken_label.configure(
-                text=f"Time Taken: {int(hours):01d}:{int(minutes):02d}:{int(seconds):02d}"
-            )
+            self.time_taken_label.configure(text=f"Time Taken: {int(hours):01d}:{int(minutes):02d}:{int(seconds):02d}")
             self.update_idletasks()
         else:
             # If the thread is not running, log a warning and stop the function
-            Logger.WARNING(
-                "AnilistMangaUpdater thread is not running. Stopping progress bar update."
-            )
+            Logger.WARNING("AnilistMangaUpdater thread is not running. Stopping progress bar update.")
             return
         self.after(50, self.update_progress_bar)
 
-    def update_progress_and_status(
-        self, status: str, program_progress: Optional[Union[float, None]] = None
-    ) -> None:
+    def update_progress_and_status(self, status: str, program_progress: Optional[Union[float, None]] = None) -> None:
         """
         Updates the progress and status of the program.
 
@@ -822,15 +759,11 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             program_progress = progress
         if program_progress != progress:
             # If progress is different update objects associated with it
-            Logger.INFO(
-                "AnilistMangaUpdater progress is different from global progress. Updating progress and status."
-            )
+            Logger.INFO("AnilistMangaUpdater progress is different from global progress. Updating progress and status.")
             progress = program_progress
             progress_status = status
             self.percent_label.configure(text=f"{round((progress * 100), 1)}%")
-            self.progress_bar_tooltip.configure(
-                message=f"{str(round((progress * 100), 1))}%"
-            )
+            self.progress_bar_tooltip.configure(message=f"{str(round((progress * 100), 1))}%")
             Logger.INFO(f"Updated progress to: {progress} and status to: {status}")
 
     def update_terminal(self, text: str) -> None:
@@ -919,9 +852,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             # And store the file path in the appropriate variable
             if is_previous:
                 self.previous_file_path = file_path
-                Logger.INFO(
-                    "Stored the selected file path in the previous_file_path variable."
-                )
+                Logger.INFO("Stored the selected file path in the previous_file_path variable.")
             else:
                 self.file_path = file_path
                 Logger.INFO("Stored the selected file path in the file_path variable.")
@@ -946,16 +877,12 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         # Open input dialogs for the client ID and secret ID
         Logger.INFO("Opening input dialog for the Client ID.")
-        client_id = customtkinter.CTkInputDialog(
-            text="Type in the Client ID:", title="Client ID"
-        )
+        client_id = customtkinter.CTkInputDialog(text="Type in the Client ID:", title="Client ID")
         client_id_value = client_id.get_input()
         Logger.INFO(f"Client ID input: {client_id_value}")
 
         Logger.INFO("Opening input dialog for the Secret ID.")
-        secret_id = customtkinter.CTkInputDialog(
-            text="Type in the Secret ID:", title="Secret ID"
-        )
+        secret_id = customtkinter.CTkInputDialog(text="Type in the Secret ID:", title="Secret ID")
         secret_id_value = secret_id.get_input()
         Logger.INFO(f"Secret ID input: {secret_id_value}")
 
@@ -965,9 +892,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.update_terminal("Canceled")
         else:
             # If the user enters both IDs, create a configuration file and save it
-            Logger.INFO(
-                "User entered both IDs. Creating and saving configuration file."
-            )
+            Logger.INFO("User entered both IDs. Creating and saving configuration file.")
             config = create_config(client_id_value, secret_id_value)
             self.update_terminal("Configuration file created and saved.")
             save_config(config, config_path)
@@ -993,9 +918,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         # Open an input dialog for the access token
         Logger.INFO("Opening input dialog for the Access Token.")
-        token = customtkinter.CTkInputDialog(
-            text="Type in the Access Token:", title="Access Token"
-        )
+        token = customtkinter.CTkInputDialog(text="Type in the Access Token:", title="Access Token")
         token_value = token.get_input()
         Logger.INFO(f"Access Token input: {token_value}")
 
@@ -1089,9 +1012,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         while True:
             # Open an input dialog for the number of months
             Logger.INFO("Opening input dialog for the number of months.")
-            months = customtkinter.CTkInputDialog(
-                text="Type in the Number of Months:", title="Months"
-            )
+            months = customtkinter.CTkInputDialog(text="Type in the Number of Months:", title="Months")
             months_value = months.get_input()
             Logger.INFO(f"Number of months input: {months_value}")
 
@@ -1102,9 +1023,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                 config = load_config(config_path)
                 if config is not None:
                     # Update the number of months in the configuration and save it
-                    Logger.INFO(
-                        "Updating number of months in configuration and saving it."
-                    )
+                    Logger.INFO("Updating number of months in configuration and saving it.")
                     config["MONTHS"] = months_value
                     save_config(config, config_path)
                     Logger.INFO("Configuration saved.")
@@ -1116,9 +1035,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                     "Error",
                     "No config file found. Please set the API values first.",
                 )
-                self.update_terminal(
-                    "No config file found. Please set the API values first."
-                )
+                self.update_terminal("No config file found. Please set the API values first.")
                 Logger.INFO("Updated terminal with error message.")
                 break
             # If the user input is not a digit, show an error message
@@ -1153,9 +1070,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         # Check if the thread is already running
         Logger.INFO("Checking if the program thread is already running.")
         if program_thread is not None and program_thread.is_alive():
-            Logger.WARNING(
-                "AnilistMangaUpdater thread is already running. Returning immediately."
-            )
+            Logger.WARNING("AnilistMangaUpdater thread is already running. Returning immediately.")
             return
 
         # Import the AnilistMangaUpdater class
@@ -1203,9 +1118,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         while True:
             # Open an input dialog for the private value
             Logger.INFO("Opening input dialog for the private value.")
-            private = customtkinter.CTkInputDialog(
-                text="Type in the Private Value (Yes/No):", title="Private"
-            )
+            private = customtkinter.CTkInputDialog(text="Type in the Private Value (Yes/No):", title="Private")
             private_value = private.get_input()
             Logger.INFO(f"Private value input: {private_value}")
 
@@ -1217,9 +1130,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                     config = load_config(config_path)
                     if config is not None:
                         # Update the private value in the configuration and save it
-                        Logger.INFO(
-                            "Updating private value in configuration and saving it."
-                        )
+                        Logger.INFO("Updating private value in configuration and saving it.")
                         config["PRIVATE"] = private_value
                         save_config(config, config_path)
                         Logger.INFO("Configuration saved.")
@@ -1230,23 +1141,17 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
                         "Error",
                         "No config file found. Please set the API values first.",
                     )
-                    self.update_terminal(
-                        "No config file found. Please set the API values first."
-                    )
+                    self.update_terminal("No config file found. Please set the API values first.")
                     Logger.INFO("Updated terminal with error message.")
                     break
                 # If the user input is not "yes" or "no", show an error message
-                Logger.WARNING(
-                    "User input is not 'yes' or 'no'. Showing error message."
-                )
+                Logger.WARNING("User input is not 'yes' or 'no'. Showing error message.")
                 messagebox.showerror("Error", "Invalid input. Please enter Yes or No.")
                 self.update_terminal("Invalid input. Please enter Yes or No.")
                 Logger.INFO("Updated terminal with error message.")
             except AttributeError:
                 # If the user cancels the dialog, show an error message
-                Logger.WARNING(
-                    "User cancelled the input dialog. Showing error message."
-                )
+                Logger.WARNING("User cancelled the input dialog. Showing error message.")
                 messagebox.showerror("Error", "Canceled")
                 self.update_terminal("Canceled")
                 Logger.INFO("Updated terminal with cancellation message.")

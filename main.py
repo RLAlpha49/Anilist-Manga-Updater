@@ -19,12 +19,8 @@ else:
     application_path = os.path.dirname(os.path.abspath(__file__))
     Logger.INFO("Running in a normal Python environment.")
 
-gui_script_path = os.path.join(
-    application_path, "AnilistMangaUpdater", "Main", "GUI.py"
-)
-Logger.DEBUG(
-    f"Application path: {application_path}\nGUI script path: {gui_script_path}"
-)
+gui_script_path = os.path.join(application_path, "AnilistMangaUpdater", "Main", "GUI.py")
+Logger.DEBUG(f"Application path: {application_path}\nGUI script path: {gui_script_path}")
 
 startupinfo = subprocess.STARTUPINFO()  # type: ignore
 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # type: ignore

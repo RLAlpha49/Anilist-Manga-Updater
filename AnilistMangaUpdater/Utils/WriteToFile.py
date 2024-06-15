@@ -64,9 +64,7 @@ def Save_Alt_Titles_To_File(alternative_titles_dict: dict) -> None:
     # Check if directory exists, if not, create it
     create_directory_if_not_exists(directory)
     # Open a file to write, this will overwrite the file if it already exists
-    with open(
-        f"{directory}/alternative_titles.json", "w", encoding="utf-8"
-    ) as alt_titles_file:
+    with open(f"{directory}/alternative_titles.json", "w", encoding="utf-8") as alt_titles_file:
         Logger.DEBUG(f"Writing to file: {directory}/alternative_titles.json")
         json.dump(alternative_titles_dict, alt_titles_file)
     Logger.INFO("Finished writing to file.")
@@ -136,9 +134,7 @@ def manage_files(dir_path: str, file_type: str) -> None:
     Logger.DEBUG(f"Found {len(files)} {file_type} files in {dir_path}.")
     # If there are more than 5 files, delete the oldest file
     if len(files) > 5:
-        Logger.WARNING(
-            f"More than 5 {file_type} files found. Deleting oldest file: {files[0]}"
-        )
+        Logger.WARNING(f"More than 5 {file_type} files found. Deleting oldest file: {files[0]}")
         os.remove(files[0])
     else:
         Logger.INFO("No files to delete.")
@@ -192,13 +188,9 @@ def formatter_not_found(not_found_manga_names: list) -> list:
         for name, last_chapter_read in not_found_manga_names:
             Logger.DEBUG(f"Writing data for manga: {name}")
             # Create search link for the manga name
-            search_link = (
-                f"https://anilist.co/search/manga?search={name.replace(' ', '%20')}"
-            )
+            search_link = f"https://anilist.co/search/manga?search={name.replace(' ', '%20')}"
             # Write manga name, last chapter read, and search link to file
-            lines.append(
-                f"{name} - Last Chapter Read: {last_chapter_read}, Search Link: {search_link}\n"
-            )
+            lines.append(f"{name} - Last Chapter Read: {last_chapter_read}, Search Link: {search_link}\n")
     return lines
 
 
@@ -227,17 +219,9 @@ def formatter_multiple_ids(multiple_id_manga_names: dict) -> list:
             last_chapter_read = ids[0][1] if len(ids[0]) > 1 else "Unknown"
             # Append manga name, IDs, and last chapter read to lines
             formatted_ids = ", ".join(map(str, actual_ids))
-            lines.append(
-                f"{manga_name} ID's: {formatted_ids}, "
-                f"Last Chapter Read: {last_chapter_read}\n"
-            )
+            lines.append(f"{manga_name} ID's: {formatted_ids}, " f"Last Chapter Read: {last_chapter_read}\n")
             # Append Anilist URLs for each ID to lines
-            lines.extend(
-                [
-                    f"Anilist URL: https://anilist.co/manga/{manga_id}\n"
-                    for manga_id in actual_ids
-                ]
-            )
+            lines.extend([f"Anilist URL: https://anilist.co/manga/{manga_id}\n" for manga_id in actual_ids])
             # Append a newline to separate each manga
             lines.append("\n")
     return lines
@@ -254,9 +238,7 @@ def write_chapters_updated_to_file(filename: str, data: int) -> None:
     Returns:
         None
     """
-    Logger.INFO(
-        f"Function write_chapters_updated_to_file called with filename: {filename}"
-    )
+    Logger.INFO(f"Function write_chapters_updated_to_file called with filename: {filename}")
     # Check if directory exists, if not, create it
     create_directory_if_not_exists("Chapters-Updated")
     # Open a file to append
