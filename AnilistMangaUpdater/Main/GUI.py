@@ -245,9 +245,6 @@ def on_close() -> None:
     This function is triggered when the application is being closed. It logs the closing event and then terminates
     the application.
 
-    Parameters:
-        None
-
     Returns:
         None
     """
@@ -585,9 +582,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         through a series of dialog boxes and terminal prompts. The method retrieves the current alternative titles
         from a file, prompts the user to select an action (add, edit, or delete), and performs the selected action.
 
-        Parameters:
-            None
-
         Returns:
             None
         """
@@ -714,9 +708,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         it updates the progress and status, as well as the time taken label. If the program thread is not running,
         it logs a warning and stops the function.
 
-        Parameters:
-            None
-
         Returns:
             None
         """
@@ -748,6 +739,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Parameters:
             status (str): The new status of the program. program_progress (float, optional): The new progress
             of the program. If not provided, the current global progress is used.
+            program_progress (float, optional): The new progress of the program. If not provided, the current global.
 
         Returns:
             None
@@ -869,9 +861,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         either dialog, a cancellation message is updated in the terminal. If the user enters both IDs,
         a configuration file is created and saved.
 
-        Parameters:
-            None
-
         Returns:
             None
         """
@@ -906,9 +895,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         an error message is displayed and the terminal is updated with a cancellation message. If the user enters the
         access token, the method loads the configuration file, adds the access token to it, and saves the updated
         configuration file. If the thread for obtaining the access token is running, it is stopped.
-
-        Parameters:
-            None
 
         Returns:
             None
@@ -960,9 +946,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         4. Starts the newly created thread.
         5. Opens an input dialog for the user to enter the access token.
         6. Waits for the access token thread to finish.
-
-        Parameters:
-            None
 
         Returns:
             None
@@ -1058,9 +1041,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             7. Updates the progress bar.
             8. Resets the progress to 0.
 
-        Parameters:
-            None
-
         Returns:
             None
         """
@@ -1108,9 +1088,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         3. If the configuration is not found, it displays an error message and updates the terminal.
         4. If the user input is not "yes" or "no", it displays an error message and updates the terminal.
         5. If the user cancels the dialog, it displays an error message and updates the terminal.
-
-        Parameters:
-            None
 
         Returns:
             None

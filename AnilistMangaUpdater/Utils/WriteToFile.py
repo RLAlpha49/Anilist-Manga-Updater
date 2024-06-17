@@ -55,7 +55,6 @@ def Save_Alt_Titles_To_File(alternative_titles_dict: dict) -> None:
 
     Parameters:
         alternative_titles_dict (dict): A dictionary of alternative titles.
-        directory (str): The directory where the file will be saved.
 
     Returns:
         None
@@ -81,7 +80,6 @@ def Get_Alt_Titles_From_File(alternative_titles_dict: dict) -> dict:
 
     Parameters:
         alternative_titles_dict (dict): A dictionary of alternative titles.
-        directory (str): The directory where the file is located.
 
     Returns:
         dict: The dictionary of alternative titles loaded from the file.
