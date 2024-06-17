@@ -534,7 +534,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
         self.scaling_optionemenu_tooltip = CTkToolTip.CTkToolTip(
             self.scaling_optionemenu,
-            ("Changes the UI scaling of the application.\n" "You may need to resize window to fit the new scaling."),
+            "Changes the UI scaling of the application.\n" "You may need to resize window to fit the new scaling.",
         )
         Logger.INFO("Created tooltip for 'UI Scaling' option menu.")
 
