@@ -15,7 +15,7 @@ CTkToolTip = "^0.8"
 requests = "^2.32.3"
 pymoe = "^2.2"
 pandas = "^2.2.2"
-ruff = "^0.4.9"
+ruff = "^0.4.10"
 
 [tool.poetry.dev-dependencies]
 types-requests = "^2.32.0.20240602"
