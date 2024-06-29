@@ -239,10 +239,7 @@ def update_manga_progress(manga: object, app: object, variables_list: list, chap
                     Logger.DEBUG(f"Updated chapters_updated to: {chapters_updated}")
                     update_sent = True
             else:
-                if manga.last_chapter_read is not None:
-                    message = f"Manga: {manga.name}({manga.id}) Has been set to chapter " f"{manga.last_chapter_read}\n"
-                else:
-                    message = f"Manga: {manga.name}({manga.id}) Status has been set to " f"{manga.status}\n"
+                message = f"Manga: {manga.name}({manga.id}) Status has been set to " f"{manga.status}\n"
                 Logger.DEBUG(message)
                 app.update_terminal(message)
                 break
