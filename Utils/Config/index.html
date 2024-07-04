@@ -1002,7 +1002,7 @@ with the values from the configuration dictionary.</p>
 </span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="n">Logger</span><span class="o">.</span><span class="n">INFO</span><span class="p">(</span><span class="s2">&quot;Environment variables set.&quot;</span><span class="p">)</span>
 </span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">else</span><span class="p">:</span>
 </span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="c1"># If the configuration dictionary is not loaded successfully, print a message</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="n">Logger</span><span class="o">.</span><span class="n">WARN</span><span class="p">(</span><span class="s2">&quot;Configuration file not found.&quot;</span><span class="p">)</span>  <span class="c1"># pylint: disable=E1101</span>
+</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="n">Logger</span><span class="o">.</span><span class="n">WARNING</span><span class="p">(</span><span class="s2">&quot;Configuration file not found.&quot;</span><span class="p">)</span>  <span class="c1"># pylint: disable=E1101</span>
 </span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
 </span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Configuration file not found. Please use buttons on the left side &quot;</span>
 </span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>            <span class="s2">&quot;to set the Client, Secret ID&#39;s, as well as the Private value and number of Months&quot;</span>
@@ -1412,7 +1412,7 @@ with the values from the configuration dictionary.</p>
 </span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a>        <span class="k">return</span> <span class="n">config</span>
 </span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
 </span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a>        <span class="c1"># If the configuration file is not found, return None</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>        <span class="n">Logger</span><span class="o">.</span><span class="n">WARN</span><span class="p">(</span>  <span class="c1"># pylint: disable=E1101</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>        <span class="n">Logger</span><span class="o">.</span><span class="n">WARNING</span><span class="p">(</span>  <span class="c1"># pylint: disable=E1101</span>
 </span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a>            <span class="s2">&quot;Configuration file not found. Returning None.&quot;</span>
 </span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>        <span class="p">)</span>
 </span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="k">return</span> <span class="kc">None</span>
