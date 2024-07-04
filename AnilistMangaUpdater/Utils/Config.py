@@ -89,7 +89,7 @@ def Get_Config(app: object) -> None:
         Logger.INFO("Environment variables set.")
     else:
         # If the configuration dictionary is not loaded successfully, print a message
-        Logger.WARN("Configuration file not found.")  # pylint: disable=E1101
+        Logger.WARNING("Configuration file not found.")  # pylint: disable=E1101
         message = (
             "\nConfiguration file not found. Please use buttons on the left side "
             "to set the Client, Secret ID's, as well as the Private value and number of Months"
@@ -120,7 +120,7 @@ def load_config(file_path: str) -> Optional[dict[Union[str, Union[str, None]], N
         return config
     except FileNotFoundError:
         # If the configuration file is not found, return None
-        Logger.WARN(  # pylint: disable=E1101
+        Logger.WARNING(  # pylint: disable=E1101
             "Configuration file not found. Returning None."
         )
         return None

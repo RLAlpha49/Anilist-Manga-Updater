@@ -81,7 +81,7 @@ def api_request(
     return None
 
 
-def Set_Access_Token(app: object) -> None:
+def Set_Access_Token(app: object) -> Union[bool, None]:
     """
     Set the access token for the API requests.
 
@@ -94,7 +94,7 @@ def Set_Access_Token(app: object) -> None:
         app: The application object used to update the terminal and progress.
 
     Returns:
-        None
+        bool: True if the access token is set successfully, None otherwise.
     """
     global headers
     Logger.INFO("Function Set_Access_Token called.")
@@ -119,6 +119,7 @@ def Set_Access_Token(app: object) -> None:
     else:
         Logger.ERROR("No config file found.")
         app.update_terminal("No config file found.")
+        return False
 
 
 def needs_refresh(app: object) -> Optional[Union[bool, None]]:

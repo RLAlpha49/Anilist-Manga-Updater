@@ -72,7 +72,9 @@ class Program:  # pylint: disable=R0903, C0115
         Logger.DEBUG("Updated progress and status.")
 
         # Set the access token
-        Set_Access_Token(app)
+        token = Set_Access_Token(app)
+        if token is False:
+            return
         Logger.DEBUG("Set_Access_Token called.")
         # Check if the access token needs to be refreshed
         refresh: Union[bool, None] = needs_refresh(app)
