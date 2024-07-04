@@ -9,7 +9,7 @@
 
 Download the latest release and run the .exe file given.
 
-To run the exe file for Linux, you will need to use Wine or another Windows emulator. The only difference between the Linux and Windows versions is the icon used for the exe file.
+To run the exe file for Linux, you will need to use Wine or another Windows emulator.
 
 P.S. Due to compiling Python files using pyinstaller, certain antivirus programs give a false positive. You may need to exclude the exe file in your antivirus.\
 You could also run the files yourself. Just download the ZIP file of the source code, extract it, get dependency through [poetry](https://python-poetry.org/docs/) or other methods (This project uses poetry for dependency management, but is not required), and run the main.py file.
