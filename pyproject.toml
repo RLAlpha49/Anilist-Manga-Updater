@@ -19,7 +19,7 @@ ruff = "^0.6.2"
 
 [tool.poetry.dev-dependencies]
 types-requests = "^2.32.0.20240712"
-mypy = "^1.11.1"
+mypy = "^1.11.2"
 mkdocs = "^1.6.0"
 mkdocs-material = "^9.5.33"
 mkdocstrings = {extras = ["crystal", "python"], version = "^0.25.2"}
