@@ -2087,7 +2087,7 @@
 
     <div class="doc doc-contents first">
 
-      <p>This module contains the implementation of the main GUI for the application.</p>
+        <p>This module contains the implementation of the main GUI for the application.</p>
 <p>It includes classes for the main window, buttons, and other GUI components,
 as well as methods for handling user input and updating the GUI.</p>
 
@@ -2287,7 +2287,7 @@ as well as methods for handling user input and updating the GUI.</p>
               Bases: <code><span title="threading.Thread">Thread</span></code></p>
 
 
-      <p>A class that extends the threading.Thread class in Python. This class is used to create a separate thread for
+        <p>A class that extends the threading.Thread class in Python. This class is used to create a separate thread for
 obtaining the access token from the Anilist API.</p>
 
 
@@ -2342,7 +2342,7 @@ it logs an error and returns. Otherwise, it calls the Get_Access_Token function 
       </tbody>
     </table>
 
-      <p>The stop flag is initially set to False, indicating that the thread should not be stopped.</p>
+        <p>The stop flag is initially set to False, indicating that the thread should not be stopped.</p>
 
                   <details class="quote">
                     <summary>Source code in <code>AnilistMangaUpdater/Main/GUI.py</code></summary>
@@ -2412,7 +2412,7 @@ it logs an error and returns. Otherwise, it calls the Get_Access_Token function 
 
     <div class="doc doc-contents ">
 
-      <p>Run the Get_Access_Token function in the thread.</p>
+        <p>Run the Get_Access_Token function in the thread.</p>
 <p>This method is called when the thread's start() method is invoked.
 It checks if the global 'app' variable is None. If it is, it logs an error and returns.
 Otherwise, it calls the Get_Access_Token function with 'app' as the argument.</p>
@@ -2465,7 +2465,7 @@ Otherwise, it calls the Get_Access_Token function with 'app' as the argument.</p
 
     <div class="doc doc-contents ">
 
-      <p>Set the stop flag to True to stop the thread.</p>
+        <p>Set the stop flag to True to stop the thread.</p>
 <p>This method can be called to stop the thread. It sets the stop flag to True,
 which indicates that the thread should stop running.</p>
 
@@ -4064,7 +4064,7 @@ which indicates that the thread should stop running.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Handles the event when the access token button is clicked.</p>
+        <p>Handles the event when the access token button is clicked.</p>
 <p>This method is triggered when the user clicks on the access token button. It performs the following steps:</p>
 <ol>
 <li>Retrieves the current configuration of the application.</li>
@@ -4197,7 +4197,7 @@ which indicates that the thread should stop running.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Opens a file dialog for the user to select a file, and updates the entry widget with the selected file path.</p>
+        <p>Opens a file dialog for the user to select a file, and updates the entry widget with the selected file path.</p>
 <p>This method prompts the user to select a file through a file dialog. The selected file path is then inserted
 into the provided entry widget and stored in the appropriate variable. If the user cancels the file dialog,
 the text of the entry widget is restored to its previous state.</p>
@@ -4412,7 +4412,7 @@ the text of the entry widget is restored to its previous state.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Get the action from the user.</p>
+        <p>Get the action from the user.</p>
 
             <details class="quote">
               <summary>Source code in <code>AnilistMangaUpdater/Main/GUI.py</code></summary>
@@ -4472,7 +4472,7 @@ the text of the entry widget is restored to its previous state.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Prompts the user to select an original title from the alternative titles dictionary.</p>
+        <p>Prompts the user to select an original title from the alternative titles dictionary.</p>
 <p>This method displays a list of original titles to the user and prompts them to select one.
 The user's selection is returned. If the user cancels the dialog or enters an invalid selection,
 the method returns None.</p>
@@ -4621,7 +4621,7 @@ the method returns None.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Manages alternative titles in the application.</p>
+        <p>Manages alternative titles in the application.</p>
 <p>This method allows the user to add, edit, or delete alternative titles. The user interacts with the method
 through a series of dialog boxes and terminal prompts. The method retrieves the current alternative titles
 from a file, prompts the user to select an action (add, edit, or delete), and performs the selected action.</p>
@@ -4750,7 +4750,7 @@ from a file, prompts the user to select an action (add, edit, or delete), and pe
 
     <div class="doc doc-contents ">
 
-      <p>Handles the event when the month button is clicked.</p>
+        <p>Handles the event when the month button is clicked.</p>
 <p>This method is triggered when the user clicks on the month button. It performs the following steps:</p>
 <ol>
 <li>Opens an input dialog for the user to enter the number of months.</li>
@@ -4886,7 +4886,7 @@ None</p>
 
     <div class="doc doc-contents ">
 
-      <p>Opens input dialogs for the client ID and secret ID.</p>
+        <p>Opens input dialogs for the client ID and secret ID.</p>
 <p>This method prompts the user to input the client ID and secret ID through input dialogs. If the user cancels
 either dialog, a cancellation message is updated in the terminal. If the user enters both IDs,
 a configuration file is created and saved.</p>
@@ -5001,7 +5001,7 @@ a configuration file is created and saved.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Opens an input dialog for the user to enter the access token.</p>
+        <p>Opens an input dialog for the user to enter the access token.</p>
 <p>This method prompts the user to input the access token through an input dialog. If the user cancels the dialog,
 an error message is displayed and the terminal is updated with a cancellation message. If the user enters the
 access token, the method loads the configuration file, adds the access token to it, and saves the updated
@@ -5169,7 +5169,7 @@ configuration file. If the thread for obtaining the access token is running, it 
 
     <div class="doc doc-contents ">
 
-      <p>Handles the event when the private button is clicked.</p>
+        <p>Handles the event when the private button is clicked.</p>
 <p>This method is triggered when the user clicks on the private button. It performs the following steps:</p>
 <ol>
 <li>Opens an input dialog for the user to enter the private value.</li>
@@ -5334,7 +5334,7 @@ configuration file. If the thread for obtaining the access token is running, it 
 
     <div class="doc doc-contents ">
 
-      <p>Handles the event when the start button is clicked.</p>
+        <p>Handles the event when the start button is clicked.</p>
 <p>This method is triggered when the user clicks on the start button. It performs the following steps:</p>
 <div class="language-text highlight"><pre><span></span><code>1. Checks if the program thread is already running. If it is, it returns immediately.
 2. If the program thread is not running, it imports the AnilistMangaUpdater class.
@@ -5488,7 +5488,7 @@ configuration file. If the thread for obtaining the access token is running, it 
 
     <div class="doc doc-contents ">
 
-      <p>Updates the estimated time remaining label in the GUI.</p>
+        <p>Updates the estimated time remaining label in the GUI.</p>
 <p>This method converts the estimated time remaining from seconds to a time format (hours, minutes,
 and seconds), updates the time remaining label, and schedules itself to be called again after 1 second if
 there is still time remaining.</p>
@@ -5638,7 +5638,7 @@ to be called again after 1 second.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Updates the progress and status of the program.</p>
+        <p>Updates the progress and status of the program.</p>
 <p>This method updates the global variables <code>progress</code> and <code>progress_status</code> that are used to track the progress
 and status of the program. If the <code>program_progress</code> parameter is provided and is different from the current
 <code>progress</code>, it updates the progress and status labels in the GUI.</p>
@@ -5789,7 +5789,7 @@ and status of the program. If the <code>program_progress</code> parameter is pro
 
     <div class="doc doc-contents ">
 
-      <p>Updates the progress bar, status label, and time taken label in the GUI.</p>
+        <p>Updates the progress bar, status label, and time taken label in the GUI.</p>
 <p>This method is scheduled to be called every 100 milliseconds. If the program thread is running,
 it updates the progress and status, as well as the time taken label. If the program thread is not running,
 it logs a warning and stops the function.</p>
@@ -5892,7 +5892,7 @@ it logs a warning and stops the function.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Updates the terminal in the GUI with the provided text.</p>
+        <p>Updates the terminal in the GUI with the provided text.</p>
 <p>This method first checks if the scrollbar is at the bottom of the terminal. If it is, the method will
 automatically scroll to the end after inserting the text. The terminal is temporarily enabled for the insertion
 of the text and then disabled again to prevent manual edits.</p>
@@ -6036,7 +6036,7 @@ of the text and then disabled again to prevent manual edits.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Adds an alternative title to the alternative titles dictionary.</p>
+        <p>Adds an alternative title to the alternative titles dictionary.</p>
 <p>This function prompts the user to input an original title and its corresponding alternative title.
 If the user provides valid inputs, it updates the alternative titles dictionary with the new pair
 and saves it to a file.</p>
@@ -6169,7 +6169,7 @@ and saves it to a file.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Changes the appearance mode of the application.</p>
+        <p>Changes the appearance mode of the application.</p>
 <p>This function changes the appearance mode of the application based on the input parameter.
 It logs the new appearance mode and the successful change of the appearance mode.</p>
 
@@ -6277,7 +6277,7 @@ It logs the new appearance mode and the successful change of the appearance mode
 
     <div class="doc doc-contents ">
 
-      <p>Changes the UI scaling of the application.</p>
+        <p>Changes the UI scaling of the application.</p>
 <p>This function changes the UI scaling of the application based on the input parameter.
 It logs the new UI scaling and the successful change of the UI scaling.</p>
 
@@ -6387,7 +6387,7 @@ It logs the new UI scaling and the successful change of the UI scaling.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Deletes an alternative title from the alternative titles dictionary.</p>
+        <p>Deletes an alternative title from the alternative titles dictionary.</p>
 <p>This function removes the alternative title associated with the given original title
 from the alternative titles dictionary and saves the updated dictionary to a file.</p>
 
@@ -6511,7 +6511,7 @@ from the alternative titles dictionary and saves the updated dictionary to a fil
 
     <div class="doc doc-contents ">
 
-      <p>Edits an alternative title in the alternative titles dictionary.</p>
+        <p>Edits an alternative title in the alternative titles dictionary.</p>
 <p>This function prompts the user to input a new alternative title for a given original title.
 If the user provides a valid new alternative title, it updates the alternative titles dictionary
 and saves it to a file.</p>
@@ -6648,7 +6648,7 @@ and saves it to a file.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Handles the event when the application is closed.</p>
+        <p>Handles the event when the application is closed.</p>
 <p>This function is triggered when the application is being closed. It logs the closing event and then terminates
 the application.</p>
 
