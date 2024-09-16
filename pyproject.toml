@@ -18,7 +18,7 @@ pandas = "^2.2.2"
 ruff = "^0.6.4"
 
 [tool.poetry.dev-dependencies]
-types-requests = "^2.32.0.20240907"
+types-requests = "^2.32.0.20240914"
 mypy = "^1.11.2"
 mkdocs = "^1.6.1"
 mkdocs-material = "^9.5.34"
