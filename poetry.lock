@@ -989,13 +989,13 @@ extra = ["pygments (>=2.12)"]
 
 [[package]]
 name = "pymoe"
-version = "2.2"
+version = "2.2.1"
 description = "This is Pymoe. The only python library you'll need if you need information on Anime, Manga, Light Novels, or Visual Novels."
 optional = false
-python-versions = ">=3.10,<4.0"
+python-versions = "<4.0,>=3.10"
 files = [
-    {file = "pymoe-2.2-py3-none-any.whl", hash = "sha256:e1f2b9dafce35f3fc91e59a5c57af95dd93786add4212ec9a7158165a9aa1423"},
-    {file = "pymoe-2.2.tar.gz", hash = "sha256:ac53248d1ea37bae873de6f98e131de5356e7ce47fd6c9ed8bf6910db36df6a7"},
+    {file = "pymoe-2.2.1-py3-none-any.whl", hash = "sha256:2d0ffdf0893c0d31051069fe9e48e217683570dec7de24aa3181ea5aaa046b99"},
+    {file = "pymoe-2.2.1.tar.gz", hash = "sha256:50f76c75636600f7dc01c77fd524cc8b0c05e53dd59a582d936fb65d3051f014"},
 ]
 
 [package.dependencies]
