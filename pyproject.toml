@@ -14,7 +14,7 @@ customtkinter = "^5.2.2"
 CTkToolTip = "^0.8"
 requests = "^2.32.3"
 pymoe = "^2.2"
-pandas = "^2.2.2"
+pandas = "^2.2.3"
 ruff = "^0.6.6"
 
 [tool.poetry.dev-dependencies]
