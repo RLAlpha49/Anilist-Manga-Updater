@@ -15,7 +15,6 @@ CTkToolTip = "^0.8"
 requests = "^2.32.3"
 pymoe = "^2.2"
 pandas = "^2.2.3"
-ruff = "^0.6.7"
 
 [tool.poetry.dev-dependencies]
 types-requests = "^2.32.0.20240914"
@@ -25,6 +24,7 @@ mkdocs-material = "^9.5.38"
 mkdocstrings = {extras = ["crystal", "python"], version = "^0.26.1"}
 mkdocs-git-revision-date-localized-plugin = "^1.2.9"
 mkdocs-git-committers-plugin-2 = "^2.3.0"
+ruff = "^0.6.7"
 
 [tool.ruff]
 line-length = 120
