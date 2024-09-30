@@ -20,7 +20,7 @@ pandas = "^2.2.3"
 types-requests = "^2.32.0.20240914"
 mypy = "^1.11.2"
 mkdocs = "^1.6.1"
-mkdocs-material = "^9.5.38"
+mkdocs-material = "^9.5.39"
 mkdocstrings = {extras = ["crystal", "python"], version = "^0.26.1"}
 mkdocs-git-revision-date-localized-plugin = "^1.2.9"
 mkdocs-git-committers-plugin-2 = "^2.3.0"
