@@ -2093,6 +2093,11 @@ as well as methods for handling user input and updating the GUI.</p>
 
 
 
+
+
+
+
+
   <div class="doc doc-children">
 
 
@@ -2344,6 +2349,11 @@ it logs an error and returns. Otherwise, it calls the Get_Access_Token function 
 
         <p>The stop flag is initially set to False, indicating that the thread should not be stopped.</p>
 
+
+
+
+
+
                   <details class="quote">
                     <summary>Source code in <code>AnilistMangaUpdater/Main/GUI.py</code></summary>
                     <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-89">89</a></span>
@@ -2517,6 +2527,11 @@ which indicates that the thread should stop running.</p>
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
               Bases: <code><span title="customtkinter.CTk">CTk</span></code></p>
+
+
+
+
+
 
 
                   <details class="quote">
@@ -3180,7 +3195,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.access_token_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">access_token_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n"><span title="self.access_token_button_clicked">access_token_button_clicked</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Get Access Token&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">access_token_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="n"><span title="self.access_token_button_clicked">access_token_button_clicked</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Get Access Token&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3243,7 +3258,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.alt_titles_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">alt_titles_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n"><span title="self.manage_alternative_titles">manage_alternative_titles</span></span><span class="p">(),</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Manage Alt Titles&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">alt_titles_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n"><span title="self.manage_alternative_titles">manage_alternative_titles</span></span><span class="p">(),</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Manage Alt Titles&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3264,7 +3279,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.api_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">api_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n"><span title="self.open_input_dialog_event">open_input_dialog_event</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Set API Values&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">api_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="n"><span title="self.open_input_dialog_event">open_input_dialog_event</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Set API Values&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3306,7 +3321,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.appearance_mode_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">appearance_mode_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Appearance Mode:&#39;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">appearance_mode_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Appearance Mode:&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(anchor)">anchor</span></span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3327,7 +3342,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.appearance_mode_optionemenu" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">appearance_mode_optionemenu</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkOptionMenu">CTkOptionMenu</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Light&#39;</span><span class="p">,</span> <span class="s1">&#39;Dark&#39;</span><span class="p">,</span> <span class="s1">&#39;System&#39;</span><span class="p">],</span> <span class="n">command</span><span class="o">=</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.change_appearance_mode_event" href="#AnilistMangaUpdater.Main.GUI.change_appearance_mode_event">change_appearance_mode_event</a></span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">appearance_mode_optionemenu</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkOptionMenu">CTkOptionMenu</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkOptionMenu(values)">values</span></span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Light&#39;</span><span class="p">,</span> <span class="s1">&#39;Dark&#39;</span><span class="p">,</span> <span class="s1">&#39;System&#39;</span><span class="p">],</span> <span class="n"><span title="customtkinter.CTkOptionMenu(command)">command</span></span><span class="o">=</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.change_appearance_mode_event" href="#AnilistMangaUpdater.Main.GUI.change_appearance_mode_event">change_appearance_mode_event</a></span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3369,7 +3384,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.browse_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">browse_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="n">self</span><span class="p">,</span> <span class="n">fg_color</span><span class="o">=</span><span class="s1">&#39;transparent&#39;</span><span class="p">,</span> <span class="n">border_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">text_color</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;gray10&#39;</span><span class="p">,</span> <span class="s1">&#39;#DCE4EE&#39;</span><span class="p">),</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Browse&#39;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n"><span title="self.browse_file">browse_file</span></span><span class="p">(</span><span class="n"><span title="self.file_path_textbox">file_path_textbox</span></span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">browse_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="customtkinter.CTkButton(master)">master</span></span><span class="o">=</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(fg_color)">fg_color</span></span><span class="o">=</span><span class="s1">&#39;transparent&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(border_width)">border_width</span></span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text_color)">text_color</span></span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;gray10&#39;</span><span class="p">,</span> <span class="s1">&#39;#DCE4EE&#39;</span><span class="p">),</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Browse&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n"><span title="self.browse_file">browse_file</span></span><span class="p">(</span><span class="n"><span title="self.file_path_textbox">file_path_textbox</span></span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3411,7 +3426,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.exit_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">exit_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.on_close" href="#AnilistMangaUpdater.Main.GUI.on_close">on_close</a></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Exit&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">exit_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.on_close" href="#AnilistMangaUpdater.Main.GUI.on_close">on_close</a></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Exit&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3474,7 +3489,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.file_path_textbox" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">file_path_textbox</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkEntry">CTkEntry</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">placeholder_text</span><span class="o">=</span><span class="s1">&#39;Kenmei Export File Path&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">file_path_textbox</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkEntry">CTkEntry</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkEntry(placeholder_text)">placeholder_text</span></span><span class="o">=</span><span class="s1">&#39;Kenmei Export File Path&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3516,7 +3531,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.logo_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">logo_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">logo</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">logo_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(image)">image</span></span><span class="o">=</span><span class="n">logo</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3537,7 +3552,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.month_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">month_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n"><span title="self.month_button_clicked">month_button_clicked</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Set Months&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">month_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="n"><span title="self.month_button_clicked">month_button_clicked</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Set Months&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3579,7 +3594,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.percent_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">percent_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;0%&#39;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">percent_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="s1">&#39;0%&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(anchor)">anchor</span></span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3600,7 +3615,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.previous_browse_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">previous_browse_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n">master</span><span class="o">=</span><span class="n">self</span><span class="p">,</span> <span class="n">fg_color</span><span class="o">=</span><span class="s1">&#39;transparent&#39;</span><span class="p">,</span> <span class="n">border_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">text_color</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;gray10&#39;</span><span class="p">,</span> <span class="s1">&#39;#DCE4EE&#39;</span><span class="p">),</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Browse&#39;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n"><span title="self.browse_file">browse_file</span></span><span class="p">(</span><span class="n"><span title="self.previous_file_path_textbox">previous_file_path_textbox</span></span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">previous_browse_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="customtkinter.CTkButton(master)">master</span></span><span class="o">=</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(fg_color)">fg_color</span></span><span class="o">=</span><span class="s1">&#39;transparent&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(border_width)">border_width</span></span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text_color)">text_color</span></span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;gray10&#39;</span><span class="p">,</span> <span class="s1">&#39;#DCE4EE&#39;</span><span class="p">),</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Browse&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n"><span title="self.browse_file">browse_file</span></span><span class="p">(</span><span class="n"><span title="self.previous_file_path_textbox">previous_file_path_textbox</span></span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3663,7 +3678,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.previous_file_path_textbox" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">previous_file_path_textbox</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkEntry">CTkEntry</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">placeholder_text</span><span class="o">=</span><span class="s1">&#39;Previous Kenmei Export File Path&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">previous_file_path_textbox</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkEntry">CTkEntry</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkEntry(placeholder_text)">placeholder_text</span></span><span class="o">=</span><span class="s1">&#39;Previous Kenmei Export File Path&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3705,7 +3720,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.private_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">private_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n"><span title="self.private_button_clicked">private_button_clicked</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Private Value&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">private_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="n"><span title="self.private_button_clicked">private_button_clicked</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Private Value&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3747,7 +3762,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.progress_bar" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">progress_bar</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkProgressBar">CTkProgressBar</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">progress_bar</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkProgressBar">CTkProgressBar</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkProgressBar(width)">width</span></span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkProgressBar(height)">height</span></span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3789,7 +3804,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.scaling_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">scaling_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;UI Scaling:&#39;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">scaling_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="s1">&#39;UI Scaling:&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(anchor)">anchor</span></span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3810,7 +3825,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.scaling_optionemenu" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">scaling_optionemenu</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkOptionMenu">CTkOptionMenu</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;80%&#39;</span><span class="p">,</span> <span class="s1">&#39;90%&#39;</span><span class="p">,</span> <span class="s1">&#39;100%&#39;</span><span class="p">,</span> <span class="s1">&#39;110%&#39;</span><span class="p">,</span> <span class="s1">&#39;120%&#39;</span><span class="p">],</span> <span class="n">command</span><span class="o">=</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.change_scaling_event" href="#AnilistMangaUpdater.Main.GUI.change_scaling_event">change_scaling_event</a></span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">scaling_optionemenu</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkOptionMenu">CTkOptionMenu</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkOptionMenu(values)">values</span></span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;80%&#39;</span><span class="p">,</span> <span class="s1">&#39;90%&#39;</span><span class="p">,</span> <span class="s1">&#39;100%&#39;</span><span class="p">,</span> <span class="s1">&#39;110%&#39;</span><span class="p">,</span> <span class="s1">&#39;120%&#39;</span><span class="p">],</span> <span class="n"><span title="customtkinter.CTkOptionMenu(command)">command</span></span><span class="o">=</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.change_scaling_event" href="#AnilistMangaUpdater.Main.GUI.change_scaling_event">change_scaling_event</a></span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3852,7 +3867,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.sidebar_frame" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">sidebar_frame</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkFrame">CTkFrame</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">140</span><span class="p">,</span> <span class="n">corner_radius</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">sidebar_frame</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkFrame">CTkFrame</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkFrame(width)">width</span></span><span class="o">=</span><span class="mi">140</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkFrame(corner_radius)">corner_radius</span></span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3873,7 +3888,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.start_button" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">start_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n"><span title="self.start_button_clicked">start_button_clicked</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Start&#39;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n"><span title="customtkinter.CTkFont">CTkFont</span></span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">18</span><span class="p">))</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">start_button</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkButton">CTkButton</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(command)">command</span></span><span class="o">=</span><span class="n"><span title="self.start_button_clicked">start_button_clicked</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Start&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkButton(font)">font</span></span><span class="o">=</span><span class="n"><span title="customtkinter.CTkFont">CTkFont</span></span><span class="p">(</span><span class="n"><span title="customtkinter.CTkFont(size)">size</span></span><span class="o">=</span><span class="mi">18</span><span class="p">))</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3936,7 +3951,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.status_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">status_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Status: </span><span class="si">{</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.progress_status" href="#AnilistMangaUpdater.Main.GUI.progress_status">progress_status</a></span><span class="p">[:</span><span class="mi">37</span><span class="p">]</span><span class="si">}</span><span class="s1">...&#39;</span> <span class="k">if</span> <span class="n">len</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.progress_status" href="#AnilistMangaUpdater.Main.GUI.progress_status">progress_status</a></span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">40</span> <span class="k">else</span> <span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.progress_status" href="#AnilistMangaUpdater.Main.GUI.progress_status">progress_status</a></span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">status_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Status: </span><span class="si">{</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.progress_status" href="#AnilistMangaUpdater.Main.GUI.progress_status">progress_status</a></span><span class="p">[:</span><span class="mi">37</span><span class="p">]</span><span class="si">}</span><span class="s1">...&#39;</span> <span class="k">if</span> <span class="n">len</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.progress_status" href="#AnilistMangaUpdater.Main.GUI.progress_status">progress_status</a></span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">40</span> <span class="k">else</span> <span class="n"><a class="autorefs autorefs-internal" title="AnilistMangaUpdater.Main.GUI.progress_status" href="#AnilistMangaUpdater.Main.GUI.progress_status">progress_status</a></span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3957,7 +3972,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.terminal" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">terminal</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkTextbox">CTkTextbox</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">wrap</span><span class="o">=</span><span class="s1">&#39;word&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">terminal</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkTextbox">CTkTextbox</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkTextbox(width)">width</span></span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkTextbox(wrap)">wrap</span></span><span class="o">=</span><span class="s1">&#39;word&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3999,7 +4014,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.time_remaining_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">time_remaining_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Estimated Time Remaining: NaN&#39;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">time_remaining_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Estimated Time Remaining: NaN&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(anchor)">anchor</span></span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4020,7 +4035,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.time_taken_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">time_taken_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Time Taken: 0:00:00&#39;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s1">&#39;e&#39;</span><span class="p">)</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">time_taken_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Time Taken: 0:00:00&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(anchor)">anchor</span></span><span class="o">=</span><span class="s1">&#39;e&#39;</span><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4041,7 +4056,7 @@ which indicates that the thread should stop running.</p>
   </span>
 
 <a href="#AnilistMangaUpdater.Main.GUI.App.title_label" class="headerlink" title="Anchor link to this section for reference">&para;</a></h4>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">title_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;Anilist Manga</span><span class="se">\n</span><span class="s1">Updater&#39;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n"><span title="customtkinter.CTkFont">CTkFont</span></span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">22</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">))</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">title_label</span> <span class="o">=</span> <span class="n"><span title="customtkinter.CTkLabel">CTkLabel</span></span><span class="p">(</span><span class="n"><span title="self.sidebar_frame">sidebar_frame</span></span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(text)">text</span></span><span class="o">=</span><span class="s1">&#39;Anilist Manga</span><span class="se">\n</span><span class="s1">Updater&#39;</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkLabel(font)">font</span></span><span class="o">=</span><span class="n"><span title="customtkinter.CTkFont">CTkFont</span></span><span class="p">(</span><span class="n"><span title="customtkinter.CTkFont(size)">size</span></span><span class="o">=</span><span class="mi">22</span><span class="p">,</span> <span class="n"><span title="customtkinter.CTkFont(weight)">weight</span></span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">))</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4212,7 +4227,9 @@ the text of the entry widget is restored to its previous state.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>entry_widget</code></td>
+            <td>
+                <code>entry_widget</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The entry widget to be updated with</p>
@@ -4226,7 +4243,9 @@ the text of the entry widget is restored to its previous state.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>is_previous</code></td>
+            <td>
+                <code>is_previous</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>A flag indicating whether the selected file is a previous Kenmei</p>
@@ -4487,7 +4506,9 @@ the method returns None.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>alt_titles_dict</code></td>
+            <td>
+                <code>alt_titles_dict</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The dictionary containing the original titles as keys and alternative</p>
@@ -5506,7 +5527,9 @@ to be called again after 1 second.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>estimated_time_remaining</code></td>
+            <td>
+                <code>estimated_time_remaining</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The estimated time remaining in seconds.</p>
@@ -5653,7 +5676,9 @@ and status of the program. If the <code>program_progress</code> parameter is pro
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>status</code></td>
+            <td>
+                <code>status</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The new status of the program. program_progress (float, optional): The new progress</p>
@@ -5667,7 +5692,9 @@ and status of the program. If the <code>program_progress</code> parameter is pro
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>program_progress</code></td>
+            <td>
+                <code>program_progress</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The new progress of the program. If not provided, the current global.</p>
@@ -5907,7 +5934,9 @@ of the text and then disabled again to prevent manual edits.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>text</code></td>
+            <td>
+                <code>text</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The text to be inserted into the terminal.</p>
@@ -6051,7 +6080,9 @@ and saves it to a file.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>alt_titles_dict</code></td>
+            <td>
+                <code>alt_titles_dict</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The dictionary containing the original titles as keys and alternative titles as values.</p>
@@ -6183,7 +6214,9 @@ It logs the new appearance mode and the successful change of the appearance mode
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>new_appearance_mode</code></td>
+            <td>
+                <code>new_appearance_mode</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The new appearance mode to be set. This should be a string representing</p>
@@ -6291,7 +6324,9 @@ It logs the new UI scaling and the successful change of the UI scaling.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>new_scaling</code></td>
+            <td>
+                <code>new_scaling</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The new UI scaling to be set. This should be a string representing the desired UI</p>
@@ -6401,7 +6436,9 @@ from the alternative titles dictionary and saves the updated dictionary to a fil
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>alt_titles_dict</code></td>
+            <td>
+                <code>alt_titles_dict</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The dictionary containing the original titles as keys and alternative titles as values.</p>
@@ -6415,7 +6452,9 @@ from the alternative titles dictionary and saves the updated dictionary to a fil
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>original_title</code></td>
+            <td>
+                <code>original_title</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The original title for which the alternative title is to be deleted.</p>
@@ -6526,7 +6565,9 @@ and saves it to a file.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>alt_titles_dict</code></td>
+            <td>
+                <code>alt_titles_dict</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The dictionary containing the original titles as keys and alternative titles as values.</p>
@@ -6540,7 +6581,9 @@ and saves it to a file.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>original_title</code></td>
+            <td>
+                <code>original_title</code>
+            </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The original title for which the alternative title is to be edited.</p>
