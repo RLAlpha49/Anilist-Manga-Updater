@@ -391,6 +391,57 @@ class SidebarFrame(customtkinter.CTkFrame):
         )
 
 
+class TerminalFrame(customtkinter.CTkFrame):
+    def __init__(self, parent: "App", *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.configure(fg_color="transparent")
+        self.parent = parent
+        self.grid(
+            row=0, column=1, columnspan=3, rowspan=3, padx=(20, 20), pady=(20, 0), sticky="nsew"
+        )
+        Logger.DEBUG("Created terminal frame for the window.")
+
+        # Create a terminal textbox
+        self.terminal = customtkinter.CTkTextbox(self, width=250, wrap="word")
+        self.terminal.grid(row=0, column=0, sticky="nsew")
+        Logger.INFO("Created terminal textbox in TerminalFrame.")
+
+        # Configure grid
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+    def update_terminal(self, text: str) -> None:
+        """
+        Updates the terminal in the GUI with the provided text.
+
+        This method first checks if the scrollbar is at the bottom of the terminal. If it is, the method will
+        automatically scroll to the end after inserting the text. The terminal is temporarily enabled for the insertion
+        of the text and then disabled again to prevent manual edits.
+
+        Parameters:
+            text (str): The text to be inserted into the terminal.
+
+        Returns:
+            None
+        """
+        # Check if the scrollbar is at the bottom
+        at_bottom = self.terminal.yview()[1] == 1.0
+
+        # Enable the terminal and insert the text
+        self.terminal.configure(state="normal")
+        self.terminal.insert("end", f"\n{text}")
+
+        # If the scrollbar was at the bottom before inserting, scroll to the end
+        if at_bottom:
+            self.terminal.see("end")
+
+        # Force Tkinter to update the GUI
+        self.terminal.update_idletasks()
+
+        # Disable the terminal
+        self.terminal.configure(state="disabled")
+
+
 class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
     def __init__(self) -> None:  # pylint: disable=R0915
         super().__init__()
@@ -407,9 +458,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.sidebar_frame = SidebarFrame(self)
         Logger.DEBUG("Initialized SidebarFrame.")
 
-        # Load the application logo
-        logo = customtkinter.CTkImage(light_image=Image.open(image1dir), size=(100, 100))
-        Logger.DEBUG("Loaded application logo.")
+        # Initialize TerminalFrame
+        self.terminal_frame = TerminalFrame(self)
+        Logger.DEBUG("Initialized TerminalFrame.")
 
         # Set the window title and size
         self.title("Anilist Manga Updater")
@@ -422,20 +473,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.grid_rowconfigure((0, 1, 2), weight=1)
         Logger.DEBUG("Configured grid layout for the window.")
 
-        # Add widgets to the main area (excluding sidebar)
-        # Create a terminal textbox
-        self.terminal = customtkinter.CTkTextbox(self, width=250, wrap="word")
-        self.terminal.grid(
-            row=0,
-            column=1,
-            columnspan=3,
-            rowspan=3,
-            padx=(20, 20),
-            pady=(20, 0),
-            sticky="nsew",
-        )
-        Logger.INFO("Created terminal textbox.")
-
+        # Add the remaining widgets to the main area (excluding sidebar and terminal)
         # Create time remaining label
         self.time_remaining_label = customtkinter.CTkLabel(
             self, text="Estimated Time Remaining: NaN", anchor="w"
@@ -520,13 +558,14 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Disabled file path textbox.")
 
         # Add a welcome message to the terminal
-        self.terminal.insert(
+        self.terminal_frame.terminal.configure(state="normal")
+        self.terminal_frame.terminal.insert(
             "end",
             "Welcome to Anilist Manga Updater!\n\n"
             "Please make sure to set all values with the buttons on the left side.\n\n",
         )
         Logger.INFO("Added welcome message to the terminal.")
-        self.terminal.configure(state="disabled")
+        self.terminal_frame.terminal.configure(state="disabled")
         Logger.INFO("Disabled terminal.")
 
         # Set the protocol for the window close button to call the on_close function
@@ -544,107 +583,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.progress_bar, f"{round((progress * 100), 1)}%"
         )
         Logger.INFO("Created tooltip for progress bar.")
-
-    def open_settings_popup(self) -> None:
-        """
-        Opens the settings popup window where users can configure API values, access token, months, and privacy settings.
-
-        Returns:
-            None
-        """
-        Logger.INFO("Opening Settings popup.")
-        SettingsPopup(self)
-
-    def manage_alternative_titles(self) -> None:
-        """
-        Manages alternative titles in the application.
-
-        This method allows the user to add, edit, or delete alternative titles. The user interacts with the method
-        through a series of dialog boxes and terminal prompts. The method retrieves the current alternative titles
-        from a file, prompts the user to select an action (add, edit, or delete), and performs the selected action.
-
-        Returns:
-            None
-        """
-        Logger.INFO("Starting to manage alternative titles.")
-        alt_titles_dict = Get_Alt_Titles_From_File(alternative_titles_dict)
-        Logger.INFO("Retrieved alternative titles from file.")
-        action = self.get_action()
-        if action is None:
-            Logger.WARNING("No action selected. Exiting manage alternative titles.")
-            return
-
-        Logger.INFO(f"Action selected: {action}")
-        if action in ["edit", "delete"]:
-            original_title = self.get_original_title(alt_titles_dict)
-            if original_title is None:
-                Logger.WARNING("No original title selected. Exiting manage alternative titles.")
-                return
-
-            Logger.INFO(f"Original title selected: {original_title}")
-            if action == "edit":
-                Logger.INFO("Starting to edit alternative title.")
-                edit_alternative_title(alt_titles_dict, original_title)
-                Logger.INFO("Finished editing alternative title.")
-            elif action == "delete":
-                Logger.INFO("Starting to delete alternative title.")
-                delete_alternative_title(alt_titles_dict, original_title)
-                Logger.INFO("Finished deleting alternative title.")
-        elif action == "add":
-            Logger.INFO("Starting to add alternative title.")
-            add_alternative_title(alt_titles_dict)
-            Logger.INFO("Finished adding alternative title.")
-        Logger.INFO("Finished managing alternative titles.")
-
-    def get_action(self) -> Union[str, None]:
-        """
-        Get the action from the user.
-        """
-        options = ["add", "edit", "delete"]
-        for i, option in enumerate(options, 1):
-            self.update_terminal(f"{i}. {option}")
-        self.update_terminal("")
-
-        Logger.INFO("Prompting user for action selection.")
-        action_index = simpledialog.askinteger(
-            "Manage Alternative Titles",
-            "Enter the number of the option you want to select:",
-        )
-        if action_index is None or action_index == 0 or action_index > len(options):
-            Logger.WARNING("Invalid or no action selected by user.")
-            return None
-        Logger.INFO(f"User selected action: {options[action_index - 1]}")
-        return options[action_index - 1]
-
-    def get_original_title(self, alt_titles_dict) -> Union[str, None]:
-        """
-        Prompts the user to select an original title from the alternative titles dictionary.
-
-        This method displays a list of original titles to the user and prompts them to select one.
-        The user's selection is returned. If the user cancels the dialog or enters an invalid selection,
-        the method returns None.
-
-        Parameters:
-            alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative
-            titles as values.
-
-        Returns:
-            str: The original title selected by the user, if a valid selection was made.
-            None: If the user cancelled the dialog or made an invalid selection.
-        """
-        titles = list(alt_titles_dict.items())
-        for i, (title, _) in enumerate(titles, 1):
-            self.update_terminal(f"{i}. {title}")
-
-        Logger.INFO("Prompting user for title selection.")
-        title_index = simpledialog.askinteger(
-            "Select a title", "Enter the number of the title you want to select:"
-        )
-        if title_index is None or title_index == 0 or title_index > len(titles):
-            Logger.WARNING("Invalid or no title selected by user.")
-            return None
-        Logger.INFO(f"User selected title: {titles[title_index - 1][0]}")
-        return titles[title_index - 1][0]
 
     def update_estimated_time_remaining(
         self, new_estimated_time_remaining: Optional[float] = None, add_time: Optional[float] = None
@@ -763,37 +701,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.progress_bar_tooltip.configure(message=f"{str(round((progress * 100), 1))}%")
             Logger.INFO(f"Updated progress to: {progress} and status to: {status}")
 
-    def update_terminal(self, text: str) -> None:
-        """
-        Updates the terminal in the GUI with the provided text.
-
-        This method first checks if the scrollbar is at the bottom of the terminal. If it is, the method will
-        automatically scroll to the end after inserting the text. The terminal is temporarily enabled for the insertion
-        of the text and then disabled again to prevent manual edits.
-
-        Parameters:
-            text (str): The text to be inserted into the terminal.
-
-        Returns:
-            None
-        """
-        # Check if the scrollbar is at the bottom
-        at_bottom = self.terminal.yview()[1] == 1.0
-
-        # Enable the terminal and insert the text
-        self.terminal.configure(state="normal")
-        self.terminal.insert("end", f"\n{text}")
-
-        # If the scrollbar was at the bottom before inserting, scroll to the end
-        if at_bottom:
-            self.terminal.see("end")
-
-        # Force Tkinter to update the GUI
-        self.terminal.update_idletasks()
-
-        # Disable the terminal
-        self.terminal.configure(state="disabled")
-
     def browse_file(
         self,
         entry_widget: Union[tkinter.Entry, customtkinter.CTkEntry],
@@ -889,7 +796,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             Logger.INFO("Saving configuration file.")
             save_config(config, config_path)
             Logger.INFO("Configuration file saved.")
-            self.update_terminal("Access Token set.")
+            self.terminal_frame.update_terminal("Access Token set.")
             Logger.INFO("Access Token set.")
             Set_Access_Token(self)
             Logger.INFO("Set Access Token in app.")
@@ -900,7 +807,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             # If the user cancels the dialog, show an error message
             Logger.WARNING("User cancelled the input dialog.")
             messagebox.showerror("Error", "Canceled")
-            self.update_terminal("Canceled")
+            self.terminal_frame.update_terminal("Canceled")
             Logger.INFO("Updated terminal with cancellation message.")
             if self.thread1 is not None:
                 self.thread1.stop_thread()
@@ -997,6 +904,121 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
         Logger.INFO("Resetting the progress to 0.")
         progress = 0
+
+    def update_terminal(self, text: str) -> None:
+        """
+        Updates the terminal in the GUI with the provided text.
+
+        This method calls the update_terminal method of the TerminalFrame.
+
+        Parameters:
+            text (str): The text to be inserted into the terminal.
+
+        Returns:
+            None
+        """
+        self.terminal_frame.update_terminal(text)
+
+    def open_settings_popup(self) -> None:
+        """
+        Opens the settings popup window where users can configure API values, access token, months, and privacy settings.
+
+        Returns:
+            None
+        """
+        Logger.INFO("Opening Settings popup.")
+        SettingsPopup(self)
+
+    def manage_alternative_titles(self) -> None:
+        """
+        Manages alternative titles in the application.
+
+        This method allows the user to add, edit, or delete alternative titles. The user interacts with the method
+        through a series of dialog boxes and terminal prompts. The method retrieves the current alternative titles
+        from a file, prompts the user to select an action (add, edit, or delete), and performs the selected action.
+
+        Returns:
+            None
+        """
+        Logger.INFO("Starting to manage alternative titles.")
+        alt_titles_dict = Get_Alt_Titles_From_File(alternative_titles_dict)
+        Logger.INFO("Retrieved alternative titles from file.")
+        action = self.get_action()
+        if action is None:
+            Logger.WARNING("No action selected. Exiting manage alternative titles.")
+            return
+
+        Logger.INFO(f"Action selected: {action}")
+        if action in ["edit", "delete"]:
+            original_title = self.get_original_title(alt_titles_dict)
+            if original_title is None:
+                Logger.WARNING("No original title selected. Exiting manage alternative titles.")
+                return
+
+            Logger.INFO(f"Original title selected: {original_title}")
+            if action == "edit":
+                Logger.INFO("Starting to edit alternative title.")
+                edit_alternative_title(alt_titles_dict, original_title)
+                Logger.INFO("Finished editing alternative title.")
+            elif action == "delete":
+                Logger.INFO("Starting to delete alternative title.")
+                delete_alternative_title(alt_titles_dict, original_title)
+                Logger.INFO("Finished deleting alternative title.")
+        elif action == "add":
+            Logger.INFO("Starting to add alternative title.")
+            add_alternative_title(alt_titles_dict)
+            Logger.INFO("Finished adding alternative title.")
+        Logger.INFO("Finished managing alternative titles.")
+
+    def get_action(self) -> Union[str, None]:
+        """
+        Get the action from the user.
+        """
+        options = ["add", "edit", "delete"]
+        for i, option in enumerate(options, 1):
+            self.update_terminal(f"{i}. {option}")
+        self.update_terminal("")
+
+        Logger.INFO("Prompting user for action selection.")
+        action_index = simpledialog.askinteger(
+            "Manage Alternative Titles",
+            "Enter the number of the option you want to select:",
+        )
+        if action_index is None or action_index == 0 or action_index > len(options):
+            Logger.WARNING("Invalid or no action selected by user.")
+            return None
+        Logger.INFO(f"User selected action: {options[action_index - 1]}")
+        return options[action_index - 1]
+
+    def get_original_title(self, alt_titles_dict) -> Union[str, None]:
+        """
+        Prompts the user to select an original title from the alternative titles dictionary.
+
+        This method displays a list of original titles to the user and prompts them to select one.
+        The user's selection is returned. If the user cancels the dialog or enters an invalid selection,
+        the method returns None.
+
+        Parameters:
+            alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative
+            titles as values.
+
+        Returns:
+            str: The original title selected by the user, if a valid selection was made.
+            None: If the user cancelled the dialog or made an invalid selection.
+        """
+        titles = list(alt_titles_dict.items())
+        for i, (title, _) in enumerate(titles, 1):
+            self.update_terminal(f"{i}. {title}")
+
+        Logger.INFO("Prompting user for title selection.")
+        title_index = simpledialog.askinteger(
+            "Select a title", "Enter the number of the title you want to select:"
+        )
+        if title_index is None or title_index == 0 or title_index > len(titles):
+            Logger.WARNING("Invalid or no title selected by user.")
+            return None
+        Logger.INFO(f"User selected title: {titles[title_index - 1][0]}")
+        return titles[title_index - 1][0]
 
 
 class SettingsPopup(customtkinter.CTkToplevel):
