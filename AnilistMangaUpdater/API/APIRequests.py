@@ -66,18 +66,23 @@ def api_request(
 
         if response.status_code == 500:
             Logger.ERROR(f"Server error, retrying request. Status code: {response.status_code}")
-            app.update_terminal(f"\nServer error, retrying request. Status code: {response.status_code}")
+            app.update_terminal(
+                f"\nServer error, retrying request. Status code: {response.status_code}"
+            )
             time.sleep(2)
             continue
 
         Logger.ERROR(f"Failed to retrieve data. Status code: {response.status_code}")
         app.update_terminal(
-            f"\nFailed to retrieve data. Status code: {response.status_code}\n" "Assumming title is not on list\n"
+            f"\nFailed to retrieve data. Status code: {response.status_code}\n"
+            "Assumming title is not on list\n"
         )
         return None
 
     Logger.ERROR(f"Failed to retrieve data after {retries} retries.")
-    app.update_terminal(f"\nFailed to retrieve data after {retries} retries.\nAssumming title is not on list\n")
+    app.update_terminal(
+        f"\nFailed to retrieve data after {retries} retries.\nAssumming title is not on list\n"
+    )
     return None
 
 

@@ -146,13 +146,16 @@ class MangaSearch:  # pylint: disable=R0902
                 # Handle server error
                 Logger.ERROR(f"Error encountered: {e}")
                 if "Too Many Requests" in str(e):
-                    self.app.update_terminal(f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds...")
+                    self.app.update_terminal(
+                        f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds..."
+                    )
                     Logger.WARNING("Too many requests. Delaying next attempt.")
                     time.sleep(self.delay)
                     self.retry_count += 1
                 else:
                     self.app.update_terminal(
-                        f"\nAn unexpected error occurred for {self.name}: {e}. " "Retrying in 2 seconds..."
+                        f"\nAn unexpected error occurred for {self.name}: {e}. "
+                        "Retrying in 2 seconds..."
                     )
                     Logger.WARNING("Unexpected error. Retrying in 2 seconds.")
                     time.sleep(2)
@@ -287,7 +290,9 @@ class MangaSearch:  # pylint: disable=R0902
         """
         Logger.INFO("Function handle_server_error called.")
         if "Too Many Requests" in str(e):
-            self.app.update_terminal(f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds...")
+            self.app.update_terminal(
+                f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds..."
+            )
             Logger.WARNING("Too Many Requests For Pymoe. Retrying.")
             time.sleep(self.delay)
             self.retry_count += 1
@@ -392,6 +397,10 @@ class MangaSearch:  # pylint: disable=R0902
                 Logger.INFO("Skipping a title.")
                 break
         else:
-            self.app.update_terminal(f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries.")
-            Logger.ERROR(f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries.")
+            self.app.update_terminal(
+                f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries."
+            )
+            Logger.ERROR(
+                f"Failed to get manga ID for '{self.name}' after {self.max_retries} retries."
+            )
         return result

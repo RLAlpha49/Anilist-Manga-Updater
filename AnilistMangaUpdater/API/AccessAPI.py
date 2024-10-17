@@ -86,7 +86,9 @@ def Get_User_Manga_List(app: object) -> list[dict[str, Union[int, str]]]:
                 Logger.DEBUG("No more chunks in manga list. Breaking the loop.")
                 break
 
-            manga_list += [entry for sublist in chunk_manga_list for entry in sublist.get("entries", [])]
+            manga_list += [
+                entry for sublist in chunk_manga_list for entry in sublist.get("entries", [])
+            ]
             Logger.DEBUG(f"Added chunk to manga list. Current list length: {len(manga_list)}")
             chunk += 1
         else:

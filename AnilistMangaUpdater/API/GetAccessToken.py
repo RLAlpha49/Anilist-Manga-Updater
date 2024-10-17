@@ -29,13 +29,16 @@ def Get_Access_Token(app: object) -> Union[str, None]:
     client_id = os.environ.get("ANILIST_CLIENT_ID")
     if client_id is None:
         app.update_terminal(
-            "No client ID found. Please enter your AniList client ID with the " "'Set API Values' button."
+            "No client ID found. Please enter your AniList client ID with the "
+            "'Set API Values' button."
         )
         return None
 
     auth_url = f"{authorization_url}?client_id={client_id}&response_type=token"
     if platform.system() == "Linux":
-        app.update_terminal("Please open the following URL in your web browser and follow the instructions:")
+        app.update_terminal(
+            "Please open the following URL in your web browser and follow the instructions:"
+        )
         app.update_terminal(auth_url)
     else:
         webbrowser.open(auth_url)

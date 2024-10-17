@@ -27,7 +27,7 @@ mkdocs-git-committers-plugin-2 = "^2.4.1"
 ruff = "^0.6.9"
 
 [tool.ruff]
-line-length = 120
+line-length = 100
 
 [tool.mypy]
 ignore_missing_imports = true

@@ -188,7 +188,9 @@ def formatter_not_found(not_found_manga_names: list) -> list:
             # Create search link for the manga name
             search_link = f"https://anilist.co/search/manga?search={name.replace(' ', '%20')}"
             # Write manga name, last chapter read, and search link to file
-            lines.append(f"{name} - Last Chapter Read: {last_chapter_read}, Search Link: {search_link}\n")
+            lines.append(
+                f"{name} - Last Chapter Read: {last_chapter_read}, Search Link: {search_link}\n"
+            )
     return lines
 
 
@@ -217,9 +219,13 @@ def formatter_multiple_ids(multiple_id_manga_names: dict) -> list:
             last_chapter_read = ids[0][1] if len(ids[0]) > 1 else "Unknown"
             # Append manga name, IDs, and last chapter read to lines
             formatted_ids = ", ".join(map(str, actual_ids))
-            lines.append(f"{manga_name} ID's: {formatted_ids}, " f"Last Chapter Read: {last_chapter_read}\n")
+            lines.append(
+                f"{manga_name} ID's: {formatted_ids}, " f"Last Chapter Read: {last_chapter_read}\n"
+            )
             # Append Anilist URLs for each ID to lines
-            lines.extend([f"Anilist URL: https://anilist.co/manga/{manga_id}\n" for manga_id in actual_ids])
+            lines.extend(
+                [f"Anilist URL: https://anilist.co/manga/{manga_id}\n" for manga_id in actual_ids]
+            )
             # Append a newline to separate each manga
             lines.append("\n")
     return lines

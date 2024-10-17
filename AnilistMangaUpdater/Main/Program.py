@@ -140,7 +140,9 @@ class Program:  # pylint: disable=R0903, C0115
 
         # Check if the file path is set
         if app.file_path == "":
-            app.update_terminal("Error: Please browse for a kenmei export file. (Previous is Optional)")
+            app.update_terminal(
+                "Error: Please browse for a kenmei export file. (Previous is Optional)"
+            )
             Logger.ERROR("File path not set.")
             return
 
@@ -256,7 +258,9 @@ class Program:  # pylint: disable=R0903, C0115
                                 )
                             )
                         else:
-                            manga_names_ids[manga_name].append((manga_id, None, manga_info["status"], None))
+                            manga_names_ids[manga_name].append(
+                                (manga_id, None, manga_info["status"], None)
+                            )
                         Logger.DEBUG("Appended additional information to manga_names_ids.")
             # Increment the counter for the number of manga processed
             manga_processed += 1
@@ -275,12 +279,17 @@ class Program:  # pylint: disable=R0903, C0115
             # Calculate the average time per ID and the estimated total time
             average_time = sum(times) / len(times)
             estimated_total_time = average_time * len(manga_names)
-            Logger.INFO(f"Average time: {average_time}, Estimated total time: {estimated_total_time}")
+            Logger.INFO(
+                f"Average time: {average_time}, Estimated total time: {estimated_total_time}"
+            )
 
             # Calculate the estimated time remaining
             time_elapsed: float = time.time() - start_time
             estimated_time_remaining = estimated_total_time - time_elapsed
-            Logger.INFO(f"Time elapsed: {time_elapsed}, " f"Estimated time remaining: {estimated_time_remaining}")
+            Logger.INFO(
+                f"Time elapsed: {time_elapsed}, "
+                f"Estimated time remaining: {estimated_time_remaining}"
+            )
 
             # Print the estimated time remaining
             app.update_estimated_time_remaining(estimated_time_remaining)
@@ -337,7 +346,9 @@ class Program:  # pylint: disable=R0903, C0115
         Get_No_Manga_Found(app)
 
         # Calculate and print the time taken
-        manga_data_time_taken: float = self.print_time_taken(manga_data_start_time, "get Manga data")
+        manga_data_time_taken: float = self.print_time_taken(
+            manga_data_start_time, "get Manga data"
+        )
         Logger.INFO(f"Time taken to get manga data: {manga_data_time_taken}")
         self.app.update_terminal("")
 
@@ -379,10 +390,15 @@ class Program:  # pylint: disable=R0903, C0115
                 # If the manga was not found in the manga list
                 if manga_entry is None:
                     self.app.update_terminal(
-                        f"Manga: {manga_name} (ID: {manga_id}) was not " "found on user list. Adding..."
+                        f"Manga: {manga_name} (ID: {manga_id}) was not "
+                        "found on user list. Adding..."
                     )
 
-                    Logger.WARNING(f"Manga: {manga_name} " f"(ID: {manga_id}) was not found " "on user list. Adding...")
+                    Logger.WARNING(
+                        f"Manga: {manga_name} "
+                        f"(ID: {manga_id}) was not found "
+                        "on user list. Adding..."
+                    )
                     chapter_anilist, status_anilist = 0, None
                 else:
                     # Get the current progress and status of the manga from the manga entry
@@ -398,7 +414,11 @@ class Program:  # pylint: disable=R0903, C0115
 
                 # If the progress or status has changed or the manga was not found in the manga list
 
-                if manga_entry is None or chapter_anilist != last_chapter_read or status_anilist != status:
+                if (
+                    manga_entry is None
+                    or chapter_anilist != last_chapter_read
+                    or status_anilist != status
+                ):
                     Logger.INFO(f"Updating manga: {manga_name}")
                     manga = Manga(
                         name=manga_name,
@@ -472,7 +492,9 @@ class Program:  # pylint: disable=R0903, C0115
         time.sleep(0.3)
 
         # Calculate and print the time taken
-        manga_update_time_taken = self.print_time_taken(manga_update_start_time, "update Manga data")
+        manga_update_time_taken = self.print_time_taken(
+            manga_update_start_time, "update Manga data"
+        )
         Logger.INFO(f"Time taken to update Manga data: {manga_update_time_taken} seconds")
 
         # Calculate the total time taken by adding the time taken to get manga data

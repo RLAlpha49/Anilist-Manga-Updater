@@ -62,7 +62,9 @@ class Logger:
             logging.FileHandler("logs/latest.log", encoding="utf-8"),
             logging.StreamHandler(stream=sys.stdout),
         ]
-        logging.basicConfig(level=logging.DEBUG, format="%(asctime)s, %(message)s", handlers=handlers)
+        logging.basicConfig(
+            level=logging.DEBUG, format="%(asctime)s, %(message)s", handlers=handlers
+        )
 
         logging.getLogger().handlers = handlers
         Logger.manage_log_files(max_logs)

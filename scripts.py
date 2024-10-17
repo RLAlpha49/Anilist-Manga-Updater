@@ -92,7 +92,9 @@ def clean(auto_fix=True):
     if errors:
         print("\nErrors occurred during the cleaning process:")
         for error in errors:
-            print(f"Command '{' '.join(error.args)}' returned non-zero exit status {error.returncode}.")
+            print(
+                f"Command '{' '.join(error.args)}' returned non-zero exit status {error.returncode}."
+            )
         sys.exit(errors[0].returncode)
 
 

@@ -113,6 +113,8 @@ def Get_No_Manga_Found(app: object) -> None:
     else:
         for manga in no_manga_found:
             name, last_chapter_read = manga
-            app.update_terminal(f"{name}, Last Chapter Read: {last_chapter_read}, Status: Not Found")
+            app.update_terminal(
+                f"{name}, Last Chapter Read: {last_chapter_read}, Status: Not Found"
+            )
             Logger.DEBUG(f"Printed info for manga not found: {name}.")
         app.update_terminal("\n")

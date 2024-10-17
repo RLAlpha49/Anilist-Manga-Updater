@@ -140,25 +140,37 @@ def update_variables(
     """
     variables_list = []
     manga.last_chapter_read = (
-        0 if manga.last_chapter_read is None and manga.last_chapter_read else manga.last_chapter_read
+        0
+        if manga.last_chapter_read is None and manga.last_chapter_read
+        else manga.last_chapter_read
     )
     if manga_status == "COMPLETED":
         pass
     elif manga.status == "PLANNING" or (
         manga.status != manga_status
-        and (manga.last_chapter_read is None or manga.last_chapter_read <= chapter_anilist or chapter_anilist is None)
+        and (
+            manga.last_chapter_read is None
+            or manga.last_chapter_read <= chapter_anilist
+            or chapter_anilist is None
+        )
     ):
         manga.last_chapter_read = 0 if manga.status == "PLANNING" else manga.last_chapter_read
         first_variables = update_manga_variables(
             manga.id,
             status=manga.status,
             progress=(
-                0 if manga.status == "PLANNING" else int(chapter_anilist) if chapter_anilist is not None else None
+                0
+                if manga.status == "PLANNING"
+                else int(chapter_anilist)
+                if chapter_anilist is not None
+                else None
             ),
             private=manga.private_bool,
         )
         variables_list.append(first_variables)
-    elif manga.last_chapter_read is not None and (manga.last_chapter_read > chapter_anilist or chapter_anilist is None):
+    elif manga.last_chapter_read is not None and (
+        manga.last_chapter_read > chapter_anilist or chapter_anilist is None
+    ):
         first_variables = update_manga_variables(
             manga.id,
             progress=((int(chapter_anilist) if chapter_anilist is not None else 0) + 1),
@@ -168,17 +180,26 @@ def update_variables(
         second_variables = None
         if (
             manga.status == "PLANNING"
-            and ((int(chapter_anilist) if chapter_anilist is not None else 0) + 1) != manga.last_chapter_read
+            and ((int(chapter_anilist) if chapter_anilist is not None else 0) + 1)
+            != manga.last_chapter_read
         ):
             second_variables = update_manga_variables(manga.id, progress=manga.last_chapter_read)
             third_variables = update_manga_variables(manga.id, status=manga.status)
-        elif ((int(chapter_anilist) if chapter_anilist is not None else 0) + 1) != manga.last_chapter_read:
-            second_variables = update_manga_variables(manga.id, status=manga.status, progress=manga.last_chapter_read)
-        variables_list.extend([v for v in [first_variables, second_variables, third_variables] if v is not None])
+        elif (
+            (int(chapter_anilist) if chapter_anilist is not None else 0) + 1
+        ) != manga.last_chapter_read:
+            second_variables = update_manga_variables(
+                manga.id, status=manga.status, progress=manga.last_chapter_read
+            )
+        variables_list.extend(
+            [v for v in [first_variables, second_variables, third_variables] if v is not None]
+        )
     return variables_list
 
 
-def update_manga_progress(manga: object, app: object, variables_list: list, chapter_anilist: int) -> Optional[bool]:
+def update_manga_progress(
+    manga: object, app: object, variables_list: list, chapter_anilist: int
+) -> Optional[bool]:
     """
     Updates the progress of the given manga.
 
@@ -225,7 +246,9 @@ def update_manga_progress(manga: object, app: object, variables_list: list, chap
             if manga.last_chapter_read is not None and (
                 manga.last_chapter_read > chapter_anilist or chapter_anilist is None
             ):
-                Logger.DEBUG("Last read chapter is greater than AniList chapter or AniList chapter is None.")
+                Logger.DEBUG(
+                    "Last read chapter is greater than AniList chapter or AniList chapter is None."
+                )
                 if previous_mediaId != variables_mediaId:
                     Logger.DEBUG("Previous mediaId is not equal to variables_mediaId.")
                     variables_mediaId = previous_mediaId
@@ -239,7 +262,9 @@ def update_manga_progress(manga: object, app: object, variables_list: list, chap
                     Logger.DEBUG(f"Updated chapters_updated to: {chapters_updated}")
                     update_sent = True
             else:
-                message = f"Manga: {manga.name}({manga.id}) Status has been set to " f"{manga.status}\n"
+                message = (
+                    f"Manga: {manga.name}({manga.id}) Status has been set to " f"{manga.status}\n"
+                )
                 Logger.DEBUG(message)
                 app.update_terminal(message)
                 break

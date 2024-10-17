@@ -130,13 +130,17 @@ def Get_Manga_Names(app: object, alt_titles_dict: dict):
                 last_chapter_read = row.last_chapter_read
                 status = row.status
                 last_read_at = row.last_read_at
-                Logger.DEBUG(f"Processing row: {title}, {last_chapter_read}, {status}, {last_read_at}")
+                Logger.DEBUG(
+                    f"Processing row: {title}, {last_chapter_read}, {status}, {last_read_at}"
+                )
 
                 try:
                     # Add the alternative title and its details to the manga_names_chapters dictionary
                     manga_names_chapters[alt_title] = {
                         "last_chapter_read": (
-                            int(last_chapter_read) if isinstance(last_chapter_read, (int, float, str)) else None
+                            int(last_chapter_read)
+                            if isinstance(last_chapter_read, (int, float, str))
+                            else None
                         ),
                         "status": status,
                         "last_read_at": last_read_at,
@@ -150,7 +154,10 @@ def Get_Manga_Names(app: object, alt_titles_dict: dict):
                     app.update_terminal(status)
                     if status in ("plan_to_read", "on_hold"):
                         manga_names_chapters[alt_title] = {"status": status}
-                        Logger.DEBUG(f"Added {alt_title} to manga_names_chapters dictionary " f"with status {status}.")
+                        Logger.DEBUG(
+                            f"Added {alt_title} to manga_names_chapters dictionary "
+                            f"with status {status}."
+                        )
         except AttributeError:
             Logger.ERROR("AttributeError encountered. Returning None.")
             return None
