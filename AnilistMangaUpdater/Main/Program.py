@@ -63,6 +63,12 @@ class Program:  # pylint: disable=R0903, C0115
         total_steps: int = 10  # Total number of steps in your program
         current_step: float = 0  # Current step number
 
+        self.start_time_total = time.time()
+        self.times_total = []
+        self.total_steps_total = 0
+        self.processed_steps_total = 0
+        self.time_remaining_total = 0
+
         # Update progress and status
         current_step += 0.5
         app.update_progress_and_status(
@@ -159,34 +165,32 @@ class Program:  # pylint: disable=R0903, C0115
         manga_data_start_time: float = time.time()
         Logger.DEBUG(f"Start time for manga data: {manga_data_start_time}")
 
+        self.start_time_total = time.time()
+        self.times_total = []
+        self.processed_steps_total = 0
+
         # Update progress and status
         current_step += 0.5
         app.update_progress_and_status("Getting manga IDs...", current_step / total_steps)
         Logger.INFO("Getting manga IDs...")
 
-        # Call the function and get the list of IDs & Names
+        # Get the manga found in the CSV file
         manga_names_ids: dict = {}
         manga_names: dict = Get_Manga_Names(app, alternative_titles_dict)
         Logger.DEBUG(f"Manga names: {manga_names}")
 
-        # Before the loop, record the start time and initialize a list to store the times
-        start_time: float = time.time()
-        times: list = []
-        Logger.DEBUG(f"Start time for loop: {start_time}")
-
-        # Initialize a counter for the number of manga processed
-        manga_processed: int = 0
+        # Initialize estimation variables for Getting IDs
+        total_ids = len(manga_names)
+        processed_ids = 0
+        times_ids = []
 
         # Iterate through the manga_names dictionary
-        manga_name: str
         for manga_name, manga_info in manga_names.items():
-            progress: float
             Logger.INFO(f"Processing manga: {manga_name}")
             try:
-                # noinspection PyUnboundLocalVariable
                 app.update_progress_and_status(
                     f"Getting ID for {manga_name}...",
-                    progress,  # pylint: disable=E0601  # noqa: F821
+                    (current_step + ((processed_ids / total_ids) * 3)) / total_steps,
                 )
                 Logger.DEBUG("Updated progress and status.")
             except UnboundLocalError:
@@ -263,7 +267,7 @@ class Program:  # pylint: disable=R0903, C0115
                             )
                         Logger.DEBUG("Appended additional information to manga_names_ids.")
             # Increment the counter for the number of manga processed
-            manga_processed += 1
+            processed_ids += 1
 
             # Record the time after finding the ID
             time_after = time.time()
@@ -273,39 +277,30 @@ class Program:  # pylint: disable=R0903, C0115
             Logger.DEBUG(f"Operation time: {operation_time}")
 
             # Append the operation time to the list
-            times.append(operation_time)
-            Logger.DEBUG("Appended operation time to times.")
+            times_ids.append(operation_time)
+            Logger.DEBUG("Appended operation time to times_ids.")
 
-            # Calculate the average time per ID and the estimated total time
-            average_time = sum(times) / len(times)
-            estimated_total_time = average_time * len(manga_names)
+            # Calculate the average time per manga ID
+            average_time_ids = sum(times_ids) / len(times_ids)
+            Logger.DEBUG(f"Average time per manga ID: {average_time_ids}")
+
+            # Calculate the estimated time remaining for Getting IDs
+            remaining_ids = total_ids - processed_ids
+            estimated_time_remaining_ids = average_time_ids * remaining_ids
             Logger.INFO(
-                f"Average time: {average_time}, Estimated total time: {estimated_total_time}"
+                f"Estimated time remaining for Getting IDs: {estimated_time_remaining_ids} seconds"
             )
 
-            # Calculate the estimated time remaining
-            time_elapsed: float = time.time() - start_time
-            estimated_time_remaining = estimated_total_time - time_elapsed
-            Logger.INFO(
-                f"Time elapsed: {time_elapsed}, "
-                f"Estimated time remaining: {estimated_time_remaining}"
-            )
+            # Update the terminal with estimation
+            app.update_estimated_time_remaining(estimated_time_remaining_ids)
+            Logger.DEBUG("Updated estimated time remaining for Getting IDs.")
 
-            # Print the estimated time remaining
-            app.update_estimated_time_remaining(estimated_time_remaining)
-            Logger.DEBUG("Updated estimated time remaining.")
+        # After the loop, estimate the total updates
+        total_updates = sum(len(info_list) for info_list in manga_names_ids.values())
+        Logger.INFO(f"Total updates to perform: {total_updates}")
 
-            # Calculate the progress for this step based on the number of manga processed
-            step_progress = manga_processed / len(manga_names)
-            Logger.DEBUG(f"Step progress: {step_progress}")
-
-            # Adjust the progress to be between 20% and 50%
-            progress = 0.2 + step_progress * 0.3
-            Logger.DEBUG(f"Adjusted progress: {progress}")
-
-        # After the loop, the progress should be around 50%
-        app.update_progress_and_status("Finished getting IDs!")
-        Logger.INFO("Finished getting IDs!")
+        # Add the update phase to estimated total steps
+        self.total_steps_total = total_updates
 
         # Update progress and status
         current_step += 3.5
@@ -352,21 +347,18 @@ class Program:  # pylint: disable=R0903, C0115
         Logger.INFO(f"Time taken to get manga data: {manga_data_time_taken}")
         self.app.update_terminal("")
 
-        # Record the start time
+        # Record the start time for updating manga
         manga_update_start_time = time.time()
         Logger.DEBUG(f"Start time for manga update: {manga_update_start_time}")
 
         # Update progress and status
-        current_step = 6
         app.update_progress_and_status("Updating manga...", 0.6)
         Logger.INFO("Updating manga...")
 
-        # Before the loop, initialize a counter for the number of manga updated
-        manga_updated: int = 0
-        total_manga: int = sum(len(info_list) for info_list in manga_names_ids.values())
-        Logger.INFO(f"Total manga to update: {total_manga}")
-
-        # Create a list to store the IDs of the manga that were not updated
+        # Initialize estimation variables for Updating Manga
+        processed_updates = 0
+        total_updates = sum(len(info_list) for info_list in manga_names_ids.values())
+        times_updates = []
         skipped_ids: list = []
         Logger.DEBUG("Created list for skipped IDs.")
 
@@ -431,23 +423,50 @@ class Program:  # pylint: disable=R0903, C0115
                     )
                     Logger.DEBUG(f"Created Manga instance: {manga}")
 
+                    # Record the time taken for this update
+                    update_time_before = time.time()
+
                     Update_Manga(manga, app, chapter_anilist, status_anilist)
                     Logger.DEBUG("Updated manga.")
 
                     # After updating the manga, increment the counter
-                    manga_updated += 1
-                    Logger.DEBUG(f"Incremented manga_updated to: {manga_updated}")
+                    processed_updates += 1
+                    Logger.DEBUG(f"Incremented processed_updates to: {processed_updates}")
 
-                    # Calculate the progress for this step
-                    step_progress = manga_updated / total_manga
-                    Logger.DEBUG(f"Calculated step progress: {step_progress}")
+                    # Assume Update_Manga is synchronous; if not, adjust accordingly
+                    update_time_after = time.time()
+                    operation_time_update = update_time_after - update_time_before
+                    times_updates.append(operation_time_update)
+                    Logger.DEBUG(f"Operation time for update: {operation_time_update}")
 
-                    # Adjust the progress to be between 60% and 90%
-                    progress = 0.6 + step_progress * 0.3
-                    Logger.DEBUG(f"Adjusted progress to: {progress}")
+                    # Calculate the average time per update
+                    average_time_update = sum(times_updates) / len(times_updates)
+                    Logger.DEBUG(f"Average time per update: {average_time_update}")
 
-                    app.update_progress_and_status(f"Updating {manga_name}...", progress)
-                    Logger.INFO("Updated progress and status.")
+                    # Calculate the estimated time remaining for Updating Manga
+                    remaining_updates = total_updates - processed_updates
+                    estimated_time_remaining_update = average_time_update * remaining_updates
+                    Logger.INFO(
+                        f"Estimated time remaining for Updating Manga: {estimated_time_remaining_update} seconds"
+                    )
+
+                    # Calculate total estimated time remaining
+                    total_estimated_time_remaining = estimated_time_remaining_update
+                    Logger.DEBUG(
+                        f"Total estimated time remaining: {total_estimated_time_remaining}"
+                    )
+
+                    # Update the estimated time remaining in the app
+                    app.update_estimated_time_remaining(total_estimated_time_remaining)
+                    Logger.DEBUG("Updated estimated time remaining for Updating Manga.")
+
+                    # Update the progress and status
+                    app.update_progress_and_status(
+                        f"Updating manga: {manga_name}",
+                        (current_step + (processed_updates / total_updates) * 3) / total_steps,
+                    )
+                    Logger.DEBUG("Updated progress and status for Updating Manga.")
+
                 else:
                     # If the progress and status have not changed, add the manga ID to list
                     skipped_ids.append(manga_id)
@@ -465,15 +484,13 @@ class Program:  # pylint: disable=R0903, C0115
             )
             Logger.DEBUG(f"Skipped IDs: {skipped_ids}")
 
-        current_step += 3
         Logger.INFO("Finished updating manga!")
         # After the loop, the progress should be exactly 90%
-        app.update_progress_and_status("Finished updating manga!", current_step / total_steps)
+        app.update_progress_and_status("Finished updating manga!", 0.9)
 
         # Update progress and status
-        current_step += 0.5
+        app.update_progress_and_status("Writing chapters updated...", 0.95)
         Logger.INFO("Writing chapters updated...")
-        app.update_progress_and_status("Writing chapters updated...", current_step / total_steps)
 
         # Get the number of chapters updated
         chapters_updated = Get_Chapters_Updated()
@@ -485,9 +502,8 @@ class Program:  # pylint: disable=R0903, C0115
         time.sleep(0.3)
 
         # Script has finished, update progress and status
-        current_step += 0.5
+        app.update_progress_and_status("Script Finished...", 1.0)
         Logger.INFO("Script Finished...")
-        app.update_progress_and_status("Script Finished...", current_step / total_steps)
 
         time.sleep(0.3)
 

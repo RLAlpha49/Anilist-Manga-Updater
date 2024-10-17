@@ -57,6 +57,7 @@ def api_request(
             wait_time = max(wait_time, 60)
             Logger.WARNING(f"Rate limit hit. Waiting for {wait_time} seconds.")
             app.update_terminal(f"\nRate limit hit. Waiting for {wait_time} seconds.")
+            app.update_estimated_time_remaining(add_time=wait_time)
             time.sleep(wait_time)
             return api_request(query, app, variables)
 

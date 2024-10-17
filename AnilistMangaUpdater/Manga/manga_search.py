@@ -150,6 +150,7 @@ class MangaSearch:  # pylint: disable=R0902
                         f"\nToo Many Requests For Pymoe. Retrying in {self.delay} seconds..."
                     )
                     Logger.WARNING("Too many requests. Delaying next attempt.")
+                    self.app.update_estimated_time_remaining(add_time=self.delay)
                     time.sleep(self.delay)
                     self.retry_count += 1
                 else:

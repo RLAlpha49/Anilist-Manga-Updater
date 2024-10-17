@@ -268,6 +268,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.after_id = None
         self.start_time: float = 0
         self.thread1: Union[AccessTokenThread, None] = None
+        self.estimated_time_remaining: float = 0
         Logger.DEBUG("Initialized GUI.")
 
         # Load the application logo
@@ -314,42 +315,28 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.start_button.grid(row=2, column=0, padx=20, pady=5)
         Logger.INFO("Added 'Start' button to the sidebar.")
 
-        self.api_button = customtkinter.CTkButton(
-            self.sidebar_frame,
-            command=self.open_input_dialog_event,
-            text="Set API Values",
-        )
-        self.api_button.grid(row=3, column=0, padx=20, pady=5)
-        Logger.INFO("Added 'Set API Values' button to the sidebar.")
-
         self.access_token_button = customtkinter.CTkButton(
             self.sidebar_frame,
             command=self.access_token_button_clicked,
             text="Get Access Token",
         )
-        self.access_token_button.grid(row=4, column=0, padx=20, pady=5)
+        self.access_token_button.grid(row=3, column=0, padx=20, pady=5)
         Logger.INFO("Added 'Get Access Token' button to the sidebar.")
 
-        self.month_button = customtkinter.CTkButton(
-            self.sidebar_frame, command=self.month_button_clicked, text="Set Months"
-        )
-        self.month_button.grid(row=5, column=0, padx=20, pady=5)
-        Logger.INFO("Added 'Set Months' button to the sidebar.")
-
-        self.private_button = customtkinter.CTkButton(
+        self.settings_button = customtkinter.CTkButton(
             self.sidebar_frame,
-            command=self.private_button_clicked,
-            text="Private Value",
+            command=self.open_settings_popup,
+            text="Settings",
         )
-        self.private_button.grid(row=6, column=0, padx=20, pady=5)
-        Logger.INFO("Added 'Private Value' button to the sidebar.")
+        self.settings_button.grid(row=4, column=0, padx=20, pady=5)
+        Logger.INFO("Added 'Settings' button to the sidebar.")
 
         self.alt_titles_button = customtkinter.CTkButton(
             self.sidebar_frame,
             command=lambda: self.manage_alternative_titles(),  # pylint: disable=W0108
             text="Manage Alt Titles",
         )
-        self.alt_titles_button.grid(row=7, column=0, padx=20, pady=5)
+        self.alt_titles_button.grid(row=5, column=0, padx=20, pady=5)
         Logger.INFO("Added 'Manage Alt Titles' button to the sidebar.")
 
         # Create a label and option menu for the appearance mode
@@ -518,37 +505,24 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             ),
         )
         Logger.INFO("Created tooltip for 'Start' button.")
-        self.api_button_tooltip = CTkToolTip.CTkToolTip(
-            self.api_button,
-            "Opens a dialog to set the API values.\nThis is for the API's Client and Secret ID's",
-        )
-        Logger.INFO("Created tooltip for 'API' button.")
+
         self.access_token_button_tooltip = CTkToolTip.CTkToolTip(
             self.access_token_button,
             "Opens a dialog to get the access token.\nThis may need to be refreshed in the future.",
         )
         Logger.INFO("Created tooltip for 'Access Token' button.")
-        self.month_button_tooltip = CTkToolTip.CTkToolTip(
-            self.month_button,
-            (
-                "Opens a dialog to set the number of months.\n"
-                "This checks when the last time you read a chapter was and if it was "
-                "after the number of months you set.\n"
-                "It will change the status to Paused.\n"
-                "If you want the program to ignore this set this to 0"
-            ),
+
+        self.settings_button_tooltip = CTkToolTip.CTkToolTip(
+            self.settings_button,
+            "Open settings to configure API values, access token, months, and privacy settings.",
         )
-        Logger.INFO("Created tooltip for 'Month' button.")
-        self.private_button_tooltip = CTkToolTip.CTkToolTip(
-            self.private_button,
-            (
-                "Opens a dialog to set the private value.\n"
-                "This is for if you want to set the manga that you update on here "
-                "to private on Anilist.\n"
-                "Meaning it will not show up as activity or on your list for other users."
-            ),
+        Logger.INFO("Created tooltip for 'Settings' button.")
+
+        self.alt_titles_button_tooltip = CTkToolTip.CTkToolTip(
+            self.alt_titles_button,
+            "Manage alternative titles for your manga.",
         )
-        Logger.INFO("Created tooltip for 'Private' button.")
+        Logger.INFO("Created tooltip for 'Manage Alt Titles' button.")
 
         self.appearance_mode_optionemenu_tooltip = CTkToolTip.CTkToolTip(
             self.appearance_mode_optionemenu,
@@ -600,6 +574,16 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             self.progress_bar, f"{round((progress * 100), 1)}%"
         )
         Logger.INFO("Created tooltip for progress bar.")
+
+    def open_settings_popup(self) -> None:
+        """
+        Opens the settings popup window where users can configure API values, access token, months, and privacy settings.
+
+        Returns:
+            None
+        """
+        Logger.INFO("Opening Settings popup.")
+        SettingsPopup(self)
 
     def manage_alternative_titles(self) -> None:
         """
@@ -692,7 +676,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO(f"User selected title: {titles[title_index - 1][0]}")
         return titles[title_index - 1][0]
 
-    def update_estimated_time_remaining(self, estimated_time_remaining: float) -> None:
+    def update_estimated_time_remaining(
+        self, new_estimated_time_remaining: Optional[float] = None, add_time: Optional[float] = None
+    ) -> None:
         """
         Updates the estimated time remaining label in the GUI.
 
@@ -705,30 +691,40 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         to be called again after 1 second.
 
         Parameters:
-            estimated_time_remaining (float): The estimated time remaining in seconds.
+            new_estimated_time_remaining (float, optional): The new estimated time remaining in seconds. Defaults to None.
+            add_time (float, optional): The time to add to the estimated time remaining in seconds. Defaults to None.
 
         Returns:
             None
         """
+        if not hasattr(self, "estimated_time_remaining"):
+            self.estimated_time_remaining = 0
+
+        if new_estimated_time_remaining is not None:
+            self.estimated_time_remaining = new_estimated_time_remaining
+
+        if add_time is not None:
+            self.estimated_time_remaining += add_time
+
         # If estimated_time_remaining is less than 0, set it to 0
-        estimated_time_remaining = max(estimated_time_remaining, 0)
+        self.estimated_time_remaining = max(self.estimated_time_remaining, 0)
 
         # Convert the estimated time remaining to hours, minutes, and seconds
-        time_remaining = str(datetime.timedelta(seconds=int(estimated_time_remaining)))
+        time_remaining = str(datetime.timedelta(seconds=int(self.estimated_time_remaining)))
 
         # Update the time remaining label
         self.time_remaining_label.configure(text=f"Estimated Time Remaining: {time_remaining}")
         self.update_idletasks()
 
         # If there is still time remaining
-        if estimated_time_remaining > 0:
+        if self.estimated_time_remaining > 0:
             # If the function is already scheduled, cancel it
             if self.after_id is not None:
                 self.after_cancel(self.after_id)
 
             # Schedule this function to be called again after 1 second and store the ID
             self.after_id = self.after(
-                1000, self.update_estimated_time_remaining, estimated_time_remaining - 1
+                1000, self.update_estimated_time_remaining, self.estimated_time_remaining - 1
             )
 
     def update_progress_bar(self) -> None:
@@ -892,40 +888,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         entry_widget.configure(state="disabled")
         Logger.INFO("Disabled the entry widget.")
 
-    def open_input_dialog_event(self) -> None:
-        """
-        Opens input dialogs for the client ID and secret ID.
-
-        This method prompts the user to input the client ID and secret ID through input dialogs. If the user cancels
-        either dialog, a cancellation message is updated in the terminal. If the user enters both IDs,
-        a configuration file is created and saved.
-
-        Returns:
-            None
-        """
-        # Open input dialogs for the client ID and secret ID
-        Logger.INFO("Opening input dialog for the Client ID.")
-        client_id = customtkinter.CTkInputDialog(text="Type in the Client ID:", title="Client ID")
-        client_id_value = client_id.get_input()
-        Logger.INFO(f"Client ID input: {client_id_value}")
-
-        Logger.INFO("Opening input dialog for the Secret ID.")
-        secret_id = customtkinter.CTkInputDialog(text="Type in the Secret ID:", title="Secret ID")
-        secret_id_value = secret_id.get_input()
-        Logger.INFO(f"Secret ID input: {secret_id_value}")
-
-        # If the user cancels either dialog, update the terminal with a cancellation message
-        if client_id_value is None or secret_id_value is None:
-            Logger.WARNING("User cancelled the input dialog.")
-            self.update_terminal("Canceled")
-        else:
-            # If the user enters both IDs, create a configuration file and save it
-            Logger.INFO("User entered both IDs. Creating and saving configuration file.")
-            config = create_config(client_id_value, secret_id_value)
-            self.update_terminal("Configuration file created and saved.")
-            save_config(config, config_path)
-            Logger.INFO("Configuration file saved.")
-
     def open_token_dialog_event(self) -> None:
         """
         Opens an input dialog for the user to enter the access token.
@@ -1014,60 +976,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.thread1.join()
         Logger.INFO("Access token thread finished.")
 
-    def month_button_clicked(self) -> None:
-        """
-        Handles the event when the month button is clicked.
-
-        This method is triggered when the user clicks on the month button. It performs the following steps:\n
-        1. Opens an input dialog for the user to enter the number of months.
-        2. If the user input is a digit, it loads the configuration, updates the number of months in the
-            configuration, and saves it.
-        3. If the configuration is not found, it displays an error message and updates the terminal.
-        4. If the user input is not a digit, it displays an error message and updates the terminal.
-
-        Parameters:
-        None
-
-        Returns:
-        None
-        """
-        while True:
-            # Open an input dialog for the number of months
-            Logger.INFO("Opening input dialog for the number of months.")
-            months = customtkinter.CTkInputDialog(
-                text="Type in the Number of Months:", title="Months"
-            )
-            months_value = months.get_input()
-            Logger.INFO(f"Number of months input: {months_value}")
-
-            # If the user input is a digit
-            if months_value.isdigit():
-                # Load the configuration
-                Logger.INFO("Loading configuration.")
-                config = load_config(config_path)
-                if config is not None:
-                    # Update the number of months in the configuration and save it
-                    Logger.INFO("Updating number of months in configuration and saving it.")
-                    config["MONTHS"] = months_value
-                    save_config(config, config_path)
-                    Logger.INFO("Configuration saved.")
-                    break
-
-                # If the configuration is not found, show an error message
-                Logger.ERROR("No configuration file found. Showing error message.")
-                messagebox.showerror(
-                    "Error",
-                    "No config file found. Please set the API values first.",
-                )
-                self.update_terminal("No config file found. Please set the API values first.")
-                Logger.INFO("Updated terminal with error message.")
-                break
-            # If the user input is not a digit, show an error message
-            Logger.WARNING("User input is not a digit. Showing error message.")
-            messagebox.showerror("Error", "Canceled")
-            self.update_terminal("Canceled")
-            Logger.INFO("Updated terminal with cancellation message.")
-
     def start_button_clicked(self) -> None:
         """
         Handles the event when the start button is clicked.
@@ -1118,63 +1026,103 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Resetting the progress to 0.")
         progress = 0
 
-    def private_button_clicked(self) -> None:
-        """
-        Handles the event when the private button is clicked.
 
-        This method is triggered when the user clicks on the private button. It performs the following steps:\n
-        1. Opens an input dialog for the user to enter the private value.
-        2. If the user input is "yes" or "no", it loads the configuration, updates the private value in the
-            configuration, and saves it.
-        3. If the configuration is not found, it displays an error message and updates the terminal.
-        4. If the user input is not "yes" or "no", it displays an error message and updates the terminal.
-        5. If the user cancels the dialog, it displays an error message and updates the terminal.
+class SettingsPopup(customtkinter.CTkToplevel):
+    def __init__(self, parent: App):
+        super().__init__(parent)
+        self.title("Settings")
+        self.geometry("400x400")
+        self.parent = parent
 
-        Returns:
-            None
-        """
-        while True:
-            # Open an input dialog for the private value
-            Logger.INFO("Opening input dialog for the private value.")
-            private = customtkinter.CTkInputDialog(
-                text="Type in the Private Value (Yes/No):", title="Private"
-            )
-            private_value = private.get_input()
-            Logger.INFO(f"Private value input: {private_value}")
+        Logger.INFO("Initialized Settings popup.")
 
-            try:
-                # If the user input is "yes" or "no"
-                if private_value.lower() in ["yes", "no"]:
-                    # Load the configuration
-                    Logger.INFO("Loading configuration.")
-                    config = load_config(config_path)
-                    if config is not None:
-                        # Update the private value in the configuration and save it
-                        Logger.INFO("Updating private value in configuration and saving it.")
-                        config["PRIVATE"] = private_value
-                        save_config(config, config_path)
-                        Logger.INFO("Configuration saved.")
-                        break
-                    # If the configuration is not found, show an error message
-                    Logger.ERROR("No configuration file found. Showing error message.")
-                    messagebox.showerror(
-                        "Error",
-                        "No config file found. Please set the API values first.",
-                    )
-                    self.update_terminal("No config file found. Please set the API values first.")
-                    Logger.INFO("Updated terminal with error message.")
-                    break
-                # If the user input is not "yes" or "no", show an error message
-                Logger.WARNING("User input is not 'yes' or 'no'. Showing error message.")
-                messagebox.showerror("Error", "Invalid input. Please enter Yes or No.")
-                self.update_terminal("Invalid input. Please enter Yes or No.")
-                Logger.INFO("Updated terminal with error message.")
-            except AttributeError:
-                # If the user cancels the dialog, show an error message
-                Logger.WARNING("User cancelled the input dialog. Showing error message.")
-                messagebox.showerror("Error", "Canceled")
-                self.update_terminal("Canceled")
-                Logger.INFO("Updated terminal with cancellation message.")
+        # Configure grid
+        self.grid_columnconfigure(1, weight=1)
+
+        # API Client ID
+        self.client_id_label = customtkinter.CTkLabel(self, text="Client ID:")
+        self.client_id_label.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
+        self.client_id_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Client ID")
+        self.client_id_entry.grid(row=0, column=1, padx=10, pady=(10, 5), sticky="ew")
+
+        # API Secret ID
+        self.secret_id_label = customtkinter.CTkLabel(self, text="Secret ID:")
+        self.secret_id_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.secret_id_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Secret ID")
+        self.secret_id_entry.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+
+        # Number of Months
+        self.months_label = customtkinter.CTkLabel(self, text="Number of Months:")
+        self.months_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.months_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Number of Months")
+        self.months_entry.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+
+        # Private Value
+        self.private_label = customtkinter.CTkLabel(self, text="Private Value (Yes/No):")
+        self.private_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.private_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Yes or No")
+        self.private_entry.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
+
+        # Save Button
+        self.save_button = customtkinter.CTkButton(self, text="Save", command=self.save_settings)
+        self.save_button.grid(row=4, column=0, columnspan=2, padx=10, pady=20)
+
+        # Populate fields with existing config if available
+        self.load_existing_settings()
+
+    def load_existing_settings(self):
+        config = load_config(config_path)
+        if config:
+            self.client_id_entry.insert(0, config.get("ANILIST_CLIENT_ID", ""))
+            self.secret_id_entry.insert(0, config.get("ANILIST_CLIENT_SECRET", ""))
+            self.months_entry.insert(0, config.get("MONTHS", ""))
+            self.private_entry.insert(0, config.get("PRIVATE", ""))
+            Logger.INFO("Loaded existing settings into Settings popup.")
+
+    def save_settings(self):
+        config = load_config(config_path)
+        client_id = self.client_id_entry.get()
+        secret_id = self.secret_id_entry.get()
+        access_token = config.get("ACCESS_TOKEN", "")
+        months = self.months_entry.get()
+        private = self.private_entry.get()
+
+        # Validate inputs
+        if not client_id or not secret_id:
+            messagebox.showerror("Error", "Client ID and Secret ID cannot be empty.")
+            Logger.ERROR("Client ID or Secret ID is empty.")
+            return
+
+        if private.lower() not in ["yes", "no"]:
+            messagebox.showerror("Error", "Private Value must be 'Yes' or 'No'.")
+            Logger.ERROR("Invalid Private Value input.")
+            return
+
+        if months and not months.isdigit():
+            messagebox.showerror("Error", "Number of Months must be a number.")
+            Logger.ERROR("Number of Months is not a digit.")
+            return
+
+        # Create or update config
+        config = create_config(client_id, secret_id)
+        config["ACCESS_TOKEN"] = access_token
+        if months:
+            config["MONTHS"] = months
+        config["PRIVATE"] = private
+
+        save_config(config, config_path)
+        Logger.INFO("Settings saved to configuration file.")
+
+        # Update terminal
+        self.parent.update_terminal("Settings have been saved.")
+        Logger.INFO("Updated terminal with settings saved message.")
+
+        # Update Access Token in app
+        Set_Access_Token(self.parent)
+        Logger.INFO("Set Access Token in app after saving settings.")
+
+        self.destroy()
+        Logger.INFO("Closed Settings popup.")
 
 
 if __name__ == "__main__":
