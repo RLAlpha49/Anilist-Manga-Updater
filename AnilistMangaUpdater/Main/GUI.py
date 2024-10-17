@@ -1,8 +1,5 @@
 """
 This module contains the implementation of the main GUI for the application.
-
-It includes classes for the main window, buttons, and other GUI components,
-as well as methods for handling user input and updating the GUI.
 """
 
 # pylint: disable=C0103, W0604, E0401, C0413, C0302, W0603
@@ -65,8 +62,8 @@ image1dir: str = os.path.join(image_directory, "Anilist-Manga-Updater-Logo2.png"
 # Define a class for the access token thread
 class AccessTokenThread(threading.Thread):
     """
-    A class that extends the threading.Thread class in Python. This class is used to create a separate thread for
-    obtaining the access token from the Anilist API.
+    A class that extends the threading.Thread class in Python. This class is used to create a separate
+    thread for obtaining the access token from the Anilist API.
 
     Attributes:
         stop : bool
@@ -77,8 +74,9 @@ class AccessTokenThread(threading.Thread):
             Initializes the AccessTokenThread. Sets the stop flag to False.
 
         run():
-            Overrides the run method of threading.Thread. It checks if the global 'app' variable is None. If it is,
-            it logs an error and returns. Otherwise, it calls the Get_Access_Token function with 'app' as the argument.
+            Overrides the run method of threading.Thread. It checks if the global 'app' variable is None.
+            If it is, it logs an error and returns. Otherwise, it calls the Get_Access_Token function with
+            'app' as the argument.
 
         stop_thread():
             Sets the stop flag to True, indicating that the thread should stop running.
@@ -129,7 +127,8 @@ def edit_alternative_title(alt_titles_dict, original_title) -> None:
     and saves it to a file.
 
     Parameters:
-        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative titles as values.
+        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative
+                                titles as values.
         original_title (str): The original title for which the alternative title is to be edited.
 
     Returns:
@@ -156,7 +155,8 @@ def delete_alternative_title(alt_titles_dict, original_title) -> None:
     from the alternative titles dictionary and saves the updated dictionary to a file.
 
     Parameters:
-        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative titles as values.
+        alt_titles_dict (dict): The dictionary containing the original titles as keys and
+                                alternative titles as values.
         original_title (str): The original title for which the alternative title is to be deleted.
 
     Returns:
@@ -177,7 +177,8 @@ def add_alternative_title(alt_titles_dict) -> None:
     and saves it to a file.
 
     Parameters:
-        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative titles as values.
+        alt_titles_dict (dict): The dictionary containing the original titles as keys and
+                                alternative titles as values.
 
     Returns:
         None
@@ -209,8 +210,8 @@ def change_appearance_mode_event(new_appearance_mode: str) -> None:
     It logs the new appearance mode and the successful change of the appearance mode.
 
     Parameters:
-        new_appearance_mode (str): The new appearance mode to be set. This should be a string representing
-        the desired appearance mode.
+        new_appearance_mode (str): The new appearance mode to be set. This should be a string
+                                   representing the desired appearance mode.
 
     Returns:
         None
@@ -240,7 +241,23 @@ def change_scaling_event(new_scaling: str) -> None:
 
 
 class SidebarFrame(customtkinter.CTkFrame):
+    """
+    A class representing the Sidebar Frame which includes buttons and options for various actions.
+
+    This class creates a sidebar frame in the GUI with buttons for starting the program, getting the access token,
+    opening settings, managing alternative titles, changing appearance mode, changing UI scaling, and exiting the
+    application. It also includes tooltips for each button and option menu.
+    """
+
     def __init__(self, parent: "App", *args, **kwargs):
+        """
+        Initializes the SidebarFrame.
+
+        Parameters:
+            parent (App): The parent application instance.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
         self.configure(width=140, corner_radius=0)
@@ -366,7 +383,22 @@ class SidebarFrame(customtkinter.CTkFrame):
 
 
 class TerminalFrame(customtkinter.CTkFrame):
+    """
+    A frame that contains a terminal-like textbox for displaying logs and messages.
+
+    This frame is part of the GUI and is used to display logs and messages in a terminal-like
+    textbox. It supports automatic scrolling to the bottom when new text is added.
+    """
+
     def __init__(self, parent: "App", *args, **kwargs):
+        """
+        Initializes the TerminalFrame.
+
+        Parameters:
+            parent (App): The parent application instance.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(parent, *args, **kwargs)
         self.configure(fg_color="transparent")
         self.parent = parent
@@ -388,9 +420,10 @@ class TerminalFrame(customtkinter.CTkFrame):
         """
         Updates the terminal in the GUI with the provided text.
 
-        This method first checks if the scrollbar is at the bottom of the terminal. If it is, the method will
-        automatically scroll to the end after inserting the text. The terminal is temporarily enabled for the insertion
-        of the text and then disabled again to prevent manual edits.
+        This method first checks if the scrollbar is at the bottom of the terminal. If it is,
+        the method will automatically scroll to the end after inserting the text. The terminal
+        is temporarily enabled for the insertion of the text and then disabled again to prevent
+        manual edits.
 
         Parameters:
             text (str): The text to be inserted into the terminal.
@@ -417,7 +450,23 @@ class TerminalFrame(customtkinter.CTkFrame):
 
 
 class StatusFrame(customtkinter.CTkFrame):
+    """
+    A class representing the Status Frame in the GUI.
+
+    This frame includes labels for estimated time remaining, time taken, a progress bar,
+    a percent label, and a status label. It also includes tooltips for the progress bar
+    and status label.
+    """
+
     def __init__(self, parent: "App", *args, **kwargs):
+        """
+        Initializes the StatusFrame.
+
+        Parameters:
+            parent (App): The parent application instance.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(parent, *args, **kwargs)
         self.configure(fg_color="transparent")
         self.parent = parent
@@ -531,9 +580,21 @@ class StatusFrame(customtkinter.CTkFrame):
 class BrowseFrame(customtkinter.CTkFrame):
     """
     A class representing the Browse Frame which includes entry fields and browse buttons for file paths.
+
+    This frame is part of the GUI and is used to allow users to browse and select file paths for the
+    previous Kenmei export file and the current Kenmei export file. It includes entry fields and browse
+    buttons for both file paths, and it initializes these fields in a disabled state.
     """
 
     def __init__(self, parent: "App", *args, **kwargs):
+        """
+        Initializes the BrowseFrame.
+
+        Parameters:
+            parent (App): The parent application instance.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
         self.configure(fg_color="transparent")
@@ -590,7 +651,33 @@ class BrowseFrame(customtkinter.CTkFrame):
 
 
 class SettingsPopup(customtkinter.CTkToplevel):
+    """
+    A popup window for configuring application settings.
+
+    This class creates a popup window that allows the user to configure various settings
+    such as API Client ID, Secret ID, Number of Months, and Private Value. It also provides
+    functionality to load existing settings and save new settings to a configuration file.
+
+    Attributes:
+        parent (App): The parent application instance.
+        client_id_label (CTkLabel): Label for the Client ID entry field.
+        client_id_entry (CTkEntry): Entry field for the Client ID.
+        secret_id_label (CTkLabel): Label for the Secret ID entry field.
+        secret_id_entry (CTkEntry): Entry field for the Secret ID.
+        months_label (CTkLabel): Label for the Number of Months entry field.
+        months_entry (CTkEntry): Entry field for the Number of Months.
+        private_label (CTkLabel): Label for the Private Value entry field.
+        private_entry (CTkEntry): Entry field for the Private Value.
+        save_button (CTkButton): Button to save the settings.
+    """
+
     def __init__(self, parent: "App"):
+        """
+        Initializes the SettingsPopup.
+
+        Parameters:
+            parent (App): The parent application instance.
+        """
         super().__init__(parent)
         self.title("Settings")
         self.geometry("400x400")
@@ -633,6 +720,12 @@ class SettingsPopup(customtkinter.CTkToplevel):
         self.load_existing_settings()
 
     def load_existing_settings(self):
+        """
+        Loads existing settings from the configuration file and populates the entry fields.
+
+        This method retrieves the existing settings from the configuration file and inserts
+        them into the corresponding entry fields in the Settings popup.
+        """
         config = load_config(config_path)
         if config:
             self.client_id_entry.insert(0, config.get("ANILIST_CLIENT_ID", ""))
@@ -642,6 +735,12 @@ class SettingsPopup(customtkinter.CTkToplevel):
             Logger.INFO("Loaded existing settings into Settings popup.")
 
     def save_settings(self):
+        """
+        Saves the settings to the configuration file.
+
+        This method validates the input fields, creates or updates the configuration file
+        with the new settings, and updates the terminal and access token in the application.
+        """
         config = load_config(config_path)
         client_id = self.client_id_entry.get()
         secret_id = self.secret_id_entry.get()
@@ -688,7 +787,21 @@ class SettingsPopup(customtkinter.CTkToplevel):
 
 
 class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
+    """
+    The main application class for the Anilist Manga Updater GUI.
+
+    This class initializes the main window, frames, and handles various events and actions
+    such as browsing files, starting the program, managing alternative titles, and updating
+    the terminal and status.
+    """
+
     def __init__(self) -> None:  # pylint: disable=R0915
+        """
+        Initializes the App class.
+
+        This method sets up the main window, initializes frames, configures the grid layout,
+        and sets up the protocol for the window close button.
+        """
         super().__init__()
 
         global program_thread  # pylint: disable=W0601
@@ -881,15 +994,51 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def open_token_dialog_event(self) -> None:
         """
-        Opens the token dialog event.
+        Opens an input dialog for the user to enter the access token.
 
-        This method should implement the dialog to input the access token.
+        This method prompts the user to input the access token through an input dialog. If the user cancels the dialog,
+        an error message is displayed and the terminal is updated with a cancellation message. If the user enters the
+        access token, the method loads the configuration file, adds the access token to it, and saves the updated
+        configuration file. If the thread for obtaining the access token is running, it is stopped.
 
         Returns:
             None
+
+        Raises:
+            TypeError: If the user cancels the input dialog.
         """
-        # Implementation of token dialog can be added here
-        pass
+        # Open an input dialog for the access token
+        Logger.INFO("Opening input dialog for the Access Token.")
+        token = customtkinter.CTkInputDialog(text="Type in the Access Token:", title="Access Token")
+        token_value = token.get_input()
+        Logger.INFO(f"Access Token input: {token_value}")
+
+        try:
+            # Load the configuration file and add the access token
+            Logger.INFO("Loading configuration file.")
+            config = load_config(config_path)
+            Logger.INFO("Adding Access Token to configuration file.")
+            if config is not None and isinstance(config, dict):
+                config["ACCESS_TOKEN"] = token_value
+            Logger.INFO("Saving configuration file.")
+            save_config(config, config_path)
+            Logger.INFO("Configuration file saved.")
+            self.terminal_frame.update_terminal("Access Token set.")
+            Logger.INFO("Access Token set.")
+            Set_Access_Token(self)
+            Logger.INFO("Set Access Token in app.")
+            if self.thread1 is not None:
+                self.thread1.stop_thread()
+            Logger.INFO("Stopped thread1.")
+        except TypeError:
+            # If the user cancels the dialog, show an error message
+            Logger.WARNING("User cancelled the input dialog.")
+            messagebox.showerror("Error", "Canceled")
+            self.terminal_frame.update_terminal("Canceled")
+            Logger.INFO("Updated terminal with cancellation message.")
+            if self.thread1 is not None:
+                self.thread1.stop_thread()
+            Logger.INFO("Stopped thread1.")
 
     def update_terminal(self, text: str) -> None:
         """
