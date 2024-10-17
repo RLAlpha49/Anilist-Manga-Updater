@@ -1,4 +1,3 @@
-#!/user/bin/env python
 """
 This module contains the implementation of the main GUI for the application.
 
@@ -14,7 +13,6 @@ import platform
 import sys
 import threading
 import time
-import tkinter
 from tkinter import filedialog, messagebox, simpledialog
 from typing import Optional, Union
 
@@ -530,6 +528,67 @@ class StatusFrame(customtkinter.CTkFrame):
         Logger.INFO(f"Updated status to: {display_status}")
 
 
+class BrowseFrame(customtkinter.CTkFrame):
+    """
+    A class representing the Browse Frame which includes entry fields and browse buttons for file paths.
+    """
+
+    def __init__(self, parent: "App", *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.parent = parent
+        self.configure(fg_color="transparent")
+        self.grid(row=7, column=1, columnspan=3, padx=20, pady=(5, 5), sticky="nsew")
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure((0, 1, 2), weight=1)
+        Logger.DEBUG("Created browse frame for the window.")
+
+        # Create an entry field and browse button for the previous Kenmei export file path
+        self.previous_file_path_textbox = customtkinter.CTkEntry(
+            self, placeholder_text="Previous Kenmei Export File Path"
+        )
+        self.previous_file_path_textbox.grid(
+            row=0, column=0, columnspan=3, pady=(15, 15), sticky="nsew"
+        )
+        Logger.INFO("Created entry field for the previous Kenmei export file path.")
+
+        self.previous_browse_button = customtkinter.CTkButton(
+            master=self,
+            fg_color="transparent",
+            border_width=2,
+            text_color=("gray10", "#DCE4EE"),
+            text="Browse",
+            command=lambda: self.parent.browse_file(self.previous_file_path_textbox, True),
+        )
+        self.previous_browse_button.grid(
+            row=0, column=3, padx=(20, 20), pady=(15, 15), sticky="nsew"
+        )
+        Logger.INFO("Created browse button for the previous Kenmei export file path.")
+
+        # Create an entry field and browse button for the Kenmei export file path
+        self.file_path_textbox = customtkinter.CTkEntry(
+            self, placeholder_text="Kenmei Export File Path"
+        )
+        self.file_path_textbox.grid(row=1, column=0, columnspan=3, pady=(5, 15), sticky="nsew")
+        Logger.INFO("Created entry field for the Kenmei export file path.")
+
+        self.browse_button = customtkinter.CTkButton(
+            master=self,
+            fg_color="transparent",
+            border_width=2,
+            text_color=("gray10", "#DCE4EE"),
+            text="Browse",
+            command=lambda: self.parent.browse_file(self.file_path_textbox, False),
+        )
+        self.browse_button.grid(row=1, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew")
+        Logger.INFO("Created browse button for the Kenmei export file path.")
+
+        # Disable file path textboxes initially
+        self.previous_file_path_textbox.configure(state="disabled")
+        Logger.INFO("Disabled previous file path textbox.")
+        self.file_path_textbox.configure(state="disabled")
+        Logger.INFO("Disabled file path textbox.")
+
+
 class SettingsPopup(customtkinter.CTkToplevel):
     def __init__(self, parent: "App"):
         super().__init__(parent)
@@ -652,6 +711,10 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.status_frame = StatusFrame(self)
         Logger.DEBUG("Initialized StatusFrame.")
 
+        # Initialize BrowseFrame
+        self.browse_frame = BrowseFrame(self)
+        Logger.DEBUG("Initialized BrowseFrame.")
+
         # Set the window title and size
         self.title("Anilist Manga Updater")
         self.geometry(f"{1100}x{700}")
@@ -662,54 +725,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0, 1, 2), weight=1)
         Logger.DEBUG("Configured grid layout for the window.")
-
-        # Create an entry field and browse button for the previous Kenmei export file path
-        self.previous_file_path_textbox = customtkinter.CTkEntry(
-            self, placeholder_text="Previous Kenmei Export File Path"
-        )
-        self.previous_file_path_textbox.grid(
-            row=7, column=1, columnspan=2, padx=(20, 0), pady=(15, 15), sticky="nsew"
-        )
-        Logger.INFO("Created entry field for the previous Kenmei export file path.")
-
-        self.previous_browse_button = customtkinter.CTkButton(
-            master=self,
-            fg_color="transparent",
-            border_width=2,
-            text_color=("gray10", "#DCE4EE"),
-            text="Browse",
-            command=lambda: self.browse_file(self.previous_file_path_textbox, True),
-        )
-        self.previous_browse_button.grid(
-            row=7, column=3, padx=(20, 20), pady=(15, 15), sticky="nsew"
-        )
-        Logger.INFO("Created browse button for the previous Kenmei export file path.")
-
-        # Create an entry field and browse button for the Kenmei export file path
-        self.file_path_textbox = customtkinter.CTkEntry(
-            self, placeholder_text="Kenmei Export File Path"
-        )
-        self.file_path_textbox.grid(
-            row=8, column=1, columnspan=2, padx=(20, 0), pady=(5, 15), sticky="nsew"
-        )
-        Logger.INFO("Created entry field for the Kenmei export file path.")
-
-        self.browse_button = customtkinter.CTkButton(
-            master=self,
-            fg_color="transparent",
-            border_width=2,
-            text_color=("gray10", "#DCE4EE"),
-            text="Browse",
-            command=lambda: self.browse_file(self.file_path_textbox, False),
-        )
-        self.browse_button.grid(row=8, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew")
-        Logger.INFO("Created browse button for the Kenmei export file path.")
-
-        # Disable file path textboxes initially
-        self.previous_file_path_textbox.configure(state="disabled")
-        Logger.INFO("Disabled previous file path textbox.")
-        self.file_path_textbox.configure(state="disabled")
-        Logger.INFO("Disabled file path textbox.")
 
         # Add a welcome message to the terminal
         self.terminal_frame.terminal.configure(state="normal")
@@ -731,8 +746,6 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Logger.INFO("Initialized 'file_path' variable.")
         self.previous_file_path = ""
         Logger.INFO("Initialized 'previous_file_path' variable.")
-
-        Logger.INFO("Created tooltip for progress bar.")
 
     def browse_file(self, textbox: customtkinter.CTkEntry, is_previous: bool) -> None:
         """
