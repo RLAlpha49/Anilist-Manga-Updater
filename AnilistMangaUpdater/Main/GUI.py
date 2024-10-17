@@ -259,6 +259,138 @@ def on_close() -> None:
     sys.exit(0)
 
 
+class SidebarFrame(customtkinter.CTkFrame):
+    def __init__(self, parent: "App", *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.parent = parent
+        self.configure(width=140, corner_radius=0)
+        self.grid(row=0, column=0, rowspan=12, sticky="nsew")
+        self.grid_rowconfigure(7, weight=1)
+        Logger.DEBUG("Created sidebar frame for the window.")
+
+        # Load the application logo
+        logo = customtkinter.CTkImage(light_image=Image.open(image1dir), size=(100, 100))
+        self.logo_label = customtkinter.CTkLabel(
+            self, image=logo, text=""
+        )  # display image with a CTkLabel
+        self.logo_label.grid(row=0, column=0, padx=20, pady=(10, 10))
+
+        # Add the application title to the sidebar
+        self.title_label = customtkinter.CTkLabel(
+            self,
+            text="Anilist Manga\nUpdater",
+            font=customtkinter.CTkFont(size=22, weight="bold"),
+        )
+        self.title_label.grid(row=1, column=0, padx=20, pady=(0, 10))
+
+        # Add buttons to the sidebar for various actions
+        self.start_button = customtkinter.CTkButton(
+            self,
+            command=self.parent.start_button_clicked,
+            text="Start",
+            font=customtkinter.CTkFont(size=18),
+        )
+        self.start_button.grid(row=2, column=0, padx=20, pady=5)
+
+        self.access_token_button = customtkinter.CTkButton(
+            self,
+            command=self.parent.access_token_button_clicked,
+            text="Get Access Token",
+        )
+        self.access_token_button.grid(row=3, column=0, padx=20, pady=5)
+
+        self.settings_button = customtkinter.CTkButton(
+            self,
+            command=self.parent.open_settings_popup,
+            text="Settings",
+        )
+        self.settings_button.grid(row=4, column=0, padx=20, pady=5)
+
+        self.alt_titles_button = customtkinter.CTkButton(
+            self,
+            command=self.parent.manage_alternative_titles,
+            text="Manage Alt Titles",
+        )
+        self.alt_titles_button.grid(row=5, column=0, padx=20, pady=5)
+
+        # Create a label and option menu for the appearance mode
+        self.appearance_mode_label = customtkinter.CTkLabel(
+            self, text="Appearance Mode:", anchor="w"
+        )
+        self.appearance_mode_label.grid(row=8, column=0, padx=20, pady=(10, 0))
+
+        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(
+            self,
+            values=["Light", "Dark", "System"],
+            command=change_appearance_mode_event,
+        )
+        self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 0))
+
+        # Create a label and option menu for the UI scaling
+        self.scaling_label = customtkinter.CTkLabel(self, text="UI Scaling:", anchor="w")
+        self.scaling_label.grid(row=10, column=0, padx=20, pady=(5, 0))
+
+        self.scaling_optionemenu = customtkinter.CTkOptionMenu(
+            self,
+            values=["80%", "90%", "100%", "110%", "120%"],
+            command=change_scaling_event,
+        )
+        self.scaling_optionemenu.grid(row=11, column=0, padx=20, pady=(10, 15))
+
+        # Create an exit button
+        self.exit_button = customtkinter.CTkButton(self, command=on_close, text="Exit")
+        self.exit_button.grid(row=12, column=0, padx=20, pady=(5, 15))
+
+        # Set default values for the appearance mode and UI scaling
+        self.appearance_mode_optionemenu.set("Dark")
+        self.scaling_optionemenu.set("100%")
+
+        # Create tooltips for the buttons and option menus
+        CTkToolTip.CTkToolTip(
+            self.start_button,
+            (
+                "Starts the program.\n"
+                "The only way to stop this is to exit the AnilistMangaUpdater with the exit button."
+            ),
+        )
+
+        CTkToolTip.CTkToolTip(
+            self.access_token_button,
+            "Opens a dialog to get the access token.\nThis may need to be refreshed in the future.",
+        )
+
+        CTkToolTip.CTkToolTip(
+            self.settings_button,
+            "Open settings to configure API values, access token, months, and privacy settings.",
+        )
+
+        CTkToolTip.CTkToolTip(
+            self.alt_titles_button,
+            "Manage alternative titles for your manga.",
+        )
+
+        CTkToolTip.CTkToolTip(
+            self.appearance_mode_optionemenu,
+            "Changes the appearance mode of the application.",
+        )
+
+        CTkToolTip.CTkToolTip(
+            self.scaling_optionemenu,
+            "Changes the UI scaling of the application.\n"
+            "You may need to resize window to fit the new scaling.",
+        )
+
+        CTkToolTip.CTkToolTip(
+            self.exit_button,
+            (
+                "Exits the application.\n"
+                "Please use this to exit program.\n"
+                "It is possible that the application will still run if you just "
+                "close the window rather than use this button."
+            ),
+        )
+
+
 class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
     def __init__(self) -> None:  # pylint: disable=R0915
         super().__init__()
@@ -270,6 +402,10 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.thread1: Union[AccessTokenThread, None] = None
         self.estimated_time_remaining: float = 0
         Logger.DEBUG("Initialized GUI.")
+
+        # Initialize SidebarFrame
+        self.sidebar_frame = SidebarFrame(self)
+        Logger.DEBUG("Initialized SidebarFrame.")
 
         # Load the application logo
         logo = customtkinter.CTkImage(light_image=Image.open(image1dir), size=(100, 100))
@@ -286,96 +422,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.grid_rowconfigure((0, 1, 2), weight=1)
         Logger.DEBUG("Configured grid layout for the window.")
 
-        # Create a sidebar frame for the window
-        self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
-        self.sidebar_frame.grid(row=0, column=0, rowspan=9, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(7, weight=1)
-        Logger.DEBUG("Created sidebar frame for the window.")
-
-        # Add the application logo and title to the sidebar
-        self.logo_label = customtkinter.CTkLabel(
-            self.sidebar_frame, image=logo, text=""
-        )  # display image with a CTkLabel
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(10, 10))
-        self.title_label = customtkinter.CTkLabel(
-            self.sidebar_frame,
-            text="Anilist Manga\nUpdater",
-            font=customtkinter.CTkFont(size=22, weight="bold"),
-        )
-        self.title_label.grid(row=1, column=0, padx=20, pady=(0, 10))
-        Logger.INFO("Added application logo and title to the sidebar.")
-
-        # Add buttons to the sidebar for various actions
-        self.start_button = customtkinter.CTkButton(
-            self.sidebar_frame,
-            command=self.start_button_clicked,
-            text="Start",
-            font=customtkinter.CTkFont(size=18),
-        )
-        self.start_button.grid(row=2, column=0, padx=20, pady=5)
-        Logger.INFO("Added 'Start' button to the sidebar.")
-
-        self.access_token_button = customtkinter.CTkButton(
-            self.sidebar_frame,
-            command=self.access_token_button_clicked,
-            text="Get Access Token",
-        )
-        self.access_token_button.grid(row=3, column=0, padx=20, pady=5)
-        Logger.INFO("Added 'Get Access Token' button to the sidebar.")
-
-        self.settings_button = customtkinter.CTkButton(
-            self.sidebar_frame,
-            command=self.open_settings_popup,
-            text="Settings",
-        )
-        self.settings_button.grid(row=4, column=0, padx=20, pady=5)
-        Logger.INFO("Added 'Settings' button to the sidebar.")
-
-        self.alt_titles_button = customtkinter.CTkButton(
-            self.sidebar_frame,
-            command=lambda: self.manage_alternative_titles(),  # pylint: disable=W0108
-            text="Manage Alt Titles",
-        )
-        self.alt_titles_button.grid(row=5, column=0, padx=20, pady=5)
-        Logger.INFO("Added 'Manage Alt Titles' button to the sidebar.")
-
-        # Create a label and option menu for the appearance mode
-        self.appearance_mode_label = customtkinter.CTkLabel(
-            self.sidebar_frame, text="Appearance Mode:", anchor="w"
-        )
-        self.appearance_mode_label.grid(row=8, column=0, padx=20, pady=(10, 0))
-        Logger.INFO("Created 'Appearance Mode' label.")
-
-        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(
-            self.sidebar_frame,
-            values=["Light", "Dark", "System"],
-            command=change_appearance_mode_event,
-        )
-        self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 0))
-        Logger.INFO("Created 'Appearance Mode' option menu.")
-
-        # Create a label and option menu for the UI scaling
-        self.scaling_label = customtkinter.CTkLabel(
-            self.sidebar_frame, text="UI Scaling:", anchor="w"
-        )
-        self.scaling_label.grid(row=10, column=0, padx=20, pady=(5, 0))
-        Logger.INFO("Created 'UI Scaling' label.")
-
-        self.scaling_optionemenu = customtkinter.CTkOptionMenu(
-            self.sidebar_frame,
-            values=["80%", "90%", "100%", "110%", "120%"],
-            command=change_scaling_event,
-        )
-        self.scaling_optionemenu.grid(row=11, column=0, padx=20, pady=(10, 15))
-        Logger.INFO("Created 'UI Scaling' option menu.")
-
-        # Create an exit button
-        self.exit_button = customtkinter.CTkButton(
-            self.sidebar_frame, command=on_close, text="Exit"
-        )
-        self.exit_button.grid(row=12, column=0, padx=20, pady=(5, 15))
-        Logger.INFO("Created 'Exit' button.")
-
+        # Add widgets to the main area (excluding sidebar)
         # Create a terminal textbox
         self.terminal = customtkinter.CTkTextbox(self, width=250, wrap="word")
         self.terminal.grid(
@@ -466,11 +513,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.browse_button.grid(row=8, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew")
         Logger.INFO("Created browse button for the Kenmei export file path.")
 
-        # Set default values for the appearance mode, UI scaling, and file path textboxes
-        self.appearance_mode_optionemenu.set("Dark")
-        Logger.INFO("Set default appearance mode to 'Dark'.")
-        self.scaling_optionemenu.set("100%")
-        Logger.INFO("Set default UI scaling to '100%'.")
+        # Disable file path textboxes initially
         self.previous_file_path_textbox.configure(state="disabled")
         Logger.INFO("Disabled previous file path textbox.")
         self.file_path_textbox.configure(state="disabled")
@@ -496,80 +539,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.previous_file_path = ""
         Logger.INFO("Initialized 'previous_file_path' variable.")
 
-        # Create tooltips for the buttons and option menus
-        self.start_button_tooltip = CTkToolTip.CTkToolTip(
-            self.start_button,
-            (
-                "Starts the program.\n"
-                "The only way to stop this is to exit the AnilistMangaUpdater with the exit button."
-            ),
-        )
-        Logger.INFO("Created tooltip for 'Start' button.")
-
-        self.access_token_button_tooltip = CTkToolTip.CTkToolTip(
-            self.access_token_button,
-            "Opens a dialog to get the access token.\nThis may need to be refreshed in the future.",
-        )
-        Logger.INFO("Created tooltip for 'Access Token' button.")
-
-        self.settings_button_tooltip = CTkToolTip.CTkToolTip(
-            self.settings_button,
-            "Open settings to configure API values, access token, months, and privacy settings.",
-        )
-        Logger.INFO("Created tooltip for 'Settings' button.")
-
-        self.alt_titles_button_tooltip = CTkToolTip.CTkToolTip(
-            self.alt_titles_button,
-            "Manage alternative titles for your manga.",
-        )
-        Logger.INFO("Created tooltip for 'Manage Alt Titles' button.")
-
-        self.appearance_mode_optionemenu_tooltip = CTkToolTip.CTkToolTip(
-            self.appearance_mode_optionemenu,
-            "Changes the appearance mode of the application.",
-        )
-        Logger.INFO("Created tooltip for 'Appearance Mode' option menu.")
-
-        self.scaling_optionemenu_tooltip = CTkToolTip.CTkToolTip(
-            self.scaling_optionemenu,
-            "Changes the UI scaling of the application.\n"
-            "You may need to resize window to fit the new scaling.",
-        )
-        Logger.INFO("Created tooltip for 'UI Scaling' option menu.")
-
-        self.exit_button_tooltip = CTkToolTip.CTkToolTip(
-            self.exit_button,
-            (
-                "Exits the application.\n"
-                "Please use this to exit program.\n"
-                "It is possible that the application will still run if you just "
-                "close the window rather than use this button."
-            ),
-        )
-        Logger.INFO("Created tooltip for 'Exit' button.")
-
-        self.previous_file_path_textbox_tooltip = CTkToolTip.CTkToolTip(
-            self.previous_file_path_textbox,
-            "Displays the path of the previous Kenmei export file. (Optional)",
-        )
-        Logger.INFO("Created tooltip for 'Previous Kenmei Export File Path' textbox.")
-
-        self.previous_browse_button_tooltip = CTkToolTip.CTkToolTip(
-            self.previous_browse_button,
-            "Opens a file dialog to select the previous Kenmei export file. (Optional)",
-        )
-        Logger.INFO("Created tooltip for 'Previous Kenmei Export File Path' browse button.")
-
-        self.file_path_textbox_tooltip = CTkToolTip.CTkToolTip(
-            self.file_path_textbox, "Displays the path of the Kenmei export file."
-        )
-        Logger.INFO("Created tooltip for 'Kenmei Export File Path' textbox.")
-
-        self.browse_button_tooltip = CTkToolTip.CTkToolTip(
-            self.browse_button, "Opens a file dialog to select the Kenmei export file."
-        )
-        Logger.INFO("Created tooltip for 'Kenmei Export File Path' browse button.")
-
+        # Create tooltips for the main area widgets
         self.progress_bar_tooltip = CTkToolTip.CTkToolTip(
             self.progress_bar, f"{round((progress * 100), 1)}%"
         )
@@ -770,9 +740,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         `progress`, it updates the progress and status labels in the GUI.
 
         Parameters:
-            status (str): The new status of the program. program_progress (float, optional): The new progress
+            status (str): The new status of the program.
+            program_progress (float, optional): The new progress
             of the program. If not provided, the current global progress is used.
-            program_progress (float, optional): The new progress of the program. If not provided, the current global.
 
         Returns:
             None
@@ -921,7 +891,7 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             Logger.INFO("Configuration file saved.")
             self.update_terminal("Access Token set.")
             Logger.INFO("Access Token set.")
-            Set_Access_Token(app)
+            Set_Access_Token(self)
             Logger.INFO("Set Access Token in app.")
             if self.thread1 is not None:
                 self.thread1.stop_thread()
@@ -940,20 +910,21 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         Handles the event when the access token button is clicked.
 
-        This method is triggered when the user clicks on the access token button. It performs the following steps:\n
-        1. Retrieves the current configuration of the application.
-        2. Pauses the execution for 2 seconds.
-        3. Creates a new thread for obtaining the access token from the Anilist API.
-        4. Starts the newly created thread.
-        5. Opens an input dialog for the user to enter the access token.
-        6. Waits for the access token thread to finish.
+        This method is triggered when the user clicks on the access token button. It performs the following steps:
+
+            1. Retrieves the current configuration of the application.
+            2. Pauses the execution for 2 seconds.
+            3. Creates a new thread for obtaining the access token from the Anilist API.
+            4. Starts the newly created thread.
+            5. Opens an input dialog for the user to enter the access token.
+            6. Waits for the access token thread to finish.
 
         Returns:
             None
         """
         # Get the configuration
         Logger.INFO("Getting the configuration.")
-        Get_Config(app)
+        Get_Config(self)
 
         # Pause execution for 2 seconds
         Logger.INFO("Pausing execution for 2 seconds.")
@@ -980,7 +951,8 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         Handles the event when the start button is clicked.
 
-        This method is triggered when the user clicks on the start button. It performs the following steps:\n
+        This method is triggered when the user clicks on the start button. It performs the following steps:
+
             1. Checks if the program thread is already running. If it is, it returns immediately.
             2. If the program thread is not running, it imports the AnilistMangaUpdater class.
             3. Creates a new thread for the program.
@@ -1083,7 +1055,7 @@ class SettingsPopup(customtkinter.CTkToplevel):
         config = load_config(config_path)
         client_id = self.client_id_entry.get()
         secret_id = self.secret_id_entry.get()
-        access_token = config.get("ACCESS_TOKEN", "")
+        access_token = config.get("ACCESS_TOKEN", "") if config else ""
         months = self.months_entry.get()
         private = self.private_entry.get()
 
