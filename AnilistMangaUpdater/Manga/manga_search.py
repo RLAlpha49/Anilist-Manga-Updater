@@ -14,7 +14,7 @@ from Utils.log import Logger  # pylint: disable=E0401
 no_manga_found: list[tuple[str, Union[int, None]]] = []
 
 
-def Check_Title_Match(title: str, name: str) -> bool:
+def check_title_match(title: str, name: str) -> bool:
     """
     Checks if all words in the search name are in the title.
 
@@ -29,7 +29,7 @@ def Check_Title_Match(title: str, name: str) -> bool:
     Returns:
         bool: True if all words in the search name are in the title, False otherwise.
     """
-    Logger.INFO("Function Check_Title_Match called.")
+    Logger.INFO("Function check_title_match called.")
     Logger.DEBUG(f"Checking if all words in '{name}' are in '{title}'.")
     # Remove punctuation from the title and the search name
     title = title.translate(str.maketrans("", "", string.punctuation))
@@ -76,7 +76,7 @@ class MangaSearch:  # pylint: disable=R0902
         search_manga(): Searches for the manga on Anilist.
         process_manga_item(manga_item): Processes a manga item from the search results.
         process_title(title): Processes the title by replacing certain characters.
-        check_title_match(title): Checks if the title matches the name.
+        _check_title_match(title): Checks if the title matches the name.
         get_id_list(): Gets the list of IDs from the matches.
         print_details(): Prints the details of the matches.
         handle_no_ids_found(): Handles the case where no IDs are found.
@@ -129,12 +129,15 @@ class MangaSearch:  # pylint: disable=R0902
         Searches for the manga on Anilist.
 
         Returns:
-            list: A list of manga items from the search results. If an error occurs, it returns None.
+            list: A list of manga items from the search results.
+                Returns None if an error occurs.
         """
         Logger.INFO("Function search_manga called.")
         max_retries = 5  # Maximum number of retries
         for attempt in range(max_retries):  # pylint: disable=W0612
-            Logger.DEBUG(f"Attempt {attempt+1} of {max_retries} to search for manga: {self.name}")
+            Logger.DEBUG(
+                f"Attempt {attempt+1} of {max_retries} to search for manga: {self.name}"
+            )
             try:
                 result = pymoe.manga.search.anilist.manga(self.name)
                 Logger.DEBUG(f"Search successful. Found {len(result)} results.")
@@ -160,7 +163,9 @@ class MangaSearch:  # pylint: disable=R0902
                     )
                     Logger.WARNING("Unexpected error. Retrying in 2 seconds.")
                     time.sleep(2)
-        self.app.update_terminal(f"Failed to search for {self.name} after {max_retries} attempts.")
+        self.app.update_terminal(
+            f"Failed to search for {self.name} after {max_retries} attempts."
+        )
         Logger.ERROR(f"Failed to search for {self.name} after {max_retries} attempts.")
 
     def process_manga_item(self, manga_item: dict) -> None:
@@ -179,16 +184,16 @@ class MangaSearch:  # pylint: disable=R0902
         match = False
         if "english" in title and title["english"]:
             english_title = self.process_title(title["english"])
-            match = match or self.check_title_match(english_title)
+            match = match or self._check_title_match(english_title)
             Logger.DEBUG(f"Checked English title: {english_title}. Match: {match}")
         if "romaji" in title and title["romaji"]:
             romaji_title = self.process_title(title["romaji"])
-            match = match or self.check_title_match(romaji_title)
+            match = match or self._check_title_match(romaji_title)
             Logger.DEBUG(f"Checked Romaji title: {romaji_title}. Match: {match}")
         if "synonyms" in manga_item:
             for synonym in manga_item["synonyms"]:
                 synonym = self.process_title(synonym)
-                match = match or self.check_title_match(synonym)
+                match = match or self._check_title_match(synonym)
                 Logger.DEBUG(f"Checked synonym: {synonym}. Match: {match}")
         if match:
             self.matches.append((match, manga_item))
@@ -213,7 +218,7 @@ class MangaSearch:  # pylint: disable=R0902
         Logger.DEBUG(f"Processed title: {title}")
         return title
 
-    def check_title_match(self, title: str) -> bool:
+    def _check_title_match(self, title: str) -> bool:
         """
         Checks if the title matches the name.
 
@@ -223,9 +228,9 @@ class MangaSearch:  # pylint: disable=R0902
         Returns:
             bool: True if the title matches the name, False otherwise.
         """
-        Logger.INFO("Function check_title_match called.")
+        Logger.INFO("Function _check_title_match called.")
         Logger.DEBUG(f"Checking if title: {title} matches name: {self.name}")
-        match = Check_Title_Match(title, self.name)
+        match = check_title_match(title, self.name)
         Logger.DEBUG(f"Match result: {match}")
         return match
 
@@ -299,7 +304,9 @@ class MangaSearch:  # pylint: disable=R0902
             self.retry_count += 1
             Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
         else:
-            self.app.update_terminal(f"An unexpected server error occurred for {self.name}: {e}")
+            self.app.update_terminal(
+                f"An unexpected server error occurred for {self.name}: {e}"
+            )
             Logger.ERROR(f"An unexpected server error occurred for {self.name}: {e}")
 
     def search_and_process_manga(self) -> bool:
@@ -336,7 +343,9 @@ class MangaSearch:  # pylint: disable=R0902
             no_manga_found.append((self.name, self.last_chapter_read))
             Logger.DEBUG(f"Added '{self.name}' to the list of manga not found.")
         elif isinstance(error, KeyError):
-            self.app.update_terminal(f"\nFailed to get data for '{self.name}', retrying...")
+            self.app.update_terminal(
+                f"\nFailed to get data for '{self.name}', retrying..."
+            )
             Logger.ERROR(f"Failed to get data for '{self.name}', retrying.")
             self.retry_count += 1 if "Too Many Requests" in str(error) else 0
             Logger.DEBUG(f"Incremented retry count to {self.retry_count}.")
@@ -365,7 +374,9 @@ class MangaSearch:  # pylint: disable=R0902
             return cached_result
 
         while self.retry_count < self.max_retries:
-            Logger.DEBUG(f"Retry count: {self.retry_count}. Max retries: {self.max_retries}.")
+            Logger.DEBUG(
+                f"Retry count: {self.retry_count}. Max retries: {self.max_retries}."
+            )
             if self.name != "Skipping Title":
                 Logger.INFO(f"Searching for manga: {self.name}.")
                 try:
@@ -379,7 +390,9 @@ class MangaSearch:  # pylint: disable=R0902
                     self.handle_search_errors(e)
                     continue
                 if not self.matches:
-                    self.app.update_terminal(f"\nNo search results found for '{self.name}'.")
+                    self.app.update_terminal(
+                        f"\nNo search results found for '{self.name}'."
+                    )
                     Logger.WARNING(f"No search results found for '{self.name}'.")
                     no_manga_found.append((self.name, self.last_chapter_read))
                     Logger.DEBUG(f"Added '{self.name}' to the list of manga not found.")

@@ -40,7 +40,9 @@ class Cache:
                 self.cache.update(json.load(f))
             Logger.INFO("Cache loaded successfully.")
         except FileNotFoundError:
-            Logger.WARNING("Cache file not found. Initializing cache with default values.")
+            Logger.WARNING(
+                "Cache file not found. Initializing cache with default values."
+            )
             if "format_cache.json" in self.cache_file:
                 self.cache.update(cache_format_dict)
             else:

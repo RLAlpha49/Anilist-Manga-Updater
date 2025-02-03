@@ -135,7 +135,7 @@ def Get_Manga_Names(app: object, alt_titles_dict: dict):
                 )
 
                 try:
-                    # Add the alternative title and its details to the manga_names_chapters dictionary
+                    # Add the alternative title and its details to the manga_names_chapters
                     manga_names_chapters[alt_title] = {
                         "last_chapter_read": (
                             int(last_chapter_read)
@@ -145,7 +145,9 @@ def Get_Manga_Names(app: object, alt_titles_dict: dict):
                         "status": status,
                         "last_read_at": last_read_at,
                     }
-                    Logger.DEBUG(f"Added {alt_title} to manga_names_chapters dictionary.")
+                    Logger.DEBUG(
+                        f"Added {alt_title} to manga_names_chapters dictionary."
+                    )
                 except (ValueError, AttributeError):
                     # If no last chapter read, print a message and add the alternative title
                     Logger.DEBUG(f"Title: {alt_title}, Has no Last Chapter Read")
@@ -201,7 +203,9 @@ def Get_File_Diff(app: object) -> Union[pd.DataFrame, None]:
             Logger.DEBUG(f"Read previous file: {app.previous_file_path}")
     except FileNotFoundError:
         # If the file is not found, print an error message
-        app.update_terminal("Error: Please browse for a kenmei export file. (Previous is Optional)")
+        app.update_terminal(
+            "Error: Please browse for a kenmei export file. (Previous is Optional)"
+        )
         Logger.ERROR("FileNotFoundError encountered. Returning None.")
         return None
 

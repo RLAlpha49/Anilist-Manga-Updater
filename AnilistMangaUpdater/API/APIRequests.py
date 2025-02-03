@@ -53,7 +53,9 @@ def api_request(
         )
 
         if response.status_code == 429:
-            wait_time = int(response.headers.get("X-RateLimit-Reset", 0)) - int(time.time())
+            wait_time = int(response.headers.get("X-RateLimit-Reset", 0)) - int(
+                time.time()
+            )
             wait_time = max(wait_time, 60)
             Logger.WARNING(f"Rate limit hit. Waiting for {wait_time} seconds.")
             app.update_terminal(f"\nRate limit hit. Waiting for {wait_time} seconds.")
@@ -66,7 +68,9 @@ def api_request(
             return response.json()
 
         if response.status_code == 500:
-            Logger.ERROR(f"Server error, retrying request. Status code: {response.status_code}")
+            Logger.ERROR(
+                f"Server error, retrying request. Status code: {response.status_code}"
+            )
             app.update_terminal(
                 f"\nServer error, retrying request. Status code: {response.status_code}"
             )
@@ -116,12 +120,14 @@ def Set_Access_Token(app: object) -> Union[bool, None]:
                 # Define the headers for the API request
                 headers = {"Authorization": f"Bearer {access_token}"}
                 Logger.DEBUG("Defined the headers for the API request.")
-            else:
-                Logger.WARNING("No access token found in the configuration.")
-                app.update_terminal("No access token found.")
+                return True
+            Logger.WARNING("No access token found in the configuration.")
+            app.update_terminal("No access token found.")
+            return False
         except KeyError:
             Logger.ERROR("No 'ACCESS_TOKEN' key in the configuration.")
             app.update_terminal("No 'ACCESS_TOKEN' key in the configuration.")
+            return False
     else:
         Logger.ERROR("No config file found.")
         app.update_terminal("No config file found.")
@@ -149,7 +155,9 @@ def needs_refresh(app: object) -> Optional[Union[bool, None]]:
     Logger.DEBUG("Defined the query.")
     try:
         # Send a POST request to the API endpoint with a timeout of 10 seconds
-        response = requests.post(url, json={"query": query}, headers=headers, timeout=10)
+        response = requests.post(
+            url, json={"query": query}, headers=headers, timeout=10
+        )
         Logger.DEBUG("Sent the POST request.")
     except requests.exceptions.RequestException:
         Logger.ERROR("Error: Cannot resolve graphql.anilist.co")

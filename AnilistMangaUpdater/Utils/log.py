@@ -33,7 +33,9 @@ if os.path.exists("logs/latest.log"):
     try:
         os.rename("logs/latest.log", f"logs/{timestamp}.log")
     except PermissionError:
-        print("Warning: Could not rename the log file because it is being used by another process.")
+        print(
+            "Warning: Could not rename the log file because it is being used by another process."
+        )
 
 
 # Define the main directory of your project

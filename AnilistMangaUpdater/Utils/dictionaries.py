@@ -1,5 +1,8 @@
 """
-This file contains the Python dictionaries that are used to store the alternative titles, format cache, and title cache.
+This file contains Python dictionaries used to store:
+- Alternative titles
+- Format cache
+- Title cache
 """
 
 # pylint: disable=C0301, C0302

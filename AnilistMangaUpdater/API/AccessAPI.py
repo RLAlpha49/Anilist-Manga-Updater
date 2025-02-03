@@ -80,16 +80,22 @@ def Get_User_Manga_List(app: object) -> list[dict[str, Union[int, str]]]:
         data = api_request(query, app, variables)
 
         if data:
-            chunk_manga_list = data.get("data", {}).get("MediaListCollection", {}).get("lists", [])
+            chunk_manga_list = (
+                data.get("data", {}).get("MediaListCollection", {}).get("lists", [])
+            )
 
             if not chunk_manga_list:
                 Logger.DEBUG("No more chunks in manga list. Breaking the loop.")
                 break
 
             manga_list += [
-                entry for sublist in chunk_manga_list for entry in sublist.get("entries", [])
+                entry
+                for sublist in chunk_manga_list
+                for entry in sublist.get("entries", [])
             ]
-            Logger.DEBUG(f"Added chunk to manga list. Current list length: {len(manga_list)}")
+            Logger.DEBUG(
+                f"Added chunk to manga list. Current list length: {len(manga_list)}"
+            )
             chunk += 1
         else:
             Logger.WARNING("API request returned no data. Breaking the loop.")
@@ -162,7 +168,9 @@ class Manga:  # pylint: disable=R0903
         )
         self.status: str = status
         self.last_read_at: Union[datetime, None]
-        if last_read_at is None or (isinstance(last_read_at, float) and math.isnan(last_read_at)):
+        if last_read_at is None or (
+            isinstance(last_read_at, float) and math.isnan(last_read_at)
+        ):
             self.last_read_at = None
         else:
             self.last_read_at = datetime.strptime(last_read_at, "%Y-%m-%d %H:%M:%S UTC")

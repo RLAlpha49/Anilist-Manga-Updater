@@ -54,8 +54,12 @@ def clean(auto_fix=True):
     If auto_fix is True, isort and black will automatically fix problems.
     """
     parser = argparse.ArgumentParser(description="Clean a Python project.")
-    parser.add_argument("path", help="The path of the project to clean.", default=".", nargs="?")
-    parser.add_argument("--no-fix", help="Do not automatically fix problems.", action="store_true")
+    parser.add_argument(
+        "path", help="The path of the project to clean.", default=".", nargs="?"
+    )
+    parser.add_argument(
+        "--no-fix", help="Do not automatically fix problems.", action="store_true"
+    )
     args = parser.parse_args()
 
     path = args.path

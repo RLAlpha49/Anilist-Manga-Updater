@@ -36,7 +36,8 @@ def update_manga_variables(
         private (bool): The privacy setting of the manga. Default is None.
 
     Returns:
-        dict: A dictionary of variables for updating a manga, excluding any parameters that are None.
+        dict: A dictionary of variables for updating a manga,
+            excluded if their value is None.
     """
     Logger.INFO("Function update_manga_variables called.")
     variables = {
@@ -154,7 +155,9 @@ def update_variables(
             or chapter_anilist is None
         )
     ):
-        manga.last_chapter_read = 0 if manga.status == "PLANNING" else manga.last_chapter_read
+        manga.last_chapter_read = (
+            0 if manga.status == "PLANNING" else manga.last_chapter_read
+        )
         first_variables = update_manga_variables(
             manga.id,
             status=manga.status,
@@ -183,7 +186,9 @@ def update_variables(
             and ((int(chapter_anilist) if chapter_anilist is not None else 0) + 1)
             != manga.last_chapter_read
         ):
-            second_variables = update_manga_variables(manga.id, progress=manga.last_chapter_read)
+            second_variables = update_manga_variables(
+                manga.id, progress=manga.last_chapter_read
+            )
             third_variables = update_manga_variables(manga.id, status=manga.status)
         elif (
             (int(chapter_anilist) if chapter_anilist is not None else 0) + 1
@@ -192,7 +197,11 @@ def update_variables(
                 manga.id, status=manga.status, progress=manga.last_chapter_read
             )
         variables_list.extend(
-            [v for v in [first_variables, second_variables, third_variables] if v is not None]
+            [
+                v
+                for v in [first_variables, second_variables, third_variables]
+                if v is not None
+            ]
         )
     return variables_list
 
@@ -203,21 +212,23 @@ def update_manga_progress(
     """
     Updates the progress of the given manga.
 
-    This function sends a mutation request to the Anilist API to update the progress of the manga.
-    It iterates over the list of variables, sends the request for each set of variables, and checks
-    the response. If the response is successful and the last read is greater than the chapter from
-    Anilist, updates the chapter progress and prints a message. If the response is not successful,
-    it prints an error message and returns.
+    This function sends a mutation request to the Anilist API to update the progress
+    of the manga. It iterates over the list of variables, sends the request for each
+    set of variables, and checks the response. If the response is successful and the
+    last read is greater than the chapter from Anilist, updates the chapter progress
+    and prints a message. If the response is not successful, it prints an error message
+    and returns.
 
     Args:
-        manga: The manga object whose progress is to be updated. The manga object should have 'name',
-        'id', and 'last_chapter_read' attributes.
+        manga: The manga object whose progress is to be updated. The manga object
+            should have 'name', 'id', and 'last_chapter_read' attributes.
         app: The application instance.
-        variables_list: A list of dictionaries, each containing the variables for the mutation request.
+        variables_list: A list of dictionaries, each containing the variables for
+            the mutation request.
         chapter_anilist: The current chapter of the manga from Anilist.
 
     Returns:
-     None
+        None
     """
     global chapters_updated
     variables_mediaId = None
@@ -262,9 +273,7 @@ def update_manga_progress(
                     Logger.DEBUG(f"Updated chapters_updated to: {chapters_updated}")
                     update_sent = True
             else:
-                message = (
-                    f"Manga: {manga.name}({manga.id}) Status has been set to " f"{manga.status}\n"
-                )
+                message = f"Manga: {manga.name}({manga.id}) Status has been set to {manga.status}\n"
                 Logger.DEBUG(message)
                 app.update_terminal(message)
                 break

@@ -88,7 +88,9 @@ class Program:  # pylint: disable=R0903, C0115
         if refresh:
             app.update_terminal("Access Token needs to be refreshed")
             app.update_progress_and_status("Token needs to be refreshed...", 0)
-            Logger.WARNING("Access token needs to be refreshed. Returning from __init__.")
+            Logger.WARNING(
+                "Access token needs to be refreshed. Returning from __init__."
+            )
             return
 
         # Load the configuration from the config.json file
@@ -97,7 +99,9 @@ class Program:  # pylint: disable=R0903, C0115
         if config is None:
             # If the configuration is not loaded successfully, get the configuration
             Get_Config(app)
-            Logger.WARNING("Config is None. Called Get_Config and returning from __init__.")
+            Logger.WARNING(
+                "Config is None. Called Get_Config and returning from __init__."
+            )
             return
 
         # If the configuration is loaded successfully, get the client ID, secret ID,
@@ -141,7 +145,9 @@ class Program:  # pylint: disable=R0903, C0115
 
         # Update progress and status
         current_step += 0.5
-        app.update_progress_and_status("Checking file path...", current_step / total_steps)
+        app.update_progress_and_status(
+            "Checking file path...", current_step / total_steps
+        )
         Logger.INFO("Checking file path...")
 
         # Check if the file path is set
@@ -154,7 +160,9 @@ class Program:  # pylint: disable=R0903, C0115
 
         # Update progress and status
         current_step += 0.5
-        app.update_progress_and_status("Getting manga from CSV...", current_step / total_steps)
+        app.update_progress_and_status(
+            "Getting manga from CSV...", current_step / total_steps
+        )
         Logger.INFO("Getting manga from CSV...")
 
         # Get the manga found in the CSV file
@@ -171,7 +179,9 @@ class Program:  # pylint: disable=R0903, C0115
 
         # Update progress and status
         current_step += 0.5
-        app.update_progress_and_status("Getting manga IDs...", current_step / total_steps)
+        app.update_progress_and_status(
+            "Getting manga IDs...", current_step / total_steps
+        )
         Logger.INFO("Getting manga IDs...")
 
         # Get the manga found in the CSV file
@@ -220,7 +230,9 @@ class Program:  # pylint: disable=R0903, C0115
                     Logger.DEBUG("Created MangaSearch instance with last chapter read.")
                 else:
                     manga_search = MangaSearch(manga_name, None, app)
-                    Logger.DEBUG("Created MangaSearch instance without last chapter read.")
+                    Logger.DEBUG(
+                        "Created MangaSearch instance without last chapter read."
+                    )
             else:
                 manga_search = MangaSearch(manga_name, None, app)
                 Logger.DEBUG("Created MangaSearch instance without last chapter read.")
@@ -265,7 +277,9 @@ class Program:  # pylint: disable=R0903, C0115
                             manga_names_ids[manga_name].append(
                                 (manga_id, None, manga_info["status"], None)
                             )
-                        Logger.DEBUG("Appended additional information to manga_names_ids.")
+                        Logger.DEBUG(
+                            "Appended additional information to manga_names_ids."
+                        )
             # Increment the counter for the number of manga processed
             processed_ids += 1
 
@@ -304,7 +318,9 @@ class Program:  # pylint: disable=R0903, C0115
 
         # Update progress and status
         current_step += 3.5
-        app.update_progress_and_status("Cleaning manga IDs...", current_step / total_steps)
+        app.update_progress_and_status(
+            "Cleaning manga IDs...", current_step / total_steps
+        )
         Logger.INFO("Cleaning manga IDs...")
 
         # Clean the manga_names_ids dictionary
@@ -321,7 +337,9 @@ class Program:  # pylint: disable=R0903, C0115
             for manga_name, ids in manga_names_ids.items():
                 for id_info in ids:
                     # Submit the task to the executor
-                    future = executor.submit(Program.process_id_info, manga_name, id_info)
+                    future = executor.submit(
+                        Program.process_id_info, manga_name, id_info
+                    )
                     futures.append(future)
 
             # Gather the results
@@ -402,7 +420,9 @@ class Program:  # pylint: disable=R0903, C0115
                         ),
                         manga_entry["status"],
                     )
-                    Logger.DEBUG(f"Got current progress and status from manga entry: {manga_entry}")
+                    Logger.DEBUG(
+                        f"Got current progress and status from manga entry: {manga_entry}"
+                    )
 
                 # If the progress or status has changed or the manga was not found in the manga list
 
@@ -431,7 +451,9 @@ class Program:  # pylint: disable=R0903, C0115
 
                     # After updating the manga, increment the counter
                     processed_updates += 1
-                    Logger.DEBUG(f"Incremented processed_updates to: {processed_updates}")
+                    Logger.DEBUG(
+                        f"Incremented processed_updates to: {processed_updates}"
+                    )
 
                     # Assume Update_Manga is synchronous; if not, adjust accordingly
                     update_time_after = time.time()
@@ -445,9 +467,12 @@ class Program:  # pylint: disable=R0903, C0115
 
                     # Calculate the estimated time remaining for Updating Manga
                     remaining_updates = total_updates - processed_updates
-                    estimated_time_remaining_update = average_time_update * remaining_updates
+                    estimated_time_remaining_update = (
+                        average_time_update * remaining_updates
+                    )
                     Logger.INFO(
-                        f"Estimated time remaining for Updating Manga: {estimated_time_remaining_update} seconds"
+                        "Estimated time remaining for Updating Manga: "
+                        + f"{estimated_time_remaining_update} seconds"
                     )
 
                     # Calculate total estimated time remaining
@@ -463,7 +488,8 @@ class Program:  # pylint: disable=R0903, C0115
                     # Update the progress and status
                     app.update_progress_and_status(
                         f"Updating manga: {manga_name}",
-                        (current_step + (processed_updates / total_updates) * 3) / total_steps,
+                        (current_step + (processed_updates / total_updates) * 3)
+                        / total_steps,
                     )
                     Logger.DEBUG("Updated progress and status for Updating Manga.")
 
@@ -511,7 +537,9 @@ class Program:  # pylint: disable=R0903, C0115
         manga_update_time_taken = self.print_time_taken(
             manga_update_start_time, "update Manga data"
         )
-        Logger.INFO(f"Time taken to update Manga data: {manga_update_time_taken} seconds")
+        Logger.INFO(
+            f"Time taken to update Manga data: {manga_update_time_taken} seconds"
+        )
 
         # Calculate the total time taken by adding the time taken to get manga data
         # and the time taken to update manga data

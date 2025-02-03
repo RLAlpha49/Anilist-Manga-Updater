@@ -78,7 +78,9 @@ def Clean_Manga_IDs(manga_names_ids: dict, app: object) -> dict:
                 Logger.DEBUG(f"Printed ID info for {manga_name}: {message}.")
         app.update_terminal("\n")
     # Write the manga names with multiple IDs to a file
-    app.update_progress_and_status("Writing multiple ID's file...", ((5.5 + (0.5 / 3)) / 10))
+    app.update_progress_and_status(
+        "Writing multiple ID's file...", ((5.5 + (0.5 / 3)) / 10)
+    )
     Logger.INFO("Writing multiple ID's file.")
     write_to_file("multiple_ids", multiple_id_manga_names, formatter_multiple_ids)
     # Return the cleaned manga names and IDs

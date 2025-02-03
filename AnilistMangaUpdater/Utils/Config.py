@@ -35,7 +35,9 @@ def create_config(
     """
     # Create and return the configuration dictionary directly
     Logger.INFO("Function create_config called.")
-    Logger.DEBUG(f"Parameters - client: {client}, " f"months: {months}, private: {private}")
+    Logger.DEBUG(
+        f"Parameters - client: {client}, " f"months: {months}, private: {private}"
+    )
     return {
         "ANILIST_CLIENT_ID": client,
         "ANILIST_CLIENT_SECRET": secret,
@@ -46,7 +48,9 @@ def create_config(
 
 
 # Function to save the configuration dictionary to a file
-def save_config(config: Union[dict[Union[str, None], None], None], file_path: str) -> None:
+def save_config(
+    config: Union[dict[Union[str, None], None], None], file_path: str
+) -> None:
     """
     Saves the configuration dictionary to a file.
 

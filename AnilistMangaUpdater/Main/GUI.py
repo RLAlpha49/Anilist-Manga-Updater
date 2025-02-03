@@ -62,24 +62,22 @@ image1dir: str = os.path.join(image_directory, "Anilist-Manga-Updater-Logo2.png"
 # Define a class for the access token thread
 class AccessTokenThread(threading.Thread):
     """
-    A class that extends the threading.Thread class in Python. This class is used to create a separate
-    thread for obtaining the access token from the Anilist API.
+    A class extending threading.Thread for obtaining Anilist API access tokens.
 
     Attributes:
         stop : bool
-            A flag used to stop the thread. It is initially set to False.
+            Flag to control thread execution. Initially False.
 
     Methods:
         __init__():
-            Initializes the AccessTokenThread. Sets the stop flag to False.
+            Initializes AccessTokenThread with stop flag set to False.
 
         run():
-            Overrides the run method of threading.Thread. It checks if the global 'app' variable is None.
-            If it is, it logs an error and returns. Otherwise, it calls the Get_Access_Token function with
-            'app' as the argument.
+            Overrides threading.Thread.run(). Checks global 'app' variable.
+            If None, logs error. Otherwise calls Get_Access_Token(app).
 
         stop_thread():
-            Sets the stop flag to True, indicating that the thread should stop running.
+            Sets stop flag to True to terminate thread execution.
     """
 
     def __init__(self) -> None:
@@ -119,17 +117,15 @@ class AccessTokenThread(threading.Thread):
 
 
 def edit_alternative_title(alt_titles_dict, original_title) -> None:
-    """
-    Edits an alternative title in the alternative titles dictionary.
+    """Edits an alternative title in the alternative titles dictionary.
 
-    This function prompts the user to input a new alternative title for a given original title.
-    If the user provides a valid new alternative title, it updates the alternative titles dictionary
-    and saves it to a file.
+    Prompts user to input a new alternative title for given original title.
+    Updates dictionary and saves to file if valid input is provided.
 
     Parameters:
-        alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative
-                                titles as values.
-        original_title (str): The original title for which the alternative title is to be edited.
+        alt_titles_dict (dict): Dictionary mapping original titles (keys) to
+            their alternative titles (values).
+        original_title (str): Original title to edit alternative for.
 
     Returns:
         None
@@ -156,7 +152,7 @@ def delete_alternative_title(alt_titles_dict, original_title) -> None:
 
     Parameters:
         alt_titles_dict (dict): The dictionary containing the original titles as keys and
-                                alternative titles as values.
+            alternative titles as values.
         original_title (str): The original title for which the alternative title is to be deleted.
 
     Returns:
@@ -172,19 +168,23 @@ def add_alternative_title(alt_titles_dict) -> None:
     """
     Adds an alternative title to the alternative titles dictionary.
 
-    This function prompts the user to input an original title and its corresponding alternative title.
-    If the user provides valid inputs, it updates the alternative titles dictionary with the new pair
-    and saves it to a file.
+    This function prompts the user to input an original title
+    and its corresponding alternative title. If the user provides
+    valid inputs, it updates the alternative titles dictionary
+    with the new pair and saves it to a file.
 
     Parameters:
-        alt_titles_dict (dict): The dictionary containing the original titles as keys and
-                                alternative titles as values.
+        alt_titles_dict (dict): The dictionary containing
+            the original titles as keys and
+            alternative titles as values.
 
     Returns:
         None
     """
     Logger.INFO("Prompting user for original title.")
-    original_title = simpledialog.askstring("Add Alternative Title", "Enter the original title:")
+    original_title = simpledialog.askstring(
+        "Add Alternative Title", "Enter the original title:"
+    )
     if original_title is None or original_title == "":
         Logger.WARNING("No original title provided. Exiting add.")
         return
@@ -211,7 +211,7 @@ def change_appearance_mode_event(new_appearance_mode: str) -> None:
 
     Parameters:
         new_appearance_mode (str): The new appearance mode to be set. This should be a string
-                                   representing the desired appearance mode.
+            representing the desired appearance mode.
 
     Returns:
         None
@@ -242,11 +242,18 @@ def change_scaling_event(new_scaling: str) -> None:
 
 class SidebarFrame(customtkinter.CTkFrame):
     """
-    A class representing the Sidebar Frame which includes buttons and options for various actions.
+    A class representing the Sidebar Frame with various action buttons/options.
 
-    This class creates a sidebar frame in the GUI with buttons for starting the program, getting the access token,
-    opening settings, managing alternative titles, changing appearance mode, changing UI scaling, and exiting the
-    application. It also includes tooltips for each button and option menu.
+    This class creates a sidebar frame in the GUI containing buttons for:
+    - Starting the program
+    - Getting the access token
+    - Opening settings
+    - Managing alternative titles
+    - Changing appearance mode
+    - Adjusting UI scaling
+    - Exiting the application
+
+    Also includes tooltips for all interactive elements and option menus.
     """
 
     def __init__(self, parent: "App", *args, **kwargs):
@@ -266,7 +273,9 @@ class SidebarFrame(customtkinter.CTkFrame):
         Logger.DEBUG("Created sidebar frame for the window.")
 
         # Load the application logo
-        logo = customtkinter.CTkImage(light_image=Image.open(image1dir), size=(100, 100))
+        logo = customtkinter.CTkImage(
+            light_image=Image.open(image1dir), size=(100, 100)
+        )
         self.logo_label = customtkinter.CTkLabel(
             self, image=logo, text=""
         )  # display image with a CTkLabel
@@ -324,7 +333,9 @@ class SidebarFrame(customtkinter.CTkFrame):
         self.appearance_mode_optionemenu.grid(row=9, column=0, padx=20, pady=(10, 0))
 
         # Create a label and option menu for the UI scaling
-        self.scaling_label = customtkinter.CTkLabel(self, text="UI Scaling:", anchor="w")
+        self.scaling_label = customtkinter.CTkLabel(
+            self, text="UI Scaling:", anchor="w"
+        )
         self.scaling_label.grid(row=10, column=0, padx=20, pady=(5, 0))
 
         self.scaling_optionemenu = customtkinter.CTkOptionMenu(
@@ -335,7 +346,9 @@ class SidebarFrame(customtkinter.CTkFrame):
         self.scaling_optionemenu.grid(row=11, column=0, padx=20, pady=(10, 15))
 
         # Create an exit button
-        self.exit_button = customtkinter.CTkButton(self, command=self.parent.on_close, text="Exit")
+        self.exit_button = customtkinter.CTkButton(
+            self, command=self.parent.on_close, text="Exit"
+        )
         self.exit_button.grid(row=12, column=0, padx=20, pady=(5, 15))
 
         # Set default values for the appearance mode and UI scaling
@@ -403,7 +416,13 @@ class TerminalFrame(customtkinter.CTkFrame):
         self.configure(fg_color="transparent")
         self.parent = parent
         self.grid(
-            row=0, column=1, columnspan=3, rowspan=3, padx=(20, 20), pady=(20, 0), sticky="nsew"
+            row=0,
+            column=1,
+            columnspan=3,
+            rowspan=3,
+            padx=(20, 20),
+            pady=(20, 0),
+            sticky="nsew",
         )
         Logger.DEBUG("Created terminal frame for the window.")
 
@@ -480,12 +499,18 @@ class StatusFrame(customtkinter.CTkFrame):
         self.estimated_time_label = customtkinter.CTkLabel(
             self, text="Estimated Time Remaining: NaN", anchor="w"
         )
-        self.estimated_time_label.grid(row=0, column=0, padx=(0, 10), pady=(0, 5), sticky="w")
+        self.estimated_time_label.grid(
+            row=0, column=0, padx=(0, 10), pady=(0, 5), sticky="w"
+        )
         Logger.INFO("Created 'Estimated Time Remaining' label.")
 
         # Create time taken label
-        self.time_taken_label = customtkinter.CTkLabel(self, text="Time Taken: 0:00:00", anchor="e")
-        self.time_taken_label.grid(row=0, column=3, padx=(10, 0), pady=(0, 5), sticky="e")
+        self.time_taken_label = customtkinter.CTkLabel(
+            self, text="Time Taken: 0:00:00", anchor="e"
+        )
+        self.time_taken_label.grid(
+            row=0, column=3, padx=(10, 0), pady=(0, 5), sticky="e"
+        )
         Logger.INFO("Created 'Time Taken' label.")
 
         # Create a progress bar
@@ -533,7 +558,9 @@ class StatusFrame(customtkinter.CTkFrame):
         """
         self.progress_bar.set(progress_value)
         self.percent_label.configure(text=f"{round((progress_value * 100), 1)}%")
-        self.progress_bar_tooltip.configure(message=f"{str(round((progress_value * 100), 1))}%")
+        self.progress_bar_tooltip.configure(
+            message=f"{str(round((progress_value * 100), 1))}%"
+        )
         Logger.INFO(f"Updated progress to: {progress_value * 100}%")
 
     def update_time_taken(self, time_taken: str) -> None:
@@ -559,7 +586,9 @@ class StatusFrame(customtkinter.CTkFrame):
         Returns:
             None
         """
-        self.estimated_time_label.configure(text=f"Estimated Time Remaining: {time_remaining}")
+        self.estimated_time_label.configure(
+            text=f"Estimated Time Remaining: {time_remaining}"
+        )
         Logger.INFO(f"Updated estimated time remaining to: {time_remaining}")
 
     def update_status(self, status: str) -> None:
@@ -572,18 +601,20 @@ class StatusFrame(customtkinter.CTkFrame):
         Returns:
             None
         """
-        display_status = f"Status: {status[:37]}..." if len(status) > 40 else f"Status: {status}"
+        display_status = (
+            f"Status: {status[:37]}..." if len(status) > 40 else f"Status: {status}"
+        )
         self.status_label.configure(text=display_status)
         Logger.INFO(f"Updated status to: {display_status}")
 
 
 class BrowseFrame(customtkinter.CTkFrame):
     """
-    A class representing the Browse Frame which includes entry fields and browse buttons for file paths.
+    A class representing the Browse Frame with file path entry fields and buttons.
 
-    This frame is part of the GUI and is used to allow users to browse and select file paths for the
-    previous Kenmei export file and the current Kenmei export file. It includes entry fields and browse
-    buttons for both file paths, and it initializes these fields in a disabled state.
+    This frame is part of the GUI and allows users to browse and select file paths
+    for both previous and current Kenmei export files. Contains entry fields and
+    browse buttons for both file paths. Initializes these fields in a disabled state.
     """
 
     def __init__(self, parent: "App", *args, **kwargs):
@@ -618,7 +649,9 @@ class BrowseFrame(customtkinter.CTkFrame):
             border_width=2,
             text_color=("gray10", "#DCE4EE"),
             text="Browse",
-            command=lambda: self.parent.browse_file(self.previous_file_path_textbox, True),
+            command=lambda: self.parent.browse_file(
+                self.previous_file_path_textbox, True
+            ),
         )
         self.previous_browse_button.grid(
             row=0, column=3, padx=(20, 20), pady=(15, 15), sticky="nsew"
@@ -629,7 +662,9 @@ class BrowseFrame(customtkinter.CTkFrame):
         self.file_path_textbox = customtkinter.CTkEntry(
             self, placeholder_text="Kenmei Export File Path"
         )
-        self.file_path_textbox.grid(row=1, column=0, columnspan=3, pady=(5, 15), sticky="nsew")
+        self.file_path_textbox.grid(
+            row=1, column=0, columnspan=3, pady=(5, 15), sticky="nsew"
+        )
         Logger.INFO("Created entry field for the Kenmei export file path.")
 
         self.browse_button = customtkinter.CTkButton(
@@ -640,7 +675,9 @@ class BrowseFrame(customtkinter.CTkFrame):
             text="Browse",
             command=lambda: self.parent.browse_file(self.file_path_textbox, False),
         )
-        self.browse_button.grid(row=1, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew")
+        self.browse_button.grid(
+            row=1, column=3, padx=(20, 20), pady=(5, 15), sticky="nsew"
+        )
         Logger.INFO("Created browse button for the Kenmei export file path.")
 
         # Disable file path textboxes initially
@@ -655,20 +692,8 @@ class SettingsPopup(customtkinter.CTkToplevel):
     A popup window for configuring application settings.
 
     This class creates a popup window that allows the user to configure various settings
-    such as API Client ID, Secret ID, Number of Months, and Private Value. It also provides
+    such as API Client ID, Secret ID, Number of Months, and Private Value. It provides
     functionality to load existing settings and save new settings to a configuration file.
-
-    Attributes:
-        parent (App): The parent application instance.
-        client_id_label (CTkLabel): Label for the Client ID entry field.
-        client_id_entry (CTkEntry): Entry field for the Client ID.
-        secret_id_label (CTkLabel): Label for the Secret ID entry field.
-        secret_id_entry (CTkEntry): Entry field for the Secret ID.
-        months_label (CTkLabel): Label for the Number of Months entry field.
-        months_entry (CTkEntry): Entry field for the Number of Months.
-        private_label (CTkLabel): Label for the Private Value entry field.
-        private_entry (CTkEntry): Entry field for the Private Value.
-        save_button (CTkButton): Button to save the settings.
     """
 
     def __init__(self, parent: "App"):
@@ -682,71 +707,59 @@ class SettingsPopup(customtkinter.CTkToplevel):
         self.title("Settings")
         self.geometry("400x400")
         self.parent = parent
-
+        self.entries = {}
         Logger.INFO("Initialized Settings popup.")
 
         # Configure grid
         self.grid_columnconfigure(1, weight=1)
 
-        # API Client ID
-        self.client_id_label = customtkinter.CTkLabel(self, text="Client ID:")
-        self.client_id_label.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
-        self.client_id_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Client ID")
-        self.client_id_entry.grid(row=0, column=1, padx=10, pady=(10, 5), sticky="ew")
+        # Create form fields using a list of tuples for field configuration
+        field_configs = [
+            (0, "Client ID:", "Enter Client ID", "client_id"),
+            (1, "Secret ID:", "Enter Secret ID", "secret_id"),
+            (2, "Number of Months:", "Enter Number of Months", "months"),
+            (3, "Private Value (Yes/No):", "Enter Yes or No", "private"),
+        ]
 
-        # API Secret ID
-        self.secret_id_label = customtkinter.CTkLabel(self, text="Secret ID:")
-        self.secret_id_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.secret_id_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Secret ID")
-        self.secret_id_entry.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+        for row, label_text, placeholder, key in field_configs:
+            label = customtkinter.CTkLabel(self, text=label_text)
+            label.grid(
+                row=row, column=0, padx=10, pady=(10, 5) if row == 0 else 5, sticky="w"
+            )
 
-        # Number of Months
-        self.months_label = customtkinter.CTkLabel(self, text="Number of Months:")
-        self.months_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        self.months_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Number of Months")
-        self.months_entry.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
-
-        # Private Value
-        self.private_label = customtkinter.CTkLabel(self, text="Private Value (Yes/No):")
-        self.private_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
-        self.private_entry = customtkinter.CTkEntry(self, placeholder_text="Enter Yes or No")
-        self.private_entry.grid(row=3, column=1, padx=10, pady=5, sticky="ew")
+            entry = customtkinter.CTkEntry(self, placeholder_text=placeholder)
+            entry.grid(
+                row=row, column=1, padx=10, pady=(10, 5) if row == 0 else 5, sticky="ew"
+            )
+            self.entries[key] = entry
 
         # Save Button
-        self.save_button = customtkinter.CTkButton(self, text="Save", command=self.save_settings)
+        self.save_button = customtkinter.CTkButton(
+            self, text="Save", command=self.save_settings
+        )
         self.save_button.grid(row=4, column=0, columnspan=2, padx=10, pady=20)
 
-        # Populate fields with existing config if available
+        # Populate fields with existing config
         self.load_existing_settings()
 
     def load_existing_settings(self):
-        """
-        Loads existing settings from the configuration file and populates the entry fields.
-
-        This method retrieves the existing settings from the configuration file and inserts
-        them into the corresponding entry fields in the Settings popup.
-        """
+        """Loads existing settings from config file into entry fields."""
         config = load_config(config_path)
         if config:
-            self.client_id_entry.insert(0, config.get("ANILIST_CLIENT_ID", ""))
-            self.secret_id_entry.insert(0, config.get("ANILIST_CLIENT_SECRET", ""))
-            self.months_entry.insert(0, config.get("MONTHS", ""))
-            self.private_entry.insert(0, config.get("PRIVATE", ""))
+            self.entries["client_id"].insert(0, config.get("ANILIST_CLIENT_ID", ""))
+            self.entries["secret_id"].insert(0, config.get("ANILIST_CLIENT_SECRET", ""))
+            self.entries["months"].insert(0, config.get("MONTHS", ""))
+            self.entries["private"].insert(0, config.get("PRIVATE", ""))
             Logger.INFO("Loaded existing settings into Settings popup.")
 
     def save_settings(self):
-        """
-        Saves the settings to the configuration file.
-
-        This method validates the input fields, creates or updates the configuration file
-        with the new settings, and updates the terminal and access token in the application.
-        """
+        """Validates and saves settings to configuration file."""
         config = load_config(config_path)
-        client_id = self.client_id_entry.get()
-        secret_id = self.secret_id_entry.get()
+        client_id = self.entries["client_id"].get()
+        secret_id = self.entries["secret_id"].get()
+        months = self.entries["months"].get()
+        private = self.entries["private"].get().lower()
         access_token = config.get("ACCESS_TOKEN", "") if config else ""
-        months = self.months_entry.get()
-        private = self.private_entry.get()
 
         # Validate inputs
         if not client_id or not secret_id:
@@ -754,7 +767,7 @@ class SettingsPopup(customtkinter.CTkToplevel):
             Logger.ERROR("Client ID or Secret ID is empty.")
             return
 
-        if private.lower() not in ["yes", "no"]:
+        if private not in ["yes", "no"]:
             messagebox.showerror("Error", "Private Value must be 'Yes' or 'No'.")
             Logger.ERROR("Invalid Private Value input.")
             return
@@ -764,7 +777,7 @@ class SettingsPopup(customtkinter.CTkToplevel):
             Logger.ERROR("Number of Months is not a digit.")
             return
 
-        # Create or update config
+        # Create/update config
         config = create_config(client_id, secret_id)
         config["ACCESS_TOKEN"] = access_token
         if months:
@@ -774,13 +787,10 @@ class SettingsPopup(customtkinter.CTkToplevel):
         save_config(config, config_path)
         Logger.INFO("Settings saved to configuration file.")
 
-        # Update terminal
+        # Update application components
         self.parent.terminal_frame.update_terminal("Settings have been saved.")
-        Logger.INFO("Updated terminal with settings saved message.")
-
-        # Update Access Token in app
         Set_Access_Token(self.parent)
-        Logger.INFO("Set Access Token in app after saving settings.")
+        Logger.INFO("Updated application components after saving settings.")
 
         self.destroy()
         Logger.INFO("Closed Settings popup.")
@@ -904,16 +914,17 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         Handles the event when the start button is clicked.
 
-        This method is triggered when the user clicks on the start button. It performs the following steps:
+        This method is triggered when the user clicks the start button.
+        It performs the following steps:
 
-            1. Checks if the program thread is already running. If it is, it returns immediately.
-            2. If the program thread is not running, it imports the AnilistMangaUpdater class.
-            3. Creates a new thread for the program.
-            4. Starts the newly created thread.
-            5. Sets the start time to the current time.
-            6. Updates the time taken label.
-            7. Updates the progress bar.
-            8. Resets the progress to 0.
+            1. Checks if program thread is already running (returns if true)
+            2. Imports AnilistMangaUpdater class if thread not running
+            3. Creates new program thread
+            4. Starts the new thread
+            5. Sets start time to current time
+            6. Updates time taken label
+            7. Updates progress bar
+            8. Resets progress to 0
 
         Returns:
             None
@@ -924,7 +935,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         # Check if the thread is already running
         Logger.INFO("Checking if the program thread is already running.")
         if program_thread is not None and program_thread.is_alive():
-            Logger.WARNING("AnilistMangaUpdater thread is already running. Returning immediately.")
+            Logger.WARNING(
+                "AnilistMangaUpdater thread is already running. Returning immediately."
+            )
             return
 
         # Import the AnilistMangaUpdater class
@@ -955,14 +968,15 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         Handles the event when the access token button is clicked.
 
-        This method is triggered when the user clicks on the access token button. It performs the following steps:
+        This method is triggered when the user clicks on the access token button.
+        Performs these steps:
 
-            1. Retrieves the current configuration of the application.
-            2. Pauses the execution for 2 seconds.
-            3. Creates a new thread for obtaining the access token from the Anilist API.
-            4. Starts the newly created thread.
-            5. Opens an input dialog for the user to enter the access token.
-            6. Waits for the access token thread to finish.
+            1. Retrieves current application configuration
+            2. Pauses execution for 2 seconds
+            3. Creates new thread for Anilist API access token retrieval
+            4. Starts the new thread
+            5. Opens input dialog for user to enter access token
+            6. Waits for access token thread completion
 
         Returns:
             None
@@ -996,10 +1010,12 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         Opens an input dialog for the user to enter the access token.
 
-        This method prompts the user to input the access token through an input dialog. If the user cancels the dialog,
-        an error message is displayed and the terminal is updated with a cancellation message. If the user enters the
-        access token, the method loads the configuration file, adds the access token to it, and saves the updated
-        configuration file. If the thread for obtaining the access token is running, it is stopped.
+        This method prompts the user to input the access token through an input dialog.
+        If the user cancels the dialog, an error message is displayed and the terminal
+        is updated with a cancellation message. If the user enters the access token,
+        the method loads the configuration file, adds the access token to it, and saves
+        the updated configuration file. If the thread for obtaining the access token is
+        running, it is stopped.
 
         Returns:
             None
@@ -1009,7 +1025,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         # Open an input dialog for the access token
         Logger.INFO("Opening input dialog for the Access Token.")
-        token = customtkinter.CTkInputDialog(text="Type in the Access Token:", title="Access Token")
+        token = customtkinter.CTkInputDialog(
+            text="Type in the Access Token:", title="Access Token"
+        )
         token_value = token.get_input()
         Logger.INFO(f"Access Token input: {token_value}")
 
@@ -1056,7 +1074,8 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
     def open_settings_popup(self) -> None:
         """
-        Opens the settings popup window where users can configure API values, access token, months, and privacy settings.
+        Opens the settings popup window where users can configure API values,
+        access token, months, and privacy settings.
 
         Returns:
             None
@@ -1068,9 +1087,11 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         """
         Manages alternative titles in the application.
 
-        This method allows the user to add, edit, or delete alternative titles. The user interacts with the method
-        through a series of dialog boxes and terminal prompts. The method retrieves the current alternative titles
-        from a file, prompts the user to select an action (add, edit, or delete), and performs the selected action.
+        This method allows the user to add, edit, or delete alternative titles.
+        The user interacts with the method through a series of dialog boxes and
+        terminal prompts. The method retrieves the current alternative titles
+        from a file, prompts the user to select an action (add, edit, or delete),
+        and performs the selected action.
 
         Returns:
             None
@@ -1087,7 +1108,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         if action in ["edit", "delete"]:
             original_title = self.get_original_title(alt_titles_dict)
             if original_title is None:
-                Logger.WARNING("No original title selected. Exiting manage alternative titles.")
+                Logger.WARNING(
+                    "No original title selected. Exiting manage alternative titles."
+                )
                 return
 
             Logger.INFO(f"Original title selected: {original_title}")
@@ -1130,12 +1153,12 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         Prompts the user to select an original title from the alternative titles dictionary.
 
         This method displays a list of original titles to the user and prompts them to select one.
-        The user's selection is returned. If the user cancels the dialog or enters an invalid selection,
-        the method returns None.
+        The user's selection is returned. If the user cancels the dialog or enters an invalid
+        selection, the method returns None.
 
         Parameters:
-            alt_titles_dict (dict): The dictionary containing the original titles as keys and alternative
-            titles as values.
+            alt_titles_dict (dict): The dictionary containing the original
+                titles as keys and alternative titles as values.
 
         Returns:
             str: The original title selected by the user, if a valid selection was made.
@@ -1156,32 +1179,33 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         return titles[title_index - 1][0]
 
     def update_progress_and_status(
-        self, status: str, program_progress: Optional[Union[float, None]] = None
+        self, status: str, program_progress: Optional[float] = None
     ) -> None:
         """
         Updates the progress and status of the program.
 
-        This method updates the global variables `progress` and `progress_status` that are used to track the progress
-        and status of the program. If the `program_progress` parameter is provided and is different from the current
-        `progress`, it updates the progress and status labels in the GUI.
+        This method updates the global variables `progress` and `progress_status` that
+        are used to track the program's state. If the `program_progress` parameter is
+        provided and differs from current `progress`, updates GUI labels.
 
         Parameters:
             status (str): The new status of the program.
-            program_progress (float, optional): The new progress
-            of the program. If not provided, the current global progress is used.
+            program_progress (float, optional): The new progress value.
+                Uses current global progress if not provided.
 
         Returns:
             None
         """
-        # Update the global variables that were updated in the AnilistMangaUpdater.py file
+        # Update global variables from AnilistMangaUpdater.py
         global progress, progress_status  # pylint: disable=W0603
         if program_progress is None:
             Logger.INFO("No program progress provided. Using global progress.")
             program_progress = progress
+
         if program_progress != progress:
-            # If progress is different update objects associated with it
             Logger.INFO(
-                "AnilistMangaUpdater progress is different from global progress. Updating progress and status."
+                "AnilistMangaUpdater progress differs from global progress. "
+                "Updating progress and status."
             )
             progress = program_progress
             progress_status = status
@@ -1190,22 +1214,28 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
             Logger.INFO(f"Updated progress to: {progress} and status to: {status}")
 
     def update_estimated_time_remaining(
-        self, new_estimated_time_remaining: Optional[float] = None, add_time: Optional[float] = None
+        self,
+        new_estimated_time_remaining: Optional[float] = None,
+        add_time: Optional[float] = None,
     ) -> None:
         """
         Updates the estimated time remaining label in the GUI.
 
-        This method converts the estimated time remaining from seconds to a time format (hours, minutes,
-        and seconds), updates the time remaining label, and schedules itself to be called again after 1 second if
-        there is still time remaining.
+        This method converts the estimated time remaining from seconds to a time
+        format (hours, minutes, and seconds), updates the time remaining label,
+        and schedules itself to be called again after 1 second if there is still
+        time remaining.
 
-        If the estimated time remaining is less than 0, it is set to 0. If there is still time remaining,
-        and the function is already scheduled, the scheduled function is cancelled. Then, this function is scheduled
-        to be called again after 1 second.
+        If the estimated time remaining is less than 0, it is set to 0. If there
+        is still time remaining, and the function is already scheduled, the
+        scheduled function is cancelled. Then, this function is scheduled to be
+        called again after 1 second.
 
         Parameters:
-            new_estimated_time_remaining (float, optional): The new estimated time remaining in seconds. Defaults to None.
-            add_time (float, optional): The time to add to the estimated time remaining in seconds. Defaults to None.
+            new_estimated_time_remaining (float, optional): The new estimated time
+                remaining in seconds. Defaults to None.
+            add_time (float, optional): The time to add to the estimated time
+                remaining in seconds. Defaults to None.
 
         Returns:
             None
@@ -1223,7 +1253,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
         self.estimated_time_remaining = max(self.estimated_time_remaining, 0)
 
         # Convert the estimated time remaining to hours, minutes, and seconds
-        time_remaining = str(datetime.timedelta(seconds=int(self.estimated_time_remaining)))
+        time_remaining = str(
+            datetime.timedelta(seconds=int(self.estimated_time_remaining))
+        )
 
         # Update the time remaining label
         self.status_frame.update_estimated_time_remaining(time_remaining)
@@ -1236,7 +1268,9 @@ class App(customtkinter.CTk):  # pylint: disable=C0115, R0902
 
             # Schedule this function to be called again after 1 second and store the ID
             self.after_id = self.after(
-                1000, self.update_estimated_time_remaining, self.estimated_time_remaining - 1
+                1000,
+                self.update_estimated_time_remaining,
+                self.estimated_time_remaining - 1,
             )
 
     def update_time_taken(self, time_taken: str) -> None:
