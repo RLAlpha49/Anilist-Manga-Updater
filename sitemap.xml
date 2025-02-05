@@ -2,66 +2,66 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/API/APIRequests/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/API/AccessAPI/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/API/GetAccessToken/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/API/Queries/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/API/UpdateManga/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Main/GUI/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Main/Program/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Manga/GetID/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Manga/MangaSearch/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Utils/Cache/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Utils/Config/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Utils/Dictionaries/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Utils/GetFromFile/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Utils/Log/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
     <url>
          <loc>https://rlalpha49.github.io/Anilist-Manga-Updater/Utils/WriteToFile/</loc>
-         <lastmod>2025-02-04</lastmod>
+         <lastmod>2025-02-05</lastmod>
     </url>
 </urlset>
