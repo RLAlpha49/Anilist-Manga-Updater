@@ -24,7 +24,7 @@ mkdocs-material = "^9.6.7"
 mkdocstrings = {extras = ["crystal", "python"], version = "^0.28.3"}
 mkdocs-git-revision-date-localized-plugin = "^1.4.4"
 mkdocs-git-committers-plugin-2 = "^2.5.0"
-ruff = "^0.9.9"
+ruff = "^0.9.10"
 
 [tool.mypy]
 ignore_missing_imports = true
