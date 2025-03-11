@@ -21,7 +21,7 @@ types-requests = "^2.32.0.20250306"
 mypy = "^1.15.0"
 mkdocs = "^1.6.1"
 mkdocs-material = "^9.6.7"
-mkdocstrings = {extras = ["crystal", "python"], version = "^0.28.3"}
+mkdocstrings = {extras = ["crystal", "python"], version = "^0.29.0"}
 mkdocs-git-revision-date-localized-plugin = "^1.4.4"
 mkdocs-git-committers-plugin-2 = "^2.5.0"
 ruff = "^0.9.10"

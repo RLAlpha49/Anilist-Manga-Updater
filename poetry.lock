@@ -610,23 +610,22 @@ files = [
 
 [[package]]
 name = "mkdocstrings"
-version = "0.28.3"
+version = "0.29.0"
 description = "Automatic documentation from sources, for MkDocs."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "mkdocstrings-0.28.3-py3-none-any.whl", hash = "sha256:df5351ffd10477aa3c2ff5cdf17544b936477195436923660274d084a5c1359c"},
-    {file = "mkdocstrings-0.28.3.tar.gz", hash = "sha256:c753516b1b6cee12d00bf9c28255e22c0d71f34c721ca668971fce885d846e0f"},
+    {file = "mkdocstrings-0.29.0-py3-none-any.whl", hash = "sha256:8ea98358d2006f60befa940fdebbbc88a26b37ecbcded10be726ba359284f73d"},
+    {file = "mkdocstrings-0.29.0.tar.gz", hash = "sha256:3657be1384543ce0ee82112c3e521bbf48e41303aa0c229b9ffcccba057d922e"},
 ]
 
 [package.dependencies]
 Jinja2 = ">=2.11.1"
 Markdown = ">=3.6"
 MarkupSafe = ">=1.1"
-mkdocs = ">=1.4"
+mkdocs = ">=1.6"
 mkdocs-autorefs = ">=1.4"
-mkdocs-get-deps = ">=0.2"
 mkdocstrings-crystal = {version = ">=0.3.4", optional = true, markers = "extra == \"crystal\""}
 mkdocstrings-python = {version = ">=1.16.2", optional = true, markers = "extra == \"python\""}
 pymdown-extensions = ">=6.3"
@@ -1481,4 +1480,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "fefb91ee7a68d48449498a07fdc6b0ee2fb46370223ae9af48dfc9c52fa2e25f"
+content-hash = "6c1e35420893ee396f06444fa6f1c97843fb42cece55fcdcbab80c8738bc51b7"
