@@ -90,13 +90,6 @@ Potential future improvements like additional tracking services, backup function
   - Implement file import functionality
   - Design settings page for AniList authentication
 
-- Story 3: Data Visualization
-  Status:
-  Requirements:
-  - Create UI components for displaying imported manga
-  - Implement review screen for confirming changes
-  - Add success/error feedback mechanisms
-
 ## Technology Stack
 
 | Technology     | Description                                                      |

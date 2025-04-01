@@ -187,6 +187,7 @@
   .draglayer {
     @apply bg-background;
     -webkit-app-region: drag;
+    app-region: drag;
   }
   button {
     @apply cursor-pointer;
@@ -200,4 +201,10 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Electron Window Dragging */
+.non-draggable {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
