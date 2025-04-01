@@ -1,0 +1,1 @@
+::: AnilistMangaUpdater.Main.GUI

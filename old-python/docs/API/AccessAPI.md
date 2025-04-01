@@ -1,0 +1,1 @@
+::: AnilistMangaUpdater.API.AccessAPI
