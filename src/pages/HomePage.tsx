@@ -11,7 +11,10 @@ import {
   Library,
   RefreshCw,
   Sparkles,
+  LogOut,
+  UserCheck,
 } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 interface StatsState {
   total: number;
@@ -24,15 +27,10 @@ interface StatsState {
   syncStatus: string;
 }
 
-interface Activity {
-  id: number;
-  title: string;
-  status: string;
-  chapters: number;
-  date: string;
-}
-
 export function HomePage() {
+  // Get auth state to check authentication status
+  const { authState } = useAuth();
+
   // Mock state for dashboard data
   const [stats] = useState<StatsState>({
     total: 0,
@@ -44,14 +42,6 @@ export function HomePage() {
     lastSync: null,
     syncStatus: "none",
   });
-
-  const [recentActivities] = useState<Activity[]>([]);
-
-  // Format date helper
-  const formatDate = (date: string | null): string => {
-    if (!date) return "Never";
-    return new Date(date).toLocaleDateString();
-  };
 
   return (
     <div className="container mx-auto px-4 py-6 md:px-6">
@@ -67,11 +57,11 @@ export function HomePage() {
         </div>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:bg-gray-800">
+      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="group relative min-w-[250px] overflow-hidden rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:bg-gray-800">
           <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-blue-500/10 to-transparent"></div>
           <div className="absolute -right-6 -bottom-6 h-32 w-32 transform rounded-full bg-blue-100/30 transition-transform group-hover:scale-110 dark:bg-blue-900/20"></div>
-          <div className="relative">
+          <div className="relative z-10">
             <h2 className="mb-1 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
               Imported Items
             </h2>
@@ -82,14 +72,14 @@ export function HomePage() {
               <Library className="mr-1 h-3.5 w-3.5 text-blue-500" />
               No items imported yet
             </p>
-            <BarChart2 className="absolute right-2 bottom-0 h-12 w-12 text-blue-200 dark:text-blue-800/50" />
           </div>
+          <BarChart2 className="absolute right-2 bottom-0 z-0 h-12 w-12 text-blue-200 dark:text-blue-800/50" />
         </div>
 
-        <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:bg-gray-800">
+        <div className="group relative min-w-[250px] overflow-hidden rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:bg-gray-800">
           <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-purple-500/10 to-transparent"></div>
           <div className="absolute -right-6 -bottom-6 h-32 w-32 transform rounded-full bg-purple-100/30 transition-transform group-hover:scale-110 dark:bg-purple-900/20"></div>
-          <div className="relative">
+          <div className="relative z-10">
             <h2 className="mb-1 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
               Sync Status
             </h2>
@@ -100,14 +90,14 @@ export function HomePage() {
               <RefreshCw className="mr-1 h-3.5 w-3.5 text-purple-500" />
               Not connected to AniList
             </p>
-            <Activity className="absolute right-2 bottom-0 h-12 w-12 text-purple-200 dark:text-purple-800/50" />
           </div>
+          <Activity className="absolute right-2 bottom-0 z-0 h-12 w-12 text-purple-200 dark:text-purple-800/50" />
         </div>
 
-        <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:bg-gray-800">
+        <div className="group relative min-w-[250px] overflow-hidden rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:bg-gray-800">
           <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-green-500/10 to-transparent"></div>
           <div className="absolute -right-6 -bottom-6 h-32 w-32 transform rounded-full bg-green-100/30 transition-transform group-hover:scale-110 dark:bg-green-900/20"></div>
-          <div className="relative">
+          <div className="relative z-10">
             <h2 className="mb-1 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
               Last Activity
             </h2>
@@ -118,21 +108,21 @@ export function HomePage() {
               <Clock className="mr-1 h-3.5 w-3.5 text-green-500" />
               No recent activity
             </p>
-            <Clock className="absolute right-2 bottom-0 h-12 w-12 text-green-200 dark:text-green-800/50" />
           </div>
+          <Clock className="absolute right-2 bottom-0 z-0 h-12 w-12 text-green-200 dark:text-green-800/50" />
         </div>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
-        <div className="rounded-xl border border-gray-100 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <div className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg sm:p-8 dark:border-gray-700 dark:bg-gray-800">
           <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
             <Sparkles className="h-5 w-5 text-blue-500" />
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Link
               to="/import"
-              className="relative flex items-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-sm transition-all hover:from-blue-600 hover:to-purple-700 hover:shadow-md"
+              className="relative flex min-h-[90px] items-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white shadow-sm transition-all hover:from-blue-600 hover:to-purple-700 hover:shadow-md"
             >
               <div className="absolute top-0 left-0 h-full w-full rounded-lg bg-white/5"></div>
               <div className="z-10 rounded-lg bg-white/20 p-2 backdrop-blur-sm">
@@ -147,30 +137,64 @@ export function HomePage() {
 
             <Link
               to="/settings"
-              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
+              className={`flex min-h-[90px] items-center gap-3 rounded-lg border ${
+                authState.isAuthenticated
+                  ? "border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20"
+                  : "border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700"
+              } p-4 shadow-sm transition-all hover:shadow-md ${
+                authState.isAuthenticated
+                  ? "hover:bg-green-100 dark:hover:bg-green-800/30"
+                  : "hover:bg-gray-50 dark:hover:bg-gray-600"
+              }`}
             >
-              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
-                <AlertCircle className="h-5 w-5 text-blue-500" />
+              <div
+                className={`rounded-lg ${
+                  authState.isAuthenticated
+                    ? "bg-green-100 dark:bg-green-800/40"
+                    : "bg-blue-100 dark:bg-blue-900/30"
+                } p-2`}
+              >
+                {authState.isAuthenticated ? (
+                  <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-blue-500" />
+                )}
               </div>
               <div className="flex-1">
-                <p className="font-medium">Connect to AniList</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Setup authentication
+                <p className="font-medium">
+                  {authState.isAuthenticated
+                    ? "AniList Connected"
+                    : "Connect to AniList"}
+                </p>
+                <p
+                  className={`text-xs ${
+                    authState.isAuthenticated
+                      ? "text-green-600/80 dark:text-green-400/80"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  {authState.isAuthenticated
+                    ? authState.username || "Authenticated User"
+                    : "Setup authentication"}
                 </p>
               </div>
-              <ArrowUpRight className="h-4 w-4 text-gray-400" />
+              {authState.isAuthenticated ? (
+                <LogOut className="h-4 w-4 text-green-500 dark:text-green-400" />
+              ) : (
+                <ArrowUpRight className="h-4 w-4 text-gray-400" />
+              )}
             </Link>
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-100 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg sm:p-8 dark:border-gray-700 dark:bg-gray-800">
           <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
             <BookOpen className="h-5 w-5 text-blue-500" />
             Getting Started
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-sm font-semibold text-white">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-sm font-semibold text-white">
                 1
               </div>
               <div>
@@ -182,7 +206,7 @@ export function HomePage() {
             </div>
 
             <div className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-sm font-semibold text-white">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-sm font-semibold text-white">
                 2
               </div>
               <div>
@@ -194,7 +218,7 @@ export function HomePage() {
             </div>
 
             <div className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 text-sm font-semibold text-white">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 text-sm font-semibold text-white">
                 3
               </div>
               <div>
@@ -206,7 +230,7 @@ export function HomePage() {
             </div>
 
             <div className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 text-sm font-semibold text-white">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 text-sm font-semibold text-white">
                 4
               </div>
               <div>

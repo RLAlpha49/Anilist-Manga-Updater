@@ -1,4 +1,5 @@
 import { ThemeMode } from "@/types/theme-mode";
+import { storage } from "../utils/storage";
 
 const THEME_KEY = "theme";
 
@@ -9,7 +10,7 @@ export interface ThemePreferences {
 
 export async function getCurrentTheme(): Promise<ThemePreferences> {
   const currentTheme = await window.themeMode.current();
-  const localTheme = localStorage.getItem(THEME_KEY) as ThemeMode | null;
+  const localTheme = storage.getItem(THEME_KEY) as ThemeMode | null;
 
   return {
     system: currentTheme,
@@ -34,7 +35,7 @@ export async function setTheme(newTheme: ThemeMode) {
     }
   }
 
-  localStorage.setItem(THEME_KEY, newTheme);
+  storage.setItem(THEME_KEY, newTheme);
 }
 
 export async function toggleTheme() {
@@ -42,7 +43,7 @@ export async function toggleTheme() {
   const newTheme = isDarkMode ? "dark" : "light";
 
   updateDocumentTheme(isDarkMode);
-  localStorage.setItem(THEME_KEY, newTheme);
+  storage.setItem(THEME_KEY, newTheme);
 }
 
 export async function syncThemeWithLocal() {

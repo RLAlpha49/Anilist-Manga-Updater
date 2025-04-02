@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ErrorMessage } from "../components/ui/error-message";
 import { ErrorType, createError, AppError } from "../utils/errorHandling";
 import { Button } from "../components/ui/button";
@@ -6,68 +6,247 @@ import {
   CheckCircle,
   RefreshCw,
   Trash2,
-  Shield,
   Key,
   Database,
   UserCircle,
   Clock,
   AlertTriangle,
+  Settings,
+  Link,
+  ExternalLink,
+  XCircle,
+  RotateCw,
 } from "lucide-react";
-
-interface AuthState {
-  isAuthenticated: boolean;
-  username?: string;
-  avatarUrl?: string;
-  expiresAt?: number;
-}
+import { useAuth } from "../hooks/useAuth";
+import { APICredentials } from "../types/auth";
+import { DEFAULT_ANILIST_CONFIG, DEFAULT_AUTH_PORT } from "../config/anilist";
+import { storage } from "../utils/storage";
 
 export function SettingsPage() {
-  const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: false,
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    authState,
+    login,
+    logout,
+    isLoading,
+    error: authError,
+    statusMessage,
+    setCredentialSource,
+    updateCustomCredentials,
+    customCredentials,
+  } = useAuth();
+
+  // Add a ref to track the previous credential source to prevent loops
+  const prevCredentialSourceRef = useRef<"default" | "custom">(
+    authState.credentialSource,
+  );
+
   const [error, setError] = useState<AppError | null>(null);
   const [cacheCleared, setCacheCleared] = useState(false);
+  const [useCustomCredentials, setUseCustomCredentials] = useState(
+    authState.credentialSource === "custom",
+  );
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  const [redirectUri, setRedirectUri] = useState(
+    `http://localhost:${DEFAULT_AUTH_PORT}/callback`,
+  );
+
+  // Track previous credential values to prevent unnecessary updates
+  const prevCredentialsRef = useRef({
+    id: "",
+    secret: "",
+    uri: "",
+  });
+
+  // Update error state when auth error changes
+  useEffect(() => {
+    if (authError) {
+      setError(createError(ErrorType.AUTHENTICATION, authError));
+    } else {
+      setError(null);
+    }
+  }, [authError]);
+
+  // Update credential source when toggle changes, but avoid infinite loop
+  useEffect(() => {
+    const newSource = useCustomCredentials ? "custom" : "default";
+    // Only update if actually changed and not from authState sync
+    if (newSource !== prevCredentialSourceRef.current) {
+      prevCredentialSourceRef.current = newSource;
+      setCredentialSource(newSource);
+    }
+  }, [useCustomCredentials, setCredentialSource]);
+
+  // Update local state if authState.credentialSource changes externally
+  useEffect(() => {
+    if (authState.credentialSource !== prevCredentialSourceRef.current) {
+      prevCredentialSourceRef.current = authState.credentialSource;
+      setUseCustomCredentials(authState.credentialSource === "custom");
+    }
+  }, [authState.credentialSource]);
+
+  // Update custom credentials when fields change
+  useEffect(() => {
+    if (useCustomCredentials && clientId && clientSecret && redirectUri) {
+      // Only update if values actually changed
+      if (
+        clientId !== prevCredentialsRef.current.id ||
+        clientSecret !== prevCredentialsRef.current.secret ||
+        redirectUri !== prevCredentialsRef.current.uri
+      ) {
+        // Update the ref
+        prevCredentialsRef.current = {
+          id: clientId,
+          secret: clientSecret,
+          uri: redirectUri,
+        };
+
+        // Update context
+        updateCustomCredentials(clientId, clientSecret, redirectUri);
+      }
+    }
+  }, [
+    useCustomCredentials,
+    clientId,
+    clientSecret,
+    redirectUri,
+    updateCustomCredentials,
+  ]);
+
+  // Reset error when auth state changes
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      setError(null);
+    }
+  }, [authState.isAuthenticated]);
+
+  // Add a timeout to detect stuck loading state
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    if (isLoading) {
+      // If loading state persists for more than 20 seconds, trigger a refresh
+      timeoutId = setTimeout(() => {
+        console.log(
+          "Loading state persisted for too long - triggering refresh",
+        );
+        handleRefreshPage();
+      }, 20000);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
+
+  // Add a useEffect to load custom credential settings from localStorage on initial mount
+  useEffect(() => {
+    try {
+      // Load custom credentials toggle state
+      const savedUseCustom = storage.getItem("useCustomCredentials");
+      if (savedUseCustom) {
+        setUseCustomCredentials(JSON.parse(savedUseCustom));
+      }
+
+      // Load saved custom credentials if they exist
+      const savedCustomCreds = storage.getItem("customCredentials");
+      if (savedCustomCreds) {
+        const credentials = JSON.parse(savedCustomCreds);
+        setClientId(credentials.clientId || "");
+        setClientSecret(credentials.clientSecret || "");
+        setRedirectUri(
+          credentials.redirectUri ||
+            `http://localhost:${DEFAULT_AUTH_PORT}/callback`,
+        );
+
+        // Also update context with saved credentials
+        if (
+          credentials.clientId &&
+          credentials.clientSecret &&
+          credentials.redirectUri
+        ) {
+          updateCustomCredentials(
+            credentials.clientId,
+            credentials.clientSecret,
+            credentials.redirectUri,
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load saved credential settings:", err);
+    }
+  }, []);
+
+  // Save custom credentials toggle state whenever it changes
+  useEffect(() => {
+    storage.setItem(
+      "useCustomCredentials",
+      JSON.stringify(useCustomCredentials),
+    );
+  }, [useCustomCredentials]);
+
+  // Save custom credentials whenever they change
+  useEffect(() => {
+    if (clientId || clientSecret || redirectUri) {
+      storage.setItem(
+        "customCredentials",
+        JSON.stringify({
+          clientId,
+          clientSecret,
+          redirectUri,
+        }),
+      );
+    }
+  }, [clientId, clientSecret, redirectUri]);
+
+  // Initialize fields from customCredentials prop when it changes
+  useEffect(() => {
+    if (customCredentials) {
+      // Use refs to avoid unnecessary state updates
+      if (clientId !== customCredentials.clientId) {
+        setClientId(customCredentials.clientId);
+      }
+      if (clientSecret !== customCredentials.clientSecret) {
+        setClientSecret(customCredentials.clientSecret);
+      }
+      if (redirectUri !== customCredentials.redirectUri) {
+        setRedirectUri(customCredentials.redirectUri);
+      }
+    }
+  }, [customCredentials]);
 
   const handleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-
     try {
-      // This would normally open an OAuth flow with AniList
-      // For demonstration, we'll simulate a network error sometimes
-      await new Promise<void>((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() > 0.7) {
-            reject(new Error("Authentication failed"));
-          } else {
-            resolve();
+      // Create credentials object based on source
+      const credentials: APICredentials = useCustomCredentials
+        ? {
+            source: "custom",
+            clientId,
+            clientSecret,
+            redirectUri,
           }
-        }, 1500);
-      });
+        : {
+            source: "default",
+            clientId: DEFAULT_ANILIST_CONFIG.clientId,
+            clientSecret: DEFAULT_ANILIST_CONFIG.clientSecret,
+            redirectUri: DEFAULT_ANILIST_CONFIG.redirectUri,
+          };
 
-      // If successful, update auth state
-      setAuthState({
-        isAuthenticated: true,
-        username: "DemoUser",
-        avatarUrl:
-          "https://s4.anilist.co/file/anilistcdn/user/avatar/large/default.png",
-        expiresAt: Date.now() + 86400000, // 24 hours from now
-      });
-    } catch {
+      await login(credentials);
+    } catch (err: unknown) {
       setError(
         createError(
           ErrorType.AUTHENTICATION,
-          "Failed to authenticate with AniList. Please try again.",
+          err instanceof Error
+            ? err.message
+            : "Failed to authenticate with AniList. Please try again.",
         ),
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    setAuthState({ isAuthenticated: false });
+  const handleCancelAuth = () => {
+    window.electronAuth.cancelAuth();
   };
 
   const handleClearCache = () => {
@@ -80,13 +259,31 @@ export function SettingsPage() {
     setError(null);
   };
 
+  const handleRefreshPage = () => {
+    // Clear error states and status messages
+    setError(null);
+    window.location.reload();
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 md:px-6">
       <div className="mb-8">
         <div className="flex flex-col space-y-2">
-          <h1 className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent md:text-4xl">
-            Settings
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent md:text-4xl">
+              Settings
+            </h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshPage}
+              className="flex items-center gap-1"
+              title="Refresh page state"
+            >
+              <RotateCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
           <p className="max-w-2xl text-gray-600 dark:text-gray-400">
             Configure your AniList authentication and manage application
             settings.
@@ -107,6 +304,35 @@ export function SettingsPage() {
         </div>
       )}
 
+      {statusMessage && !error && (
+        <div className="mb-8 rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/30">
+          <div className="flex items-center">
+            <div className="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-800">
+              <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                Authentication Status
+              </h3>
+              <div className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                {statusMessage}
+              </div>
+            </div>
+            {isLoading && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancelAuth}
+                className="flex items-center gap-1 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/50"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancel
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <div className="flex flex-col rounded-xl border border-gray-100 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
@@ -115,6 +341,97 @@ export function SettingsPage() {
             </div>
             AniList Authentication
           </h2>
+
+          {/* API Credentials Toggle */}
+          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Settings className="h-4 w-4" />
+              API Credentials
+            </h3>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Use custom API credentials
+              </span>
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={useCustomCredentials}
+                  onChange={(e) => setUseCustomCredentials(e.target.checked)}
+                  disabled={authState.isAuthenticated}
+                />
+                <div className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-indigo-600 peer-focus:ring-4 peer-focus:ring-indigo-300 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700 dark:peer-checked:bg-indigo-500 dark:peer-focus:ring-indigo-800"></div>
+              </label>
+            </div>
+
+            {authState.isAuthenticated && (
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="mr-1 inline-block h-3 w-3" />
+                You must log out before changing API credentials
+              </p>
+            )}
+
+            {/* Custom Credentials Fields */}
+            {useCustomCredentials && (
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Client ID
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    disabled={authState.isAuthenticated || isLoading}
+                    placeholder="Your AniList Client ID"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Client Secret
+                  </label>
+                  <input
+                    type="password"
+                    className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+                    value={clientSecret}
+                    onChange={(e) => setClientSecret(e.target.value)}
+                    disabled={authState.isAuthenticated || isLoading}
+                    placeholder="Your AniList Client Secret"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                    <Link className="h-3.5 w-3.5" />
+                    Redirect URI
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 p-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+                    value={redirectUri}
+                    onChange={(e) => setRedirectUri(e.target.value)}
+                    disabled={authState.isAuthenticated || isLoading}
+                    placeholder={`http://localhost:${DEFAULT_AUTH_PORT}/callback`}
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Must match the redirect URI registered in your AniList app
+                    settings
+                  </p>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  You can get these by registering a new client on{" "}
+                  <a
+                    href="https://anilist.co/settings/developer"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 hover:underline dark:text-indigo-400"
+                  >
+                    AniList Developer Settings
+                  </a>
+                </p>
+              </div>
+            )}
+          </div>
 
           {authState.isAuthenticated ? (
             <div>
@@ -163,7 +480,7 @@ export function SettingsPage() {
                   Refresh Token
                 </Button>
                 <Button
-                  onClick={handleLogout}
+                  onClick={logout}
                   variant="destructive"
                   className="flex flex-1 items-center justify-center gap-2"
                 >
@@ -192,7 +509,11 @@ export function SettingsPage() {
 
               <Button
                 onClick={handleLogin}
-                disabled={isLoading}
+                disabled={
+                  isLoading ||
+                  (useCustomCredentials &&
+                    (!clientId || !clientSecret || !redirectUri))
+                }
                 className={`w-full justify-center py-3 ${isLoading ? "bg-indigo-400" : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"} flex items-center gap-2 rounded-lg font-medium text-white shadow-md transition-all hover:shadow-lg`}
               >
                 {isLoading ? (
@@ -249,12 +570,14 @@ export function SettingsPage() {
               <Button
                 onClick={handleClearCache}
                 variant="outline"
-                className="flex w-full items-center justify-center gap-2 border-blue-300 py-2.5 text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                className={`flex w-full items-center justify-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20 ${
+                  cacheCleared ? "bg-green-50 text-green-600" : ""
+                }`}
               >
                 {cacheCleared ? (
                   <>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Cache Cleared
+                    <CheckCircle className="h-4 w-4" />
+                    Cache Cleared Successfully
                   </>
                 ) : (
                   <>
@@ -264,27 +587,37 @@ export function SettingsPage() {
                 )}
               </Button>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-purple-50 p-6 dark:border-gray-700/50 dark:from-gray-800/50 dark:to-purple-900/10">
-              <h3 className="mb-3 flex items-center gap-2 text-lg font-medium">
-                <Shield className="h-4 w-4 text-purple-500" />
-                Application Info
-              </h3>
-              <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center justify-between rounded border border-gray-200 bg-white/80 p-2 dark:border-gray-700 dark:bg-gray-800/80">
-                  <span className="font-medium">Version</span>
-                  <span>1.0.0</span>
-                </div>
-                <div className="flex items-center justify-between rounded border border-gray-200 bg-white/80 p-2 dark:border-gray-700 dark:bg-gray-800/80">
-                  <span className="font-medium">Last Updated</span>
-                  <span>{new Date().toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center justify-between rounded border border-gray-200 bg-white/80 p-2 dark:border-gray-700 dark:bg-gray-800/80">
-                  <span className="font-medium">Built with</span>
-                  <span>Electron, React, TailwindCSS</span>
-                </div>
-              </div>
-            </div>
+      {/* Application Info Section */}
+      <div className="mt-8 rounded-lg border border-gray-100 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <h3 className="mb-4 text-lg font-medium">About KenmeiToAniList</h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-700/50">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Version
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">1.0.0</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-700/50">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              API Credentials
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {authState.credentialSource === "default"
+                ? "Using default"
+                : "Using custom"}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-700/50">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Authentication Status
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {authState.isAuthenticated ? "Connected" : "Not connected"}
+            </p>
           </div>
         </div>
       </div>

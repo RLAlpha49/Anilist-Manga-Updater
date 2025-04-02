@@ -74,29 +74,90 @@ export async function getAccessToken(
   redirectUri: string,
   code: string,
 ): Promise<{ access_token: string; token_type: string; expires_in: number }> {
-  const response = await fetch("https://anilist.co/api/v2/oauth/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      grant_type: "authorization_code",
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      code,
-    }),
+  console.log("🔑 getAccessToken starting with:", {
+    clientId: clientId.substring(0, 2) + "...",
+    redirectUri,
+    codeLength: code.length,
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      `Token Error: ${response.status} - ${
-        errorData.error || response.statusText
-      }`,
-    );
+  // Format the request body
+  const tokenRequestBody = {
+    grant_type: "authorization_code",
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: redirectUri,
+    code: code,
+  };
+
+  // Maximum number of retry attempts
+  const MAX_RETRIES = 3;
+  let retries = 0;
+  let lastError: Error | null = null;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      console.log(`🔑 Token exchange attempt ${retries + 1}/${MAX_RETRIES}`);
+
+      // Delay between retries (exponential backoff)
+      if (retries > 0) {
+        const delay = retries * 1000; // 1s, 2s, 3s
+        console.log(`🔑 Waiting ${delay}ms before retry...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+
+      const response = await fetch("https://anilist.co/api/v2/oauth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(tokenRequestBody),
+      });
+
+      console.log("🔑 Token API response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("🔑 Token API error:", errorData);
+        throw new Error(`API error: ${response.status} ${errorData}`);
+      }
+
+      const data = await response.json();
+      console.log("🔑 Token received successfully!", {
+        token_type: data.token_type,
+        expires_in: data.expires_in,
+        token_length: data.access_token?.length || 0,
+      });
+
+      return data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(
+        `🔑 Token exchange attempt ${retries + 1} failed:`,
+        lastError,
+      );
+
+      // Determine if we should retry
+      const isNetworkError =
+        lastError.message.includes("Failed to fetch") ||
+        lastError.message.includes("Network Error") ||
+        lastError.message.includes("ECONNRESET") ||
+        lastError.message.includes("ETIMEDOUT");
+
+      if (!isNetworkError) {
+        // Don't retry for non-network errors
+        console.error("🔑 Non-network error, won't retry");
+        break;
+      }
+
+      retries++;
+    }
   }
 
-  return await response.json();
+  // If we've exhausted all retries or received a non-retriable error
+  const errorMsg = lastError
+    ? lastError.message
+    : "Unknown error during token exchange";
+  console.error("🔑 All token exchange attempts failed:", errorMsg);
+  throw new Error(`Failed to exchange code for token: ${errorMsg}`);
 }
