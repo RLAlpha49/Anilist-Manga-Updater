@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
 } from "lucide-react";
+import { DataTable } from "../components/import/DataTable";
 
 export function ImportPage() {
   const [importData, setImportData] = useState<KenmeiData | null>(null);
@@ -264,81 +265,7 @@ export function ImportPage() {
 
           <div className="mb-6">
             <h3 className="mb-3 text-lg font-medium">Manga Entries</h3>
-            <div className="mb-4 max-h-72 overflow-y-auto rounded-lg border">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Title
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Status
-                    </th>
-                    {statusCounts["reading"] > 0 && (
-                      <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                        Chapters
-                      </th>
-                    )}
-                    {importData.manga.some((m) => m.score !== undefined) && (
-                      <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                        Score
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
-                  {importData.manga
-                    .slice(0, 10)
-                    .map((item: KenmeiMangaItem, idx: number) => (
-                      <tr
-                        key={idx}
-                        className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      >
-                        <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                          {item.title}
-                        </td>
-                        <td className="px-6 py-4 text-sm whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              item.status === "reading"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                : item.status === "completed"
-                                  ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-                                  : item.status === "dropped"
-                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-                            }`}
-                          >
-                            {item.status.replace("_", " ")}
-                          </span>
-                        </td>
-                        {statusCounts["reading"] > 0 && (
-                          <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                            {item.chapters_read || 0}
-                          </td>
-                        )}
-                        {importData.manga.some(
-                          (m) => m.score !== undefined,
-                        ) && (
-                          <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                            {item.score || "-"}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  {importData.manga.length > 10 && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="bg-gray-50 px-6 py-4 text-center text-sm text-gray-500 dark:bg-gray-800/50 dark:text-gray-400"
-                      >
-                        + {importData.manga.length - 10} more items
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <DataTable data={importData.manga} itemsPerPage={50} />
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
             <button

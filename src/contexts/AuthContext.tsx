@@ -20,9 +20,7 @@ declare global {
       storeCredentials: (
         credentials: APICredentials,
       ) => Promise<{ success: boolean; error?: string }>;
-      getCredentials: (
-        source: "default" | "custom",
-      ) => Promise<{
+      getCredentials: (source: "default" | "custom") => Promise<{
         success: boolean;
         credentials?: APICredentials;
         error?: string;

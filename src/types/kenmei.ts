@@ -3,6 +3,7 @@ export interface KenmeiMangaItem {
   status: string;
   score?: number;
   chapters_read?: number;
+  volumes_read?: number;
   url?: string;
   source?: string;
   notes?: string;

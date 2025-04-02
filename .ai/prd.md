@@ -75,7 +75,7 @@ Potential future improvements like additional tracking services, backup function
 ## Epic 1: Story List
 
 - Story 1: Project Setup
-  Status:
+  Status: Completed
   Requirements:
 
   - Set up Electron with TypeScript
@@ -83,12 +83,36 @@ Potential future improvements like additional tracking services, backup function
   - Set up build and packaging pipeline
 
 - Story 2: Basic UI Implementation
-  Status:
+  Status: Completed
   Requirements:
 
   - Create main application window
   - Implement file import functionality
   - Design settings page for AniList authentication
+
+## Epic 2: Story List
+
+- Story 3: AniList API Authentication Implementation
+  Status: Completed
+  Requirements:
+
+  - Configure AniList OAuth Application settings
+  - Implement Electron OAuth workflow
+  - Enhance Settings Page UI
+  - Implement Token Management
+  - Create Auth Context Provider
+
+## Epic 4: Story List
+
+- Story 4: Data Processing and Synchronization
+  Status: Planned
+  Requirements:
+
+  - Implement Kenmei manga data processing pipeline
+  - Add matching algorithm for AniList entries
+  - Develop conflict resolution interface
+  - Create batch update mechanism
+  - Implement progress tracking and error handling
 
 ## Technology Stack
 
@@ -225,6 +249,7 @@ src/
 
 ## Change Log
 
-| Change        | Story ID | Description       |
-| ------------- | -------- | ----------------- |
-| Initial draft | N/A      | Initial draft PRD |
+| Change        | Story ID | Description                                       |
+| ------------- | -------- | ------------------------------------------------- |
+| Initial draft | N/A      | Initial draft PRD                                 |
+| Update        | Story-3  | Marked Stories 1-3 as completed and added Story 4 |

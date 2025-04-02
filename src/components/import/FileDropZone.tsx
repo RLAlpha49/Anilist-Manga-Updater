@@ -1,8 +1,9 @@
 import React, { useState, useRef } from "react";
 import { UploadCloud, File, FileText } from "lucide-react";
 import { Button } from "../ui/button";
-import { KenmeiData, KenmeiMangaItem } from "../../types/kenmei";
+import { KenmeiData } from "../../types/kenmei";
 import { createError, ErrorType, AppError } from "../../utils/errorHandling";
+import { parseKenmeiCsvExport } from "../../api/kenmei/parser";
 
 interface FileDropZoneProps {
   onFileLoaded: (data: KenmeiData) => void;
@@ -77,10 +78,11 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
         }
 
         const content = event.target.result as string;
-        // Parse CSV content
-        const parsedData = parseCSV(content);
-
-        if (!parsedData || parsedData.manga.length === 0) {
+        
+        // Use our parser function from api/kenmei/parser.ts
+        const parsedData = parseKenmeiCsvExport(content);
+        
+        if (!parsedData || !parsedData.manga || parsedData.manga.length === 0) {
           onError(
             createError(
               ErrorType.VALIDATION,
@@ -89,8 +91,25 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
           );
           return;
         }
-
-        onFileLoaded(parsedData);
+        
+        // Convert to our app's expected format
+        const kenmeiData: KenmeiData = {
+          version: "1.0.0",
+          exported_at: parsedData.export_date,
+          manga: parsedData.manga.map(manga => ({
+            title: manga.title,
+            status: manga.status,
+            score: manga.score,
+            chapters_read: manga.chapters_read,
+            volumes_read: manga.volumes_read,
+            created_at: manga.created_at,
+            updated_at: manga.updated_at,
+            notes: manga.notes,
+            url: manga.url,
+          })),
+        };
+        
+        onFileLoaded(kenmeiData);
       } catch (err) {
         console.error("CSV parsing error:", err);
         onError(
@@ -109,105 +128,6 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
     };
 
     reader.readAsText(file);
-  };
-
-  // Parse CSV content into KenmeiData
-  const parseCSV = (csvContent: string): KenmeiData => {
-    // Split by lines and get header row and data rows
-    const lines = csvContent
-      .split(/\r?\n/)
-      .filter((line) => line.trim() !== "");
-    if (lines.length < 2) {
-      throw new Error(
-        "CSV file must contain at least a header row and one data row",
-      );
-    }
-
-    // Parse header row to get column indices
-    const headers = parseCSVLine(lines[0]);
-
-    // Find required column indices
-    const titleIndex = headers.findIndex((h) =>
-      h.toLowerCase().includes("title"),
-    );
-    const statusIndex = headers.findIndex((h) =>
-      h.toLowerCase().includes("status"),
-    );
-    const scoreIndex = headers.findIndex((h) =>
-      h.toLowerCase().includes("score"),
-    );
-    const chaptersReadIndex = headers.findIndex(
-      (h) =>
-        h.toLowerCase().includes("chapters") &&
-        h.toLowerCase().includes("read"),
-    );
-
-    if (titleIndex === -1 || statusIndex === -1) {
-      throw new Error("CSV file must contain 'title' and 'status' columns");
-    }
-
-    // Parse manga entries
-    const manga = lines
-      .slice(1)
-      .map((line) => {
-        const values = parseCSVLine(line);
-        if (values.length <= Math.max(titleIndex, statusIndex)) {
-          return null; // Skip invalid lines
-        }
-
-        const entry = {
-          title: values[titleIndex],
-          status: values[statusIndex] || "reading",
-          score:
-            scoreIndex !== -1 ? parseFloat(values[scoreIndex]) || 0 : undefined,
-          chapters_read:
-            chaptersReadIndex !== -1
-              ? parseInt(values[chaptersReadIndex]) || 0
-              : undefined,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        // Validate required fields
-        if (!entry.title || !entry.status) {
-          return null;
-        }
-
-        return entry;
-      })
-      .filter(Boolean) as KenmeiMangaItem[];
-
-    return {
-      version: "1.0.0",
-      exported_at: new Date().toISOString(),
-      manga,
-    };
-  };
-
-  // Helper function to parse a CSV line correctly (handles quotes, etc.)
-  const parseCSVLine = (line: string): string[] => {
-    const result = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-
-      if (char === '"') {
-        // Toggle quotes state
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        // End of field
-        result.push(current.trim());
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-
-    // Don't forget the last field
-    result.push(current.trim());
-    return result;
   };
 
   const handleButtonClick = () => {

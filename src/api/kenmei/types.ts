@@ -2,6 +2,8 @@
  * Types for Kenmei data processing
  */
 
+import { MediaListStatus } from "../anilist/types";
+
 export type KenmeiStatus =
   | "reading"
   | "completed"
@@ -18,9 +20,13 @@ export interface KenmeiManga {
   cover_url?: string;
   chapters_read: number;
   total_chapters?: number;
+  volumes_read?: number;
+  total_volumes?: number;
   notes?: string;
   created_at: string;
   updated_at: string;
+  author?: string;
+  alternative_titles?: string[];
 }
 
 export interface KenmeiExport {
@@ -31,6 +37,19 @@ export interface KenmeiExport {
   };
   manga: KenmeiManga[];
 }
+
+// Parse options for more flexible parsing
+export interface KenmeiParseOptions {
+  validateStructure: boolean;
+  allowPartialData: boolean;
+  defaultStatus: KenmeiStatus;
+}
+
+export const DEFAULT_PARSE_OPTIONS: KenmeiParseOptions = {
+  validateStructure: true,
+  allowPartialData: false,
+  defaultStatus: "plan_to_read",
+};
 
 export const parseKenmeiExport = (jsonString: string): KenmeiExport => {
   try {
@@ -68,10 +87,35 @@ export interface MangaMatch {
 }
 
 // Status mapping from Kenmei to AniList
-export const STATUS_MAPPING: Record<KenmeiStatus, string> = {
+export const STATUS_MAPPING: Record<KenmeiStatus, MediaListStatus> = {
   reading: "CURRENT",
   completed: "COMPLETED",
   on_hold: "PAUSED",
   dropped: "DROPPED",
   plan_to_read: "PLANNING",
 };
+
+// Custom status mapping configuration
+export interface StatusMappingConfig {
+  reading: MediaListStatus;
+  completed: MediaListStatus;
+  on_hold: MediaListStatus;
+  dropped: MediaListStatus;
+  plan_to_read: MediaListStatus;
+}
+
+// Validation errors
+export interface ValidationError {
+  mangaTitle: string;
+  field: string;
+  message: string;
+  index: number;
+}
+
+// Processing result
+export interface ProcessingResult {
+  processedEntries: KenmeiManga[];
+  validationErrors: ValidationError[];
+  totalEntries: number;
+  successfulEntries: number;
+}
