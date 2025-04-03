@@ -1237,7 +1237,7 @@ export async function batchMatchManga(
 
       // Create a promise that we can use to wait for all processing to complete
       let resolve: (value: void | PromiseLike<void>) => void;
-      let reject: (reason?: any) => void;
+      let reject: (reason?: unknown) => void;
       const completionPromise = new Promise<void>((res, rej) => {
         resolve = res;
         reject = rej;

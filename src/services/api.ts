@@ -1,4 +1,4 @@
-import { ErrorType, createError, AppError } from "../utils/errorHandling";
+import { ErrorType, createError } from "../utils/errorHandling";
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
@@ -29,7 +29,7 @@ export async function apiRequest<T>(
 
     if (!response.ok) {
       let errorMessage = "An error occurred during the request";
-      let errorType = ErrorType.API;
+      let errorType = ErrorType.SERVER;
 
       try {
         const errorData = await response.json();
@@ -45,7 +45,7 @@ export async function apiRequest<T>(
       } else if (response.status === 400 || response.status === 422) {
         errorType = ErrorType.VALIDATION;
       } else if (response.status >= 500) {
-        errorType = ErrorType.API;
+        errorType = ErrorType.SERVER;
       }
 
       throw createError(errorType, errorMessage, {
@@ -60,7 +60,13 @@ export async function apiRequest<T>(
 
     return (await response.json()) as T;
   } catch (error) {
-    if (error instanceof AppError) {
+    // Check if it's already our custom error type
+    if (
+      error &&
+      typeof error === "object" &&
+      "type" in error &&
+      "message" in error
+    ) {
       throw error;
     }
 
@@ -94,21 +100,21 @@ export const api = {
   get: <T>(url: string, options?: RequestOptions) =>
     apiRequest<T>(url, { method: "GET", ...options }),
 
-  post: <T>(url: string, data: any, options?: RequestOptions) =>
+  post: <T, D = unknown>(url: string, data: D, options?: RequestOptions) =>
     apiRequest<T>(url, {
       method: "POST",
       body: JSON.stringify(data),
       ...options,
     }),
 
-  put: <T>(url: string, data: any, options?: RequestOptions) =>
+  put: <T, D = unknown>(url: string, data: D, options?: RequestOptions) =>
     apiRequest<T>(url, {
       method: "PUT",
       body: JSON.stringify(data),
       ...options,
     }),
 
-  patch: <T>(url: string, data: any, options?: RequestOptions) =>
+  patch: <T, D = unknown>(url: string, data: D, options?: RequestOptions) =>
     apiRequest<T>(url, {
       method: "PATCH",
       body: JSON.stringify(data),

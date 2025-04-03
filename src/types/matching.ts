@@ -1,5 +1,5 @@
 import { KenmeiManga } from "../api/kenmei/types";
-import { AniListManga, MangaMatchResult } from "../api/anilist/types";
+import { MangaMatchResult } from "../api/anilist/types";
 
 // Global window interface extension for the matching process state
 declare global {

@@ -43,7 +43,7 @@ export const RematchOptions: React.FC<RematchOptionsProps> = ({
   // Calculate the total count of manga to be rematched
   const calculateTotalCount = () => {
     return Object.entries(selectedStatuses)
-      .filter(([status, selected]) => selected)
+      .filter(([, selected]) => selected)
       .reduce((count, [status]) => {
         if (status === "unmatched") {
           return count + (allManga.length - matchResults.length);
@@ -152,7 +152,42 @@ export const RematchOptions: React.FC<RematchOptionsProps> = ({
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
           />
           <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-            Unmatched ({allManga.length - matchResults.length})
+            Unmatched (
+            {(() => {
+              // Calculate unmatched count
+              const displayedCount = allManga.length - matchResults.length;
+              console.log(
+                `RematchOptions: Base unmatched count = ${displayedCount} (${allManga.length} total - ${matchResults.length} processed)`,
+              );
+
+              // Always try the title-based approach first since IDs are undefined
+              const processedTitles = new Set(
+                matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+              );
+
+              // Find manga that don't have matching titles
+              const titleBasedCount = allManga.filter(
+                (m) => !processedTitles.has(m.title.toLowerCase()),
+              ).length;
+
+              console.log(
+                `RematchOptions: Title-based unmatched count = ${titleBasedCount}`,
+              );
+
+              // If title-based count seems reasonable, use it
+              if (titleBasedCount >= 0 && titleBasedCount <= allManga.length) {
+                return titleBasedCount;
+              }
+
+              // Only as a fallback, if displayedCount seems reasonable, use it
+              if (displayedCount >= 0 && displayedCount <= allManga.length) {
+                return displayedCount;
+              }
+
+              // Last resort - numerical difference
+              return Math.max(0, allManga.length - matchResults.length);
+            })()}
+            )
           </span>
         </label>
       </div>

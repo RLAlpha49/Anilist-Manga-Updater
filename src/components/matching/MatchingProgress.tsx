@@ -3,7 +3,6 @@ import { MatchingProgress, TimeEstimate } from "../../types/matching";
 import { formatTimeRemaining } from "../../utils/timeUtils";
 
 interface MatchingProgressProps {
-  isLoading: boolean;
   isCancelling: boolean;
   progress: MatchingProgress;
   statusMessage: string;
@@ -15,7 +14,6 @@ interface MatchingProgressProps {
 }
 
 export const MatchingProgressPanel: React.FC<MatchingProgressProps> = ({
-  isLoading,
   isCancelling,
   progress,
   statusMessage,

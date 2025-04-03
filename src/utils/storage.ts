@@ -10,6 +10,49 @@ declare global {
   }
 }
 
+// Define proper types for the Kenmei data structure
+export interface KenmeiManga {
+  id: string | number;
+  title: string;
+  status?: string;
+  // Add other manga properties as needed
+}
+
+export interface KenmeiData {
+  manga?: KenmeiManga[];
+  // Add other data properties as needed
+}
+
+export interface ImportStats {
+  total: number;
+  timestamp: string;
+  statusCounts: Record<string, number>;
+}
+
+export interface AnilistMatch {
+  id: number;
+  title: {
+    english?: string | null;
+    romaji?: string | null;
+    native?: string | null;
+  };
+  coverImage?: {
+    medium?: string;
+    large?: string;
+  };
+  description?: string;
+  status?: string;
+  matchConfidence?: number;
+}
+
+export interface MatchResult {
+  kenmeiManga: KenmeiManga;
+  anilistMatches?: AnilistMatch[];
+  selectedMatch?: AnilistMatch;
+  status: string;
+  matchDate?: string;
+}
+
 // Cache to avoid redundant storage operations
 const storageCache: Record<string, string> = {};
 
@@ -161,12 +204,12 @@ export const CURRENT_CACHE_VERSION = 1;
  * Save Kenmei manga data to storage
  * @param data The Kenmei data to save
  */
-export function saveKenmeiData(data: any): void {
+export function saveKenmeiData(data: KenmeiData): void {
   try {
     storage.setItem(STORAGE_KEYS.KENMEI_DATA, JSON.stringify(data));
 
     // Also save import stats for quick access on dashboard
-    const stats = {
+    const stats: ImportStats = {
       total: data.manga?.length || 0,
       timestamp: new Date().toISOString(),
       statusCounts: getStatusCountsFromData(data),
@@ -190,7 +233,7 @@ export function saveKenmeiData(data: any): void {
  * Get Kenmei manga data from storage
  * @returns The saved Kenmei data or null if not found
  */
-export function getKenmeiData(): any {
+export function getKenmeiData(): KenmeiData | null {
   try {
     const data = storage.getItem(STORAGE_KEYS.KENMEI_DATA);
     return data ? JSON.parse(data) : null;
@@ -204,7 +247,7 @@ export function getKenmeiData(): any {
  * Get import statistics from storage
  * @returns The import stats or null if not found
  */
-export function getImportStats(): any {
+export function getImportStats(): ImportStats | null {
   try {
     const stats = storage.getItem(STORAGE_KEYS.IMPORT_STATS);
     return stats ? JSON.parse(stats) : null;
@@ -219,11 +262,11 @@ export function getImportStats(): any {
  * @param data The Kenmei data
  * @returns An object with counts for each status
  */
-function getStatusCountsFromData(data: any): Record<string, number> {
+function getStatusCountsFromData(data: KenmeiData): Record<string, number> {
   if (!data?.manga?.length) return {};
 
   return data.manga.reduce(
-    (acc: Record<string, number>, manga: any) => {
+    (acc: Record<string, number>, manga: KenmeiManga) => {
       const status = manga.status || "unknown";
       acc[status] = (acc[status] || 0) + 1;
       return acc;
@@ -236,7 +279,7 @@ function getStatusCountsFromData(data: any): Record<string, number> {
  * Get saved match results from storage
  * @returns The saved match results or null if not found or incompatible
  */
-export function getSavedMatchResults() {
+export function getSavedMatchResults(): MatchResult[] | null {
   try {
     // Check cache version compatibility
     const savedVersion = parseInt(
@@ -263,7 +306,7 @@ export function getSavedMatchResults() {
  * @param newResults The new matching results
  * @returns Merged results with preserved user progress
  */
-export function mergeMatchResults(newResults: any[]) {
+export function mergeMatchResults(newResults: MatchResult[]): MatchResult[] {
   try {
     // Get existing results
     const existingResults = getSavedMatchResults();
@@ -281,8 +324,8 @@ export function mergeMatchResults(newResults: any[]) {
     );
 
     // Create a map of existing results for quick lookup by both ID and title
-    const existingById = new Map();
-    const existingByTitle = new Map();
+    const existingById = new Map<string, MatchResult>();
+    const existingByTitle = new Map<string, MatchResult>();
 
     existingResults.forEach((match) => {
       if (match.kenmeiManga?.id) {

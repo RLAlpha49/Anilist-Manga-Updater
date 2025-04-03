@@ -59,7 +59,6 @@ export const useMatchingProcess = (authState: {
     async (
       mangaList: KenmeiManga[],
       forceSearch: boolean = false,
-      matchResults: MangaMatchResult[] = [],
       setMatchResults: React.Dispatch<
         React.SetStateAction<MangaMatchResult[]>
       > = () => {},
@@ -441,31 +440,95 @@ export const useMatchingProcess = (authState: {
       // Always clear error state first
       setError(null);
 
+      // Get the full manga list from local storage to find all unprocessed manga
+      try {
+        // Fix: Use the correct storage key KENMEI_DATA instead of KENMEI_MANGA
+        const kenmeiDataJson = storage.getItem(STORAGE_KEYS.KENMEI_DATA);
+
+        if (kenmeiDataJson) {
+          const kenmeiData = JSON.parse(kenmeiDataJson);
+          const allManga = kenmeiData.manga || [];
+
+          console.log(`Found ${allManga.length} total manga in storage`);
+
+          if (allManga.length > 0) {
+            // Find manga that haven't been processed yet based on titles
+            const processedTitles = new Set(
+              matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+            );
+
+            const titleBasedUnmatched = allManga.filter(
+              (manga: KenmeiManga) =>
+                !processedTitles.has(manga.title.toLowerCase()),
+            );
+
+            if (titleBasedUnmatched.length > 0) {
+              console.log(
+                `Found ${titleBasedUnmatched.length} unmatched manga by title comparison`,
+              );
+              console.log("Starting matching process with all unmatched manga");
+
+              // Set the pendingManga explicitly to the full list of unmatched manga
+              // This ensures the correct count is shown in the UI
+              setPendingManga(titleBasedUnmatched);
+
+              startMatching(titleBasedUnmatched, false, setMatchResults);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error processing all manga for resume:", error);
+      }
+
+      // If we couldn't find unmatched manga by comparing all manga, try using pendingManga state
       if (pendingManga.length > 0) {
         console.log(
-          `Resuming matching process with ${pendingManga.length} remaining manga`,
+          `Resuming matching process with ${pendingManga.length} remaining manga from pendingManga state`,
         );
-        startMatching(pendingManga, false, matchResults, setMatchResults);
-      } else {
-        // Check if we have any unmatched manga in the results
-        const unmatchedManga = matchResults
-          .filter((r) => r.status === "pending")
-          .map((r) => r.kenmeiManga);
 
-        if (unmatchedManga.length > 0) {
-          console.log(
-            `Resuming with ${unmatchedManga.length} unmatched manga from results`,
-          );
-          startMatching(unmatchedManga, false, matchResults, setMatchResults);
+        // Add a check to ensure we're not duplicating already processed manga
+        const processedTitles = new Set(
+          matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+        );
+
+        // Filter out any manga that have already been processed
+        const uniquePendingManga = pendingManga.filter(
+          (manga) => !processedTitles.has(manga.title.toLowerCase()),
+        );
+
+        console.log(
+          `Filtered out ${pendingManga.length - uniquePendingManga.length} already processed manga, remaining: ${uniquePendingManga.length}`,
+        );
+
+        if (uniquePendingManga.length > 0) {
+          // If we still have manga to process after filtering, start the matching process
+          startMatching(uniquePendingManga, false, setMatchResults);
+          return;
         } else {
-          // If we got here, there's nothing to resume
-          console.log("No pending manga found to resume matching");
-          savePendingManga([]); // Ensure pending manga is cleared
-          setError("No pending manga found to resume matching.");
+          console.log("All pending manga have already been processed");
+          savePendingManga([]); // Clear the pending manga since they're already processed
         }
       }
+
+      // Last resort: check for unmatched manga in the results
+      const unmatchedFromResults = matchResults
+        .filter((r) => r.status === "pending")
+        .map((r) => r.kenmeiManga);
+
+      if (unmatchedFromResults.length > 0) {
+        console.log(
+          `Resuming with ${unmatchedFromResults.length} unmatched manga from results as last resort`,
+        );
+        startMatching(unmatchedFromResults, false, setMatchResults);
+      } else {
+        // If we got here, there's nothing to resume
+        console.log("No pending manga found to resume matching");
+        savePendingManga([]); // Ensure pending manga is cleared
+        setError("No pending manga found to resume matching.");
+      }
     },
-    [pendingManga, startMatching, savePendingManga],
+    [pendingManga, startMatching, savePendingManga, setPendingManga],
   );
 
   /**

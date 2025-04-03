@@ -71,6 +71,7 @@ export const useTimeEstimate = () => {
 
         // Update global tracking state
         if (window.matchingProcessState) {
+          // eslint-disable-next-line react-compiler/react-compiler
           window.matchingProcessState.timeEstimate = newEstimate;
           window.matchingProcessState.lastUpdated = now;
         }

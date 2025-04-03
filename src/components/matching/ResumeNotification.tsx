@@ -11,6 +11,11 @@ export const ResumeNotification: React.FC<ResumeNotificationProps> = ({
   onResumeMatching,
   onCancelResume,
 }) => {
+  // Don't render anything if there are no pending manga
+  if (pendingMangaCount <= 0) {
+    return null;
+  }
+
   return (
     <div className="mb-6 rounded-md bg-yellow-50 p-4 dark:bg-yellow-900/30">
       <div className="flex">

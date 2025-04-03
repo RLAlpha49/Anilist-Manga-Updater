@@ -94,12 +94,16 @@ export interface SearchResult<T> {
 
 // Manga match types
 export interface MangaMatch {
-  coverImage: any;
+  coverImage:
+    | {
+        medium?: string;
+        large?: string;
+      }
+    | string;
   format: string;
   status: string;
-  chapters: boolean;
-  title: any;
-  title: any;
+  chapters: number;
+  title: string;
   id: number;
   manga: AniListManga;
   confidence: number;

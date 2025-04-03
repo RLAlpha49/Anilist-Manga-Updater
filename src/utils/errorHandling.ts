@@ -58,7 +58,10 @@ export function handleNetworkError(error: unknown): AppError {
   }
 
   // Handle API responses with error status codes
-  if (error instanceof Response || (error as any)?.status) {
+  if (
+    error instanceof Response ||
+    (typeof error === "object" && error !== null && "status" in error)
+  ) {
     const response = error as
       | Response
       | { status: number; statusText?: string };
