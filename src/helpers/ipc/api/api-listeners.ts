@@ -6,6 +6,16 @@ const API_URL = "https://graphql.anilist.co";
 // Cache settings
 const CACHE_EXPIRATION = 30 * 60 * 1000; // 30 minutes
 
+// API request rate limiting
+const API_RATE_LIMIT = 28; // 30 requests per minute is the AniList limit, use 28 to be safe
+const REQUEST_INTERVAL = (60 * 1000) / API_RATE_LIMIT; // milliseconds between requests
+const MAX_RETRY_ATTEMPTS = 5; // Maximum number of retry attempts for rate limited requests
+
+// Rate limiting state
+let lastRequestTime = 0;
+let isRateLimited = false;
+let rateLimitResetTime = 0;
+
 // Simple in-memory cache
 interface Cache<T> {
   [key: string]: {
@@ -18,17 +28,51 @@ interface Cache<T> {
 const searchCache: Cache<Record<string, unknown>> = {};
 
 /**
+ * Sleep for the specified number of milliseconds
+ */
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
  * Make a GraphQL request to the AniList API
  * @param query GraphQL query or mutation
  * @param variables Variables for the query
  * @param token Optional access token for authenticated requests
+ * @param retryCount Current retry attempt (for internal use)
  * @returns Promise resolving to the response data
  */
 async function requestAniList(
   query: string,
   variables?: Record<string, unknown>,
   token?: string,
+  retryCount: number = 0,
 ): Promise<Record<string, unknown>> {
+  // Check if we're currently rate limited
+  if (isRateLimited) {
+    const now = Date.now();
+    if (now < rateLimitResetTime) {
+      const waitTime = rateLimitResetTime - now;
+      console.log(
+        `Rate limited, waiting ${Math.round(waitTime / 1000)}s before retrying`,
+      );
+      await sleep(waitTime);
+      isRateLimited = false;
+    } else {
+      isRateLimited = false;
+    }
+  }
+
+  // Implement rate limiting based on time since last request
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+
+  if (lastRequestTime > 0 && timeSinceLastRequest < REQUEST_INTERVAL) {
+    const waitTime = REQUEST_INTERVAL - timeSinceLastRequest;
+    await sleep(waitTime);
+  }
+
+  // Update last request time
+  lastRequestTime = Date.now();
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -38,26 +82,89 @@ async function requestAniList(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-  });
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw {
-      status: response.status,
-      statusText: response.statusText,
-      errors: errorData.errors,
-      message: errorData.errors?.[0]?.message || response.statusText,
-    };
+    // Handle rate limiting (status code 429)
+    if (response.status === 429) {
+      if (retryCount >= MAX_RETRY_ATTEMPTS) {
+        throw {
+          status: 429,
+          statusText: "Rate Limit Exceeded",
+          errors: [
+            {
+              message: `Rate limit exceeded after ${MAX_RETRY_ATTEMPTS} attempts`,
+            },
+          ],
+          message: `Rate limit exceeded after ${MAX_RETRY_ATTEMPTS} attempts`,
+        };
+      }
+
+      // Set rate limited flag
+      isRateLimited = true;
+
+      // Check for Retry-After header (in seconds)
+      const retryAfter = response.headers.get("Retry-After");
+      let waitTime: number;
+
+      if (retryAfter && !isNaN(Number(retryAfter))) {
+        // Use server-provided retry time
+        waitTime = Number(retryAfter) * 1000;
+        console.log(`Rate limited with Retry-After header: ${retryAfter}s`);
+      } else {
+        // Use exponential backoff if no header (starting with 5s, then 10s, 20s, etc.)
+        waitTime = 5000 * Math.pow(2, retryCount);
+        console.log(
+          `Rate limited, using exponential backoff: ${waitTime / 1000}s`,
+        );
+      }
+
+      // Set the reset time
+      rateLimitResetTime = Date.now() + waitTime;
+
+      console.log(
+        `Rate limited for "${variables?.search || "request"}", waiting ${Math.round(waitTime / 1000)}s before retry #${retryCount + 1}`,
+      );
+      await sleep(waitTime);
+
+      // Try again recursively with incremented retry count
+      return requestAniList(query, variables, token, retryCount + 1);
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw {
+        status: response.status,
+        statusText: response.statusText,
+        errors: errorData.errors,
+        message: errorData.errors?.[0]?.message || response.statusText,
+      };
+    }
+
+    return await response.json();
+  } catch (error) {
+    // Handle network errors with retry
+    if (
+      error instanceof Error &&
+      error.name === "FetchError" &&
+      retryCount < MAX_RETRY_ATTEMPTS
+    ) {
+      const waitTime = 1000 * Math.pow(2, retryCount);
+      console.log(
+        `Network error, retrying in ${waitTime / 1000}s (attempt ${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`,
+      );
+      await sleep(waitTime);
+      return requestAniList(query, variables, token, retryCount + 1);
+    }
+    throw error;
   }
-
-  return await response.json();
 }
 
 /**

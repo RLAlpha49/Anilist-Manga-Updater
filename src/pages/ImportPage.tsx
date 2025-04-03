@@ -12,10 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 import { DataTable } from "../components/import/DataTable";
-import {
-  saveKenmeiData,
-  getSavedMatchResults,
-} from "../utils/storage";
+import { saveKenmeiData, getSavedMatchResults } from "../utils/storage";
 
 export function ImportPage() {
   const navigate = useNavigate();

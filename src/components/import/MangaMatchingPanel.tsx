@@ -35,9 +35,13 @@ export function MangaMatchingPanel({
   onResetToPending,
 }: MangaMatchingPanelProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter] = useState<
-    "all" | "conflicts" | "matched" | "pending" | "manual" | "skipped"
-  >("all");
+  const [statusFilters, setStatusFilters] = useState({
+    conflicts: true,
+    matched: true,
+    pending: true,
+    manual: true,
+    skipped: true,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,8 +98,13 @@ export function MangaMatchingPanel({
       return false;
     }
 
-    // First apply status filter
-    const statusMatch = filter === "all" || match.status === filter;
+    // Apply status filters
+    const statusMatch =
+      (match.status === "conflict" && statusFilters.conflicts) ||
+      (match.status === "matched" && statusFilters.matched) ||
+      (match.status === "pending" && statusFilters.pending) ||
+      (match.status === "manual" && statusFilters.manual) ||
+      (match.status === "skipped" && statusFilters.skipped);
 
     // Then apply search term if any
     const searchMatch =
@@ -103,12 +112,15 @@ export function MangaMatchingPanel({
       match.kenmeiManga.title
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      match.selectedMatch?.title.english
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      match.selectedMatch?.title.romaji
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      (match.selectedMatch?.title?.english !== undefined &&
+        match.selectedMatch.title.english !== null &&
+        match.selectedMatch.title.english
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      (match.selectedMatch?.title?.romaji !== undefined &&
+        match.selectedMatch.title.romaji
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()));
 
     return statusMatch && searchMatch;
   });
@@ -129,7 +141,7 @@ export function MangaMatchingPanel({
     if (currentPage > totalPages) {
       setCurrentPage(Math.max(1, totalPages));
     }
-  }, [filter, searchTerm, totalPages, currentPage]);
+  }, [statusFilters, searchTerm, totalPages, currentPage]);
 
   // Focus search input when pressing Ctrl+F
   useEffect(() => {
@@ -330,82 +342,150 @@ export function MangaMatchingPanel({
       </div>
 
       {/* Filter selection */}
-      <div className="mb-4 flex items-center justify-between rounded-md border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-800">
-        <span className="ml-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="mb-4 flex flex-col items-start justify-between rounded-md border border-gray-200 bg-white p-3 md:flex-row md:items-center dark:border-gray-700 dark:bg-gray-800">
+        <span className="mb-2 ml-2 flex items-center text-sm font-medium text-gray-700 md:mb-0 dark:text-gray-300">
           <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
-          Filter:
+          Show status:
         </span>
-        <div
-          className="inline-flex rounded-md shadow-sm"
-          role="group"
-          aria-label="Filter matches"
-        >
-          <button
-            className={`inline-flex items-center rounded-l-md border border-gray-300 px-4 py-2 text-sm font-medium ${
-              filter === "all"
-                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-800"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => setFilter("all")}
-            aria-pressed={filter === "all"}
-          >
-            All
-          </button>
-          <button
-            className={`inline-flex items-center border-y border-r border-gray-300 px-4 py-2 text-sm font-medium ${
-              filter === "conflicts"
-                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-800"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => setFilter("conflicts")}
-            aria-pressed={filter === "conflicts"}
-          >
-            Conflicts
-          </button>
-          <button
-            className={`inline-flex items-center border-y border-r border-gray-300 px-4 py-2 text-sm font-medium ${
-              filter === "matched"
-                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-800"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => setFilter("matched")}
-            aria-pressed={filter === "matched"}
-          >
-            Matched
-          </button>
-          <button
-            className={`inline-flex items-center border-y border-r border-gray-300 px-4 py-2 text-sm font-medium ${
-              filter === "manual"
-                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-800"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => setFilter("manual")}
-            aria-pressed={filter === "manual"}
-          >
-            Manual
-          </button>
-          <button
-            className={`inline-flex items-center border-y border-r border-gray-300 px-4 py-2 text-sm font-medium ${
-              filter === "pending"
-                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-800"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => setFilter("pending")}
-            aria-pressed={filter === "pending"}
-          >
-            Pending
-          </button>
-          <button
-            className={`inline-flex items-center rounded-r-md border-y border-r border-gray-300 px-4 py-2 text-sm font-medium ${
-              filter === "skipped"
-                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-800"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-            }`}
-            onClick={() => setFilter("skipped")}
-            aria-pressed={filter === "skipped"}
-          >
-            Skipped
-          </button>
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:w-auto md:grid-cols-3">
+          <label className="flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={statusFilters.conflicts}
+              onChange={() =>
+                setStatusFilters({
+                  ...statusFilters,
+                  conflicts: !statusFilters.conflicts,
+                })
+              }
+              aria-label="Show conflicts"
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Conflicts
+            </span>
+            <span className="ml-auto rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+              {matchStats.conflicts}
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={statusFilters.matched}
+              onChange={() =>
+                setStatusFilters({
+                  ...statusFilters,
+                  matched: !statusFilters.matched,
+                })
+              }
+              aria-label="Show matched"
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Matched
+            </span>
+            <span className="ml-auto rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+              {matchStats.matched}
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={statusFilters.pending}
+              onChange={() =>
+                setStatusFilters({
+                  ...statusFilters,
+                  pending: !statusFilters.pending,
+                })
+              }
+              aria-label="Show pending"
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Pending
+            </span>
+            <span className="ml-auto rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+              {matchStats.pending}
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={statusFilters.manual}
+              onChange={() =>
+                setStatusFilters({
+                  ...statusFilters,
+                  manual: !statusFilters.manual,
+                })
+              }
+              aria-label="Show manual matches"
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Manual
+            </span>
+            <span className="ml-auto rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+              {matchStats.manual}
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={statusFilters.skipped}
+              onChange={() =>
+                setStatusFilters({
+                  ...statusFilters,
+                  skipped: !statusFilters.skipped,
+                })
+              }
+              aria-label="Show skipped"
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Skipped
+            </span>
+            <span className="ml-auto rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300">
+              {matchStats.skipped}
+            </span>
+          </label>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() =>
+                setStatusFilters({
+                  conflicts: true,
+                  matched: true,
+                  pending: true,
+                  manual: true,
+                  skipped: true,
+                })
+              }
+              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              aria-label="Select all status filters"
+            >
+              Select All
+            </button>
+            <span className="text-gray-400">|</span>
+            <button
+              onClick={() =>
+                setStatusFilters({
+                  conflicts: false,
+                  matched: false,
+                  pending: false,
+                  manual: false,
+                  skipped: false,
+                })
+              }
+              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              aria-label="Clear all status filters"
+            >
+              Clear All
+            </button>
+          </div>
         </div>
       </div>
 
@@ -632,7 +712,7 @@ export function MangaMatchingPanel({
                               console.log(
                                 `Clicked Accept Match for manga ID: ${match.kenmeiManga.id}, title: ${match.kenmeiManga.title}`,
                               );
-                              onAcceptMatch && onAcceptMatch(match);
+                              if (onAcceptMatch) onAcceptMatch(match);
                             }}
                             onKeyDown={(e) =>
                               handleKeyDown(
@@ -655,7 +735,7 @@ export function MangaMatchingPanel({
                           console.log(
                             `Clicked Search Manually for manga ID: ${match.kenmeiManga.id}, title: ${match.kenmeiManga.title}`,
                           );
-                          onManualSearch && onManualSearch(match.kenmeiManga);
+                          if (onManualSearch) onManualSearch(match.kenmeiManga);
                         }}
                         onKeyDown={(e) =>
                           handleKeyDown(
@@ -672,7 +752,9 @@ export function MangaMatchingPanel({
                       </button>
                       <button
                         className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                        onClick={() => onRejectMatch && onRejectMatch(match)}
+                        onClick={() => {
+                          if (onRejectMatch) onRejectMatch(match);
+                        }}
                         onKeyDown={(e) =>
                           handleKeyDown(
                             e,
@@ -690,9 +772,9 @@ export function MangaMatchingPanel({
                     <>
                       <button
                         className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-                        onClick={() =>
-                          onManualSearch && onManualSearch(match.kenmeiManga)
-                        }
+                        onClick={() => {
+                          if (onManualSearch) onManualSearch(match.kenmeiManga);
+                        }}
                         onKeyDown={(e) =>
                           handleKeyDown(
                             e,
@@ -708,9 +790,9 @@ export function MangaMatchingPanel({
                       </button>
                       <button
                         className="inline-flex items-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                        onClick={() =>
-                          onResetToPending && onResetToPending(match)
-                        }
+                        onClick={() => {
+                          if (onResetToPending) onResetToPending(match);
+                        }}
                         onKeyDown={(e) =>
                           handleKeyDown(
                             e,
@@ -731,9 +813,9 @@ export function MangaMatchingPanel({
                     <>
                       <button
                         className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-                        onClick={() =>
-                          onManualSearch && onManualSearch(match.kenmeiManga)
-                        }
+                        onClick={() => {
+                          if (onManualSearch) onManualSearch(match.kenmeiManga);
+                        }}
                         onKeyDown={(e) =>
                           handleKeyDown(
                             e,
@@ -749,9 +831,9 @@ export function MangaMatchingPanel({
                       </button>
                       <button
                         className="inline-flex items-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                        onClick={() =>
-                          onResetToPending && onResetToPending(match)
-                        }
+                        onClick={() => {
+                          if (onResetToPending) onResetToPending(match);
+                        }}
                         onKeyDown={(e) =>
                           handleKeyDown(
                             e,
@@ -772,9 +854,9 @@ export function MangaMatchingPanel({
                     <>
                       <button
                         className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-                        onClick={() =>
-                          onManualSearch && onManualSearch(match.kenmeiManga)
-                        }
+                        onClick={() => {
+                          if (onManualSearch) onManualSearch(match.kenmeiManga);
+                        }}
                         onKeyDown={(e) =>
                           handleKeyDown(
                             e,
@@ -790,9 +872,9 @@ export function MangaMatchingPanel({
                       </button>
                       <button
                         className="inline-flex items-center rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                        onClick={() =>
-                          onResetToPending && onResetToPending(match)
-                        }
+                        onClick={() => {
+                          if (onResetToPending) onResetToPending(match);
+                        }}
                         onKeyDown={(e) =>
                           handleKeyDown(
                             e,
@@ -843,12 +925,10 @@ export function MangaMatchingPanel({
                                   : "Alternative manga")
                               } as alternative match`}
                               onKeyDown={(e) =>
-                                handleKeyDown(
-                                  e,
-                                  () =>
-                                    onSelectAlternative &&
-                                    onSelectAlternative(match, index + 1),
-                                )
+                                handleKeyDown(e, () => {
+                                  if (onSelectAlternative)
+                                    onSelectAlternative(match, index + 1);
+                                })
                               }
                             >
                               <div className="flex items-center space-x-3">
@@ -960,9 +1040,9 @@ export function MangaMatchingPanel({
                                       "Unknown"}
                                     {/* Chapters - check both possible paths */}
                                     {((altMatch.manga?.chapters &&
-                                      altMatch.manga.chapters > 0) ||
+                                      Number(altMatch.manga.chapters) > 0) ||
                                       (altMatch.chapters &&
-                                        altMatch.chapters > 0)) &&
+                                        Number(altMatch.chapters) > 0)) &&
                                       ` • ${altMatch.manga?.chapters || altMatch.chapters} chapters`}
                                   </p>
                                 </div>
@@ -972,10 +1052,10 @@ export function MangaMatchingPanel({
                                   renderConfidenceBadge(altMatch.confidence)}
                                 <button
                                   className="inline-flex min-w-[100px] items-center justify-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-700 hover:bg-green-200 focus:ring-2 focus:ring-green-500 focus:ring-offset-1 focus:outline-none dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-800/50"
-                                  onClick={() =>
-                                    onSelectAlternative &&
-                                    onSelectAlternative(match, index + 1)
-                                  }
+                                  onClick={() => {
+                                    if (onSelectAlternative)
+                                      onSelectAlternative(match, index + 1);
+                                  }}
                                   aria-label={`Make ${
                                     altMatch.manga?.title?.english ||
                                     altMatch.manga?.title?.romaji ||
@@ -1019,8 +1099,8 @@ export function MangaMatchingPanel({
           <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
             <p className="text-gray-600 dark:text-gray-400">
               {searchTerm
-                ? `No manga matches found for "${searchTerm}" with the current filter.`
-                : "No manga matches found with the current filter."}
+                ? `No manga matches found for "${searchTerm}" with the current filters.`
+                : "No manga matches found with the current filters."}
             </p>
           </div>
         )}

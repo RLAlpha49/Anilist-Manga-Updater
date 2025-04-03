@@ -150,6 +150,7 @@ export const STORAGE_KEYS = {
   KENMEI_DATA: "kenmei_data",
   IMPORT_STATS: "import_stats",
   MATCH_RESULTS: "match_results",
+  PENDING_MANGA: "pending_manga",
   CACHE_VERSION: "cache_version",
 };
 

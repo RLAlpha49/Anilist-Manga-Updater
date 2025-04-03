@@ -278,9 +278,11 @@ export async function searchManga(
 
   if (bypassCache) {
     console.log(
-      `🔄 MANUAL SEARCH: Bypassing cache for "${search}" in client.searchManga`,
+      `🚨 FORCE SEARCH: Bypassing cache for "${search}" in client.searchManga - will make API request`,
     );
   }
+
+  console.log(`🔍 Searching for manga: "${search}" (page ${page})`);
 
   try {
     // Updated type parameter to correctly handle potential nested data structure
@@ -339,7 +341,9 @@ export async function searchManga(
         `💾 Cached ${result.Page.media.length} results for "${search}"`,
       );
     } else {
-      console.log(`🔄 MANUAL SEARCH: Skipping cache storage for "${search}"`);
+      console.log(
+        `🚨 FORCE SEARCH: Not caching results for "${search}" as bypassCache=true`,
+      );
     }
 
     // Signal to other components that a new search result is available
@@ -412,7 +416,7 @@ export async function advancedSearchManga(
 
   if (bypassCache) {
     console.log(
-      `🔄 MANUAL SEARCH: Bypassing cache for "${search}" in client.advancedSearchManga`,
+      `🚨 FORCE SEARCH: Bypassing cache for "${search}" in client.advancedSearchManga - will make API request`,
     );
   }
 
@@ -491,7 +495,7 @@ export async function advancedSearchManga(
       );
     } else {
       console.log(
-        `🔄 MANUAL SEARCH: Skipping cache storage for advanced search "${search}"`,
+        `🚨 FORCE SEARCH: Not caching advanced search results for "${search}" as bypassCache=true`,
       );
     }
 

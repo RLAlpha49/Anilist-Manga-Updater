@@ -811,7 +811,9 @@ export async function searchMangaByTitle(
       }));
     }
   } else {
-    console.log(`🔍 MANUAL SEARCH: Bypassing cache for "${title}"`);
+    console.log(
+      `🚨 FORCE SEARCH: Bypassing cache for "${title}" - will query AniList API directly`,
+    );
 
     // For manual searches, ensure we're not too strict with exact matching
     if (searchConfig.exactMatchingOnly) {
@@ -831,6 +833,11 @@ export async function searchMangaByTitle(
   let results: AniListManga[] = [];
   let currentPage = 1;
   let hasNextPage = true;
+
+  // Add debug log to show we're making a network request
+  console.log(
+    `🌐 Making network request to AniList API for "${title}" - bypassCache=${searchConfig.bypassCache}`,
+  );
 
   // Search until we have enough results or there are no more pages
   while (hasNextPage && results.length < searchConfig.maxSearchResults) {
@@ -1663,23 +1670,117 @@ export const cacheDebugger = {
   },
 
   /**
-   * Reset all caches (in-memory and localStorage)
+   * Reset all caches (both in-memory and localStorage)
    */
   resetAllCaches(): void {
     // Clear in-memory cache
-    Object.keys(mangaCache).forEach((key) => delete mangaCache[key]);
+    clearMangaCache();
 
-    // Clear localStorage
+    // Clear localStorage caches
     if (typeof window !== "undefined") {
       try {
         localStorage.removeItem("anilist_manga_cache");
         localStorage.removeItem("anilist_search_cache");
+        console.log("All AniList caches have been cleared");
       } catch (e) {
-        console.error("Error clearing localStorage:", e);
+        console.error("Error clearing localStorage caches:", e);
       }
     }
+  },
 
-    console.log("All caches have been reset");
+  /**
+   * Clear cache entry for a specific manga title
+   * @param title The manga title to clear from cache
+   * @returns boolean True if an entry was cleared, false if no entry was found
+   */
+  clearCacheEntryForTitle(title: string): boolean {
+    // Generate cache key for the title
+    const mainKey = generateCacheKey(title);
+    let cleared = false;
+
+    // Check if we have this entry in the cache
+    if (mangaCache[mainKey]) {
+      delete mangaCache[mainKey];
+      cleared = true;
+    }
+
+    // Try alternate forms of the title (English title/native title)
+    // This should only match EXACT English/Native titles, not partial matches
+    const titleLower = title.toLowerCase().trim();
+
+    // Track entries to remove (to avoid modifying while iterating)
+    const keysToRemove = [];
+
+    // Look for entries that may be this exact manga but stored under a different title variant
+    Object.keys(mangaCache).forEach((key) => {
+      if (key === mainKey) return; // Skip the main key we already handled
+
+      // Check if this cache entry is for this specific manga (by exact title match)
+      const entries = mangaCache[key].manga;
+
+      for (const manga of entries) {
+        if (!manga.title) continue;
+
+        // Only compare exact matches for English/romaji titles
+        const romajiTitle = manga.title.romaji
+          ? manga.title.romaji.toLowerCase().trim()
+          : "";
+        const englishTitle = manga.title.english
+          ? manga.title.english.toLowerCase().trim()
+          : "";
+
+        // Only delete if it's an exact title match, not partial matches
+        if (
+          (romajiTitle && romajiTitle === titleLower) ||
+          (englishTitle && englishTitle === titleLower)
+        ) {
+          keysToRemove.push(key);
+          break; // No need to check other manga in this entry
+        }
+      }
+    });
+
+    // Remove the entries outside the loop to avoid concurrent modification
+    if (keysToRemove.length > 0) {
+      keysToRemove.forEach((key) => {
+        delete mangaCache[key];
+      });
+      cleared = true;
+    }
+
+    // Save the updated cache if we cleared anything
+    if (cleared) {
+      saveCache();
+    }
+
+    return cleared;
+  },
+
+  /**
+   * Clear cache entries for multiple manga titles at once
+   * @param titles Array of manga titles to clear from cache
+   * @returns number Number of cache entries cleared
+   */
+  clearCacheForTitles(titles: string[]): number {
+    if (!titles || titles.length === 0) return 0;
+
+    console.log(`Clearing cache for ${titles.length} manga titles...`);
+    let entriesCleared = 0;
+    let notFoundCount = 0;
+
+    // Process all titles in a batch
+    titles.forEach((title) => {
+      if (this.clearCacheEntryForTitle(title)) {
+        entriesCleared++;
+      } else {
+        notFoundCount++;
+      }
+    });
+
+    console.log(
+      `Cleared ${entriesCleared} cache entries (${notFoundCount} titles had no existing cache entries)`,
+    );
+    return entriesCleared;
   },
 };
 
