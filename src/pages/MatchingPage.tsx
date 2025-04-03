@@ -1,3 +1,11 @@
+// TODO: Fix confidence match scores being set incorrectly when resuming from a previous process
+// TODO: Fix statuses being reset to pending when resuming from a previous process (Happens when canceling a process, maybe when it finished too).
+// TODO: Fix the amount of manga displayed as being processed being incorrect when canceling a resume processing operation (maybe when it finished too). This seems to set the amount of manga processed to before the process was started. It fixes itself when resuming again.
+
+// TODO: Add a button to accept the main match of all pending manga matches.
+// TODO: Add a button to skip all pending manga matches without any matches from searching.
+// TODO: Add a button to re-search all manga that don't have a match.
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { KenmeiManga } from "../api/kenmei/types";
