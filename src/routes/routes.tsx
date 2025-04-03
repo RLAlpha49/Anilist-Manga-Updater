@@ -3,6 +3,7 @@ import { RootRoute } from "./__root";
 import { HomePage } from "../pages/HomePage";
 import { ImportPage } from "../pages/ImportPage";
 import { SettingsPage } from "../pages/SettingsPage";
+import { ReviewPage } from "../pages/MatchingPage";
 
 // TODO: Steps to add a new route:
 // 1. Create a new page component in the '../pages/' directory (e.g., NewPage.tsx)
@@ -35,6 +36,12 @@ export const ImportRoute = createRoute({
   component: ImportPage,
 });
 
+export const ReviewRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/review",
+  component: ReviewPage,
+});
+
 export const SettingsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/settings",
@@ -44,5 +51,6 @@ export const SettingsRoute = createRoute({
 export const rootTree = RootRoute.addChildren([
   HomeRoute,
   ImportRoute,
+  ReviewRoute,
   SettingsRoute,
 ]);

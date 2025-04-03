@@ -19,41 +19,59 @@ export async function getCurrentTheme(): Promise<ThemePreferences> {
 }
 
 export async function setTheme(newTheme: ThemeMode) {
+  let isDarkMode = false;
+
   switch (newTheme) {
     case "dark":
       await window.themeMode.dark();
-      updateDocumentTheme(true);
+      isDarkMode = true;
       break;
     case "light":
       await window.themeMode.light();
-      updateDocumentTheme(false);
+      isDarkMode = false;
       break;
     case "system": {
-      const isDarkMode = await window.themeMode.system();
-      updateDocumentTheme(isDarkMode);
+      isDarkMode = await window.themeMode.system();
       break;
     }
   }
 
+  updateDocumentTheme(isDarkMode);
   storage.setItem(THEME_KEY, newTheme);
+
+  // Notify any listeners that theme has changed
+  document.dispatchEvent(new CustomEvent("themeToggled"));
+
+  return isDarkMode;
 }
 
 export async function toggleTheme() {
-  const isDarkMode = await window.themeMode.toggle();
-  const newTheme = isDarkMode ? "dark" : "light";
+  const { local } = await getCurrentTheme();
+  // If current theme is dark or not set, switch to light, otherwise switch to dark
+  const newTheme = local === "dark" ? "light" : "dark";
 
-  updateDocumentTheme(isDarkMode);
-  storage.setItem(THEME_KEY, newTheme);
+  const isDarkMode = await setTheme(newTheme);
+  return isDarkMode;
 }
 
 export async function syncThemeWithLocal() {
-  const { local } = await getCurrentTheme();
-  if (!local) {
-    setTheme("system");
-    return;
-  }
+  try {
+    const { local, system } = await getCurrentTheme();
 
-  await setTheme(local);
+    // If we have a stored preference, use it
+    if (local) {
+      await setTheme(local);
+      return;
+    }
+
+    // Otherwise set system as default and save it to local storage
+    // This ensures we have a saved preference for next time
+    await setTheme(system || "light");
+  } catch (error) {
+    console.error("Failed to sync theme:", error);
+    // Fallback to light theme if there's an error
+    await setTheme("light");
+  }
 }
 
 function updateDocumentTheme(isDarkMode: boolean) {

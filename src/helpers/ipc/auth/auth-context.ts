@@ -1,11 +1,5 @@
+import { APICredentials } from "@/types/auth";
 import { contextBridge, ipcRenderer } from "electron";
-
-interface APICredentials {
-  source: "default" | "custom";
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-}
 
 export function exposeAuthContext() {
   // For debugging
@@ -19,7 +13,7 @@ export function exposeAuthContext() {
       });
       return ipcRenderer.invoke("auth:openOAuthWindow", oauthUrl, redirectUri);
     },
-    storeCredentials: (credentials: any) => {
+    storeCredentials: (credentials: APICredentials) => {
       console.log("Renderer requesting to store credentials", {
         source: credentials.source,
       });

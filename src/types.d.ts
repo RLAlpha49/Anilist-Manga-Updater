@@ -18,7 +18,82 @@ interface ElectronWindow {
   close: () => Promise<void>;
 }
 
+// Token parameters type for API calls
+interface TokenExchangeParams {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+  code: string;
+}
+
+// Auth credentials interface
+interface AuthCredentials {
+  source: "default" | "custom";
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
 declare interface Window {
   themeMode: ThemeModeContext;
   electronWindow: ElectronWindow;
+  electronAPI: {
+    window: {
+      minimize: () => Promise<void>;
+      maximize: () => Promise<void>;
+      close: () => Promise<void>;
+    };
+    theme: {
+      setTheme: (theme: string) => Promise<void>;
+      getTheme: () => Promise<string>;
+    };
+    anilist: {
+      request: (
+        query: string,
+        variables?: Record<string, unknown>,
+        token?: string,
+      ) => Promise<{
+        success: boolean;
+        data?: Record<string, unknown>;
+        error?: {
+          message: string;
+          status?: number;
+          errors?: Array<{ message: string }>;
+        };
+      }>;
+      exchangeToken: (params: TokenExchangeParams) => Promise<{
+        success: boolean;
+        token?: {
+          access_token: string;
+          token_type: string;
+          expires_in: number;
+        };
+        error?: string;
+      }>;
+      clearCache: (searchQuery?: string) => Promise<{ success: boolean }>;
+    };
+    shell: {
+      openExternal: (url: string) => Promise<void>;
+    };
+    electronStore: {
+      getItem: (key: string) => Promise<string>;
+      setItem: (key: string, value: string) => Promise<void>;
+      removeItem: (key: string) => Promise<void>;
+      clear: () => Promise<void>;
+    };
+  };
+  electronAuth: {
+    openOAuthWindow: (oauthUrl: string, redirectUri: string) => Promise<void>;
+    storeCredentials: (credentials: AuthCredentials) => Promise<void>;
+    getCredentials: (source: string) => Promise<AuthCredentials>;
+    cancelAuth: () => Promise<void>;
+    onStatus: (callback: (message: string) => void) => () => void;
+    onCodeReceived: (callback: (data: { code: string }) => void) => () => void;
+    onCancelled: (callback: () => void) => () => void;
+    exchangeToken: (params: TokenExchangeParams) => Promise<{
+      success: boolean;
+      token?: { access_token: string; token_type: string; expires_in: number };
+      error?: string;
+    }>;
+  };
 }

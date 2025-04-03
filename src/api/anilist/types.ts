@@ -2,6 +2,8 @@
  * AniList API type definitions
  */
 
+import { KenmeiManga } from "../kenmei/types";
+
 export type MediaListStatus =
   | "CURRENT"
   | "PLANNING"
@@ -17,9 +19,40 @@ export interface AniListManga {
     english: string | null;
     native: string | null;
   };
+  synonyms?: string[];
+  description?: string;
   format: string;
   status: string;
   chapters?: number;
+  volumes?: number;
+  countryOfOrigin?: string;
+  source?: string;
+  coverImage?: {
+    large?: string;
+    medium?: string;
+  };
+  genres?: string[];
+  tags?: {
+    id: number;
+    name: string;
+    category?: string;
+  }[];
+  startDate?: {
+    year?: number;
+    month?: number;
+    day?: number;
+  };
+  staff?: {
+    edges: {
+      node: {
+        id: number;
+        name: {
+          full: string;
+        };
+        role: string;
+      };
+    }[];
+  };
 }
 
 export interface AniListMediaEntry {
@@ -42,4 +75,47 @@ export interface AniListUser {
 
 export interface AniListResponse<T> {
   data: T;
+}
+
+export interface PageInfo {
+  total: number;
+  currentPage: number;
+  lastPage: number;
+  hasNextPage: boolean;
+  perPage: number;
+}
+
+export interface SearchResult<T> {
+  Page: {
+    pageInfo: PageInfo;
+    media: T[];
+  };
+}
+
+// Manga match types
+export interface MangaMatch {
+  coverImage: any;
+  format: string;
+  status: string;
+  chapters: boolean;
+  title: any;
+  title: any;
+  id: number;
+  manga: AniListManga;
+  confidence: number;
+}
+
+export type MatchStatus =
+  | "pending"
+  | "matched"
+  | "conflict"
+  | "manual"
+  | "skipped";
+
+export interface MangaMatchResult {
+  kenmeiManga: KenmeiManga;
+  anilistMatches?: MangaMatch[];
+  selectedMatch?: AniListManga;
+  status: MatchStatus;
+  matchDate?: Date;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowUpRight,
@@ -13,8 +13,10 @@ import {
   Sparkles,
   LogOut,
   UserCheck,
+  ClipboardCheck,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { getImportStats } from "../utils/storage";
 
 interface StatsState {
   total: number;
@@ -31,8 +33,8 @@ export function HomePage() {
   // Get auth state to check authentication status
   const { authState } = useAuth();
 
-  // Mock state for dashboard data
-  const [stats] = useState<StatsState>({
+  // State for dashboard data
+  const [stats, setStats] = useState<StatsState>({
     total: 0,
     reading: 0,
     completed: 0,
@@ -42,6 +44,41 @@ export function HomePage() {
     lastSync: null,
     syncStatus: "none",
   });
+
+  // Load import stats from storage on component mount
+  useEffect(() => {
+    const importStats = getImportStats();
+    if (importStats) {
+      // Update stats from stored data
+      const statusCounts = importStats.statusCounts || {};
+      setStats({
+        ...stats,
+        total: importStats.total || 0,
+        reading: statusCounts.reading || 0,
+        completed: statusCounts.completed || 0,
+        dropped: statusCounts.dropped || 0,
+        onHold: statusCounts.on_hold || 0,
+        planToRead: statusCounts.plan_to_read || 0,
+        lastSync: importStats.timestamp || null,
+      });
+    }
+  }, []);
+
+  // Format date for display
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Never";
+
+    try {
+      const date = new Date(dateString);
+      return (
+        date.toLocaleDateString() +
+        " " +
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
+    } catch {
+      return "Invalid date";
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 md:px-6">
@@ -70,7 +107,9 @@ export function HomePage() {
             </p>
             <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
               <Library className="mr-1 h-3.5 w-3.5 text-blue-500" />
-              No items imported yet
+              {stats.total > 0
+                ? `Last imported: ${formatDate(stats.lastSync)}`
+                : "No items imported yet"}
             </p>
           </div>
           <BarChart2 className="absolute right-2 bottom-0 z-0 h-12 w-12 text-blue-200 dark:text-blue-800/50" />
@@ -81,14 +120,14 @@ export function HomePage() {
           <div className="absolute -right-6 -bottom-6 h-32 w-32 transform rounded-full bg-purple-100/30 transition-transform group-hover:scale-110 dark:bg-purple-900/20"></div>
           <div className="relative z-10">
             <h2 className="mb-1 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-              Sync Status
+              Reading Status
             </h2>
             <p className="mb-1 text-3xl font-bold text-purple-600 dark:text-purple-400">
-              -
+              {stats.reading}
             </p>
             <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
               <RefreshCw className="mr-1 h-3.5 w-3.5 text-purple-500" />
-              Not connected to AniList
+              {stats.completed} Completed • {stats.onHold} On Hold
             </p>
           </div>
           <Activity className="absolute right-2 bottom-0 z-0 h-12 w-12 text-purple-200 dark:text-purple-800/50" />
@@ -99,14 +138,14 @@ export function HomePage() {
           <div className="absolute -right-6 -bottom-6 h-32 w-32 transform rounded-full bg-green-100/30 transition-transform group-hover:scale-110 dark:bg-green-900/20"></div>
           <div className="relative z-10">
             <h2 className="mb-1 text-sm font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-              Last Activity
+              Match Status
             </h2>
             <p className="mb-1 text-3xl font-bold text-green-600 dark:text-green-400">
-              -
+              {stats.total > 0 ? "Ready" : "-"}
             </p>
             <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-              <Clock className="mr-1 h-3.5 w-3.5 text-green-500" />
-              No recent activity
+              <ClipboardCheck className="mr-1 h-3.5 w-3.5 text-green-500" />
+              {stats.total > 0 ? "Review matches now" : "Import data first"}
             </p>
           </div>
           <Clock className="absolute right-2 bottom-0 z-0 h-12 w-12 text-green-200 dark:text-green-800/50" />
@@ -135,55 +174,74 @@ export function HomePage() {
               <ArrowUpRight className="z-10 h-4 w-4 text-white/70" />
             </Link>
 
-            <Link
-              to="/settings"
-              className={`flex min-h-[90px] items-center gap-3 rounded-lg border ${
-                authState.isAuthenticated
-                  ? "border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20"
-                  : "border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700"
-              } p-4 shadow-sm transition-all hover:shadow-md ${
-                authState.isAuthenticated
-                  ? "hover:bg-green-100 dark:hover:bg-green-800/30"
-                  : "hover:bg-gray-50 dark:hover:bg-gray-600"
-              }`}
-            >
-              <div
-                className={`rounded-lg ${
-                  authState.isAuthenticated
-                    ? "bg-green-100 dark:bg-green-800/40"
-                    : "bg-blue-100 dark:bg-blue-900/30"
-                } p-2`}
+            {stats.total > 0 ? (
+              <Link
+                to="/review"
+                className="relative flex min-h-[90px] items-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-green-500 to-teal-600 p-4 text-white shadow-sm transition-all hover:from-green-600 hover:to-teal-700 hover:shadow-md"
               >
-                {authState.isAuthenticated ? (
-                  <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-blue-500" />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">
-                  {authState.isAuthenticated
-                    ? "AniList Connected"
-                    : "Connect to AniList"}
-                </p>
-                <p
-                  className={`text-xs ${
+                <div className="absolute top-0 left-0 h-full w-full rounded-lg bg-white/5"></div>
+                <div className="z-10 rounded-lg bg-white/20 p-2 backdrop-blur-sm">
+                  <ClipboardCheck className="h-5 w-5" />
+                </div>
+                <div className="z-10 flex-1">
+                  <p className="font-medium">Review Matches</p>
+                  <p className="text-xs text-white/80">
+                    Check your manga matches
+                  </p>
+                </div>
+                <ArrowUpRight className="z-10 h-4 w-4 text-white/70" />
+              </Link>
+            ) : (
+              <Link
+                to="/settings"
+                className={`flex min-h-[90px] items-center gap-3 rounded-lg border ${
+                  authState.isAuthenticated
+                    ? "border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-900/20"
+                    : "border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700"
+                } p-4 shadow-sm transition-all hover:shadow-md ${
+                  authState.isAuthenticated
+                    ? "hover:bg-green-100 dark:hover:bg-green-800/30"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-600"
+                }`}
+              >
+                <div
+                  className={`rounded-lg ${
                     authState.isAuthenticated
-                      ? "text-green-600/80 dark:text-green-400/80"
-                      : "text-gray-500 dark:text-gray-400"
-                  }`}
+                      ? "bg-green-100 dark:bg-green-800/40"
+                      : "bg-blue-100 dark:bg-blue-900/30"
+                  } p-2`}
                 >
-                  {authState.isAuthenticated
-                    ? authState.username || "Authenticated User"
-                    : "Setup authentication"}
-                </p>
-              </div>
-              {authState.isAuthenticated ? (
-                <LogOut className="h-4 w-4 text-green-500 dark:text-green-400" />
-              ) : (
-                <ArrowUpRight className="h-4 w-4 text-gray-400" />
-              )}
-            </Link>
+                  {authState.isAuthenticated ? (
+                    <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-blue-500" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">
+                    {authState.isAuthenticated
+                      ? "AniList Connected"
+                      : "Connect to AniList"}
+                  </p>
+                  <p
+                    className={`text-xs ${
+                      authState.isAuthenticated
+                        ? "text-green-600/80 dark:text-green-400/80"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {authState.isAuthenticated
+                      ? authState.username || "Authenticated User"
+                      : "Setup authentication"}
+                  </p>
+                </div>
+                {authState.isAuthenticated ? (
+                  <LogOut className="h-4 w-4 text-green-500 dark:text-green-400" />
+                ) : (
+                  <ArrowUpRight className="h-4 w-4 text-gray-400" />
+                )}
+              </Link>
+            )}
           </div>
         </div>
 
@@ -222,9 +280,9 @@ export function HomePage() {
                 3
               </div>
               <div>
-                <h3 className="font-medium">Review and sync your collection</h3>
+                <h3 className="font-medium">Review your matches</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Verify your manga entries before syncing to AniList
+                  Verify your manga matches and make corrections if needed
                 </p>
               </div>
             </div>
@@ -234,9 +292,9 @@ export function HomePage() {
                 4
               </div>
               <div>
-                <h3 className="font-medium">Enjoy your synchronized library</h3>
+                <h3 className="font-medium">Synchronize to AniList</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Your Kenmei collection is now on AniList
+                  Send your reviewed matches to your AniList account
                 </p>
               </div>
             </div>

@@ -42,6 +42,14 @@ export function SettingsPage() {
 
   const [error, setError] = useState<AppError | null>(null);
   const [cacheCleared, setCacheCleared] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [cachesToClear, setCachesToClear] = useState({
+    search: true,
+    manga: true,
+    review: true,
+    import: true,
+    other: true,
+  });
   const [useCustomCredentials, setUseCustomCredentials] = useState(
     authState.credentialSource === "custom",
   );
@@ -249,10 +257,163 @@ export function SettingsPage() {
     window.electronAuth.cancelAuth();
   };
 
-  const handleClearCache = () => {
-    // Simulate clearing cache
-    setCacheCleared(true);
-    setTimeout(() => setCacheCleared(false), 3000);
+  const handleClearCache = async () => {
+    try {
+      // Start clearing process and show loading state
+      setCacheCleared(false);
+      setIsClearing(true);
+      setError(null);
+
+      // Get all cache clearing functions
+      const { clearMangaCache, cacheDebugger } = await import(
+        "../api/matching/manga-search-service"
+      );
+      const { clearSearchCache } = await import("../api/anilist/client");
+      const { STORAGE_KEYS } = await import("../utils/storage");
+
+      console.log("🧹 Starting selective cache clearing...");
+
+      // Define which localStorage keys belong to which cache type
+      const cacheKeysByType = {
+        search: ["anilist_search_cache"],
+        manga: ["anilist_manga_cache"],
+        review: ["match_results", "manga_matches", "review_progress"],
+        import: ["kenmei_data", "import_history", "import_stats"],
+        other: [
+          "title_cache",
+          "format_cache",
+          "alternative_titles_cache",
+          "user_manga_list",
+          "anilist_user_manga",
+          "cache_version",
+        ],
+      };
+
+      // Additional keys from STORAGE_KEYS constant
+      if (STORAGE_KEYS) {
+        Object.entries(STORAGE_KEYS).forEach(([key, value]) => {
+          if (typeof value === "string") {
+            // Add to appropriate category based on key name
+            if (key.includes("MATCH") || key.includes("REVIEW")) {
+              if (!cacheKeysByType.review.includes(value)) {
+                cacheKeysByType.review.push(value);
+              }
+            } else if (key.includes("IMPORT")) {
+              if (!cacheKeysByType.import.includes(value)) {
+                cacheKeysByType.import.push(value);
+              }
+            } else if (key.includes("CACHE")) {
+              if (!cacheKeysByType.other.includes(value)) {
+                cacheKeysByType.other.push(value);
+              }
+            }
+          }
+        });
+      }
+
+      // Keep track of which caches were cleared for user feedback
+      const clearedCacheTypes = [];
+
+      // Clear Search Cache if selected
+      if (cachesToClear.search) {
+        clearSearchCache();
+        clearedCacheTypes.push("search");
+        console.log("🧹 Search cache cleared");
+      }
+
+      // Clear Manga Cache if selected
+      if (cachesToClear.manga) {
+        clearMangaCache();
+        clearedCacheTypes.push("manga");
+        console.log("🧹 Manga cache cleared");
+      }
+
+      // If both search and manga are selected, use the full reset
+      if (cachesToClear.search && cachesToClear.manga) {
+        cacheDebugger.resetAllCaches();
+        console.log("🧹 All in-memory caches reset");
+      }
+
+      // Get all localStorage keys to clear based on selections
+      const keysToRemove: string[] = [];
+
+      Object.entries(cachesToClear).forEach(([type, selected]) => {
+        if (selected && cacheKeysByType[type]) {
+          keysToRemove.push(...cacheKeysByType[type]);
+        }
+      });
+
+      // Remove duplicates
+      const uniqueKeysToRemove = [...new Set(keysToRemove)];
+
+      console.log(
+        "🧹 Clearing the following localStorage keys:",
+        uniqueKeysToRemove,
+      );
+
+      // Clear selected localStorage keys
+      uniqueKeysToRemove.forEach((cacheKey) => {
+        try {
+          localStorage.removeItem(cacheKey);
+          console.log(`🧹 Cleared cache: ${cacheKey}`);
+        } catch (e) {
+          console.warn(`Failed to clear cache: ${cacheKey}`, e);
+        }
+      });
+
+      // Clear IndexedDB if any cache is selected
+      if (Object.values(cachesToClear).some(Boolean)) {
+        try {
+          const DBDeleteRequest =
+            window.indexedDB.deleteDatabase("anilist-cache");
+          DBDeleteRequest.onsuccess = () =>
+            console.log("🧹 Successfully deleted IndexedDB database");
+          DBDeleteRequest.onerror = () =>
+            console.error("Error deleting IndexedDB database");
+          clearedCacheTypes.push("indexeddb");
+        } catch (e) {
+          console.warn("Failed to clear IndexedDB:", e);
+        }
+      }
+
+      console.log("🧹 Selected caches cleared");
+
+      // Show success message
+      setCacheCleared(true);
+
+      // Create a summary of cleared caches for user feedback
+      const clearedSummary = Object.entries(cachesToClear)
+        .filter(([, selected]) => selected)
+        .map(([type]) => `✅ Cleared ${type} cache`)
+        .join("\n");
+
+      // Show a detailed summary to the user
+      try {
+        window.alert(
+          "Cache Cleared Successfully!\n\n" +
+            clearedSummary +
+            "\n\nYou may need to restart the application for all changes to take effect.",
+        );
+      } catch (e) {
+        console.warn("Failed to show alert:", e);
+      }
+
+      setTimeout(() => setCacheCleared(false), 5000);
+
+      // Remove loading state
+      setIsClearing(false);
+    } catch (error) {
+      console.error("Error clearing cache:", error);
+      setError(
+        createError(
+          ErrorType.SYSTEM,
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred while clearing cache",
+        ),
+      );
+      setIsClearing(false);
+    }
   };
 
   const dismissError = () => {
@@ -563,18 +724,157 @@ export function SettingsPage() {
                 Clear Local Cache
               </h3>
               <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                This will remove all cached data, including import history and
-                temporary files. Your AniList authentication will not be
-                affected.
+                Select which types of cached data to remove. Your AniList
+                authentication will not be affected.
               </p>
+
+              <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg border border-blue-100 bg-blue-50/50 p-3 dark:border-blue-800/30 dark:bg-blue-900/10">
+                <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-blue-100/50 dark:hover:bg-blue-800/20">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500 dark:border-blue-600 dark:bg-gray-700"
+                    checked={cachesToClear.search}
+                    onChange={(e) =>
+                      setCachesToClear({
+                        ...cachesToClear,
+                        search: e.target.checked,
+                      })
+                    }
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Search Cache
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    (search results)
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-blue-100/50 dark:hover:bg-blue-800/20">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500 dark:border-blue-600 dark:bg-gray-700"
+                    checked={cachesToClear.manga}
+                    onChange={(e) =>
+                      setCachesToClear({
+                        ...cachesToClear,
+                        manga: e.target.checked,
+                      })
+                    }
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Manga Cache
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    (manga metadata)
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-blue-100/50 dark:hover:bg-blue-800/20">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500 dark:border-blue-600 dark:bg-gray-700"
+                    checked={cachesToClear.review}
+                    onChange={(e) =>
+                      setCachesToClear({
+                        ...cachesToClear,
+                        review: e.target.checked,
+                      })
+                    }
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Review Cache
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    (matching results)
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-blue-100/50 dark:hover:bg-blue-800/20">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500 dark:border-blue-600 dark:bg-gray-700"
+                    checked={cachesToClear.import}
+                    onChange={(e) =>
+                      setCachesToClear({
+                        ...cachesToClear,
+                        import: e.target.checked,
+                      })
+                    }
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Import Cache
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    (import history)
+                  </span>
+                </label>
+                <label className="col-span-2 flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-blue-100/50 dark:hover:bg-blue-800/20">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500 dark:border-blue-600 dark:bg-gray-700"
+                    checked={cachesToClear.other}
+                    onChange={(e) =>
+                      setCachesToClear({
+                        ...cachesToClear,
+                        other: e.target.checked,
+                      })
+                    }
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Other Caches
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    (miscellaneous data)
+                  </span>
+                </label>
+
+                <div className="col-span-2 mt-2 flex justify-between border-t border-blue-100 pt-2 dark:border-blue-800/30">
+                  <button
+                    onClick={() =>
+                      setCachesToClear({
+                        search: true,
+                        manga: true,
+                        review: true,
+                        import: true,
+                        other: true,
+                      })
+                    }
+                    className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCachesToClear({
+                        search: false,
+                        manga: false,
+                        review: false,
+                        import: false,
+                        other: false,
+                      })
+                    }
+                    className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+
               <Button
                 onClick={handleClearCache}
                 variant="outline"
+                disabled={
+                  isClearing || !Object.values(cachesToClear).some(Boolean)
+                }
                 className={`flex w-full items-center justify-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20 ${
-                  cacheCleared ? "bg-green-50 text-green-600" : ""
+                  cacheCleared
+                    ? "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                    : ""
                 }`}
               >
-                {cacheCleared ? (
+                {isClearing ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Clearing Cache...
+                  </>
+                ) : cacheCleared ? (
                   <>
                     <CheckCircle className="h-4 w-4" />
                     Cache Cleared Successfully
@@ -582,7 +882,7 @@ export function SettingsPage() {
                 ) : (
                   <>
                     <Trash2 className="h-4 w-4" />
-                    Clear Cache
+                    Clear Selected Caches
                   </>
                 )}
               </Button>

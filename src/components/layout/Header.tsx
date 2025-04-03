@@ -62,6 +62,15 @@ export function Header() {
                     </Link>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
+                    <Link to="/review">
+                      <NavigationMenuLink
+                        className={navigationMenuTriggerStyle()}
+                      >
+                        Review
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
                     <Link to="/settings">
                       <NavigationMenuLink
                         className={navigationMenuTriggerStyle()}

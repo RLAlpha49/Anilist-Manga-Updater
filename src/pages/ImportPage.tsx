@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { FileDropZone } from "../components/import/FileDropZone";
 import { ErrorMessage } from "../components/ui/error-message";
 import { ErrorType, AppError, createError } from "../utils/errorHandling";
@@ -11,12 +12,18 @@ import {
   Clock,
 } from "lucide-react";
 import { DataTable } from "../components/import/DataTable";
+import {
+  saveKenmeiData,
+  getSavedMatchResults,
+} from "../utils/storage";
 
 export function ImportPage() {
+  const navigate = useNavigate();
   const [importData, setImportData] = useState<KenmeiData | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
+  const [previousMatchCount, setPreviousMatchCount] = useState(0);
 
   const handleFileLoaded = (data: KenmeiData) => {
     setImportData(data);
@@ -37,31 +44,23 @@ export function ImportPage() {
 
     setIsLoading(true);
     try {
-      // This simulates an API call that might fail
-      await new Promise<void>((resolve, reject) => {
-        setTimeout(() => {
-          // Randomly fail to demonstrate error handling
-          if (Math.random() > 0.7) {
-            reject(new Error("Network connection failed"));
-          } else {
-            resolve();
-          }
-        }, 1500);
-      });
+      // Save the imported data to local storage
+      saveKenmeiData(importData);
 
-      // If successful, we would normally process the data
-      console.log("Import successful!", importData);
-
-      // Show success state
+      // Show success state briefly before redirecting
       setImportSuccess(true);
 
-      // In a real app, we would show a success message and redirect
-    } catch {
-      // Demonstrate our error handling
+      // Redirect to the review page after a short delay
+      setTimeout(() => {
+        navigate({ to: "/review" });
+      }, 1500);
+    } catch (err) {
+      // Handle any errors that might occur during storage
+      console.error("Storage error:", err);
       handleError(
         createError(
-          ErrorType.NETWORK,
-          "Failed to upload data to the server. Please try again.",
+          ErrorType.STORAGE,
+          "Failed to save import data. Please try again.",
         ),
       );
     } finally {
@@ -94,6 +93,21 @@ export function ImportPage() {
   };
 
   const statusCounts = getStatusCounts();
+
+  useEffect(() => {
+    // Check if we have previous match results
+    const savedResults = getSavedMatchResults();
+    if (savedResults && Array.isArray(savedResults)) {
+      const reviewedCount = savedResults.filter(
+        (m) =>
+          m.status === "matched" ||
+          m.status === "manual" ||
+          m.status === "skipped",
+      ).length;
+
+      setPreviousMatchCount(reviewedCount);
+    }
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-6 md:px-6">
@@ -129,22 +143,8 @@ export function ImportPage() {
             <h2 className="mb-2 text-2xl font-bold">Import Successful!</h2>
             <p className="mb-6 text-gray-600 dark:text-gray-400">
               Your {importData?.manga.length} manga entries have been
-              successfully imported to AniList.
+              successfully imported. Redirecting to review page...
             </p>
-            <div className="flex flex-col justify-center gap-3 sm:flex-row">
-              <button
-                onClick={resetForm}
-                className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2.5 font-medium text-white shadow-sm transition-all hover:from-blue-700 hover:to-purple-700"
-              >
-                Import Another File
-              </button>
-              <button
-                onClick={() => (window.location.href = "/")}
-                className="rounded-lg border border-gray-300 px-5 py-2.5 font-medium transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-              >
-                Return to Dashboard
-              </button>
-            </div>
           </div>
         </div>
       ) : !importData ? (
@@ -295,10 +295,10 @@ export function ImportPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Importing...
+                  Processing...
                 </>
               ) : (
-                "Import to AniList"
+                "Continue to Review"
               )}
             </button>
             <button
@@ -309,6 +309,14 @@ export function ImportPage() {
               Cancel
             </button>
           </div>
+          {previousMatchCount > 0 && (
+            <div className="mt-2 rounded-md bg-blue-50 p-3 text-sm text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+              <span className="font-medium">Note:</span> You have{" "}
+              {previousMatchCount} previously matched manga entries. Your
+              matching progress will be preserved when proceeding to the next
+              step.
+            </div>
+          )}
         </div>
       )}
     </div>

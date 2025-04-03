@@ -78,10 +78,10 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
         }
 
         const content = event.target.result as string;
-        
+
         // Use our parser function from api/kenmei/parser.ts
         const parsedData = parseKenmeiCsvExport(content);
-        
+
         if (!parsedData || !parsedData.manga || parsedData.manga.length === 0) {
           onError(
             createError(
@@ -91,12 +91,12 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
           );
           return;
         }
-        
+
         // Convert to our app's expected format
         const kenmeiData: KenmeiData = {
           version: "1.0.0",
           exported_at: parsedData.export_date,
-          manga: parsedData.manga.map(manga => ({
+          manga: parsedData.manga.map((manga) => ({
             title: manga.title,
             status: manga.status,
             score: manga.score,
@@ -108,7 +108,7 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
             url: manga.url,
           })),
         };
-        
+
         onFileLoaded(kenmeiData);
       } catch (err) {
         console.error("CSV parsing error:", err);

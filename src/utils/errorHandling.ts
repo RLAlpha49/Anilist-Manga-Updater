@@ -4,11 +4,15 @@
 
 // Define different error types
 export enum ErrorType {
-  NETWORK = "network",
-  VALIDATION = "validation",
-  AUTHENTICATION = "authentication",
-  API = "api",
   UNKNOWN = "unknown",
+  VALIDATION = "validation",
+  NETWORK = "network",
+  AUTH = "auth",
+  SERVER = "server",
+  CLIENT = "client",
+  STORAGE = "storage",
+  AUTHENTICATION = "AUTHENTICATION",
+  SYSTEM = "SYSTEM",
 }
 
 // Define the error structure
@@ -64,7 +68,7 @@ export function handleNetworkError(error: unknown): AppError {
 
     if (status === 401 || status === 403) {
       return createError(
-        ErrorType.AUTHENTICATION,
+        ErrorType.AUTH,
         "Authentication failed. Please log in again.",
         error,
         "AUTH_FAILED",
@@ -73,7 +77,7 @@ export function handleNetworkError(error: unknown): AppError {
 
     if (status === 404) {
       return createError(
-        ErrorType.API,
+        ErrorType.SERVER,
         "The requested resource was not found.",
         error,
         "NOT_FOUND",
@@ -82,14 +86,14 @@ export function handleNetworkError(error: unknown): AppError {
 
     if (status >= 500) {
       return createError(
-        ErrorType.API,
+        ErrorType.SERVER,
         "The server encountered an error. Please try again later.",
         error,
         "SERVER_ERROR",
       );
     }
 
-    return createError(ErrorType.API, message, error, code);
+    return createError(ErrorType.SERVER, message, error, code);
   }
 
   // For timeout errors

@@ -2,16 +2,16 @@
  * Data processor for Kenmei manga data
  */
 
-import { AniListManga } from '../anilist/types';
-import { mapKenmeiToAniListStatus } from './status-mapper';
+import { AniListManga } from "../anilist/types";
+import { mapKenmeiToAniListStatus } from "./status-mapper";
 import {
-  KenmeiExport,
   KenmeiManga,
   KenmeiParseOptions,
+  KenmeiStatus,
   ProcessingResult,
   StatusMappingConfig,
-} from './types';
-import { parseKenmeiExport, processKenmeiMangaBatches } from './parser';
+} from "./types";
+import { parseKenmeiExport, processKenmeiMangaBatches } from "./parser";
 
 /**
  * Options for processing Kenmei data
@@ -32,7 +32,7 @@ export const DEFAULT_PROCESS_OPTIONS: ProcessOptions = {
   parseOptions: {
     validateStructure: true,
     allowPartialData: true,
-    defaultStatus: 'plan_to_read',
+    defaultStatus: "plan_to_read",
   },
   preferVolumes: false,
   normalizeScores: true,
@@ -49,11 +49,14 @@ export function processKenmeiExport(
   options: Partial<ProcessOptions> = {},
 ): ProcessingResult {
   const processOptions = { ...DEFAULT_PROCESS_OPTIONS, ...options };
-  
+
   try {
     // Parse the export data
-    const exportData = parseKenmeiExport(fileContent, processOptions.parseOptions);
-    
+    const exportData = parseKenmeiExport(
+      fileContent,
+      processOptions.parseOptions,
+    );
+
     // Process the manga entries in batches
     return processKenmeiMangaBatches(
       exportData.manga,
@@ -64,7 +67,7 @@ export function processKenmeiExport(
     if (error instanceof Error) {
       throw new Error(`Failed to process Kenmei data: ${error.message}`);
     }
-    throw new Error('Failed to process Kenmei data: Unknown error');
+    throw new Error("Failed to process Kenmei data: Unknown error");
   }
 }
 
@@ -87,26 +90,29 @@ export function prepareEntryForSync(
   progressVolumes?: number;
 } {
   const processOptions = { ...DEFAULT_PROCESS_OPTIONS, ...options };
-  
+
   // Map the status
-  const status = mapKenmeiToAniListStatus(manga.status, processOptions.statusMapping);
-  
+  const status = mapKenmeiToAniListStatus(
+    manga.status,
+    processOptions.statusMapping,
+  );
+
   // Determine progress (chapters vs volumes)
-  let progress = manga.chapters_read;
+  const progress = manga.chapters_read;
   let progressVolumes: number | undefined = manga.volumes_read;
-  
+
   // If we prefer volumes and have volume data, set progress to volumes
   if (processOptions.preferVolumes && manga.volumes_read !== undefined) {
     progressVolumes = manga.volumes_read;
   }
-  
+
   // Normalize score if needed (Kenmei uses 1-10, AniList uses 1-100 or 1-10 depending on settings)
   let score: number | undefined = manga.score;
   if (processOptions.normalizeScores && score > 0) {
     // We'll assume AniList is using the 100-point scale
     score = Math.round(score * 10);
   }
-  
+
   return {
     mediaId: anilistMatch.id,
     status,
@@ -133,23 +139,23 @@ export function extractReadingStats(manga: KenmeiManga[]): {
   let completedManga = 0;
   let inProgressManga = 0;
   const statusBreakdown: Record<string, number> = {};
-  
-  manga.forEach(entry => {
+
+  manga.forEach((entry) => {
     // Count chapters and volumes
     totalChapters += entry.chapters_read || 0;
     totalVolumes += entry.volumes_read || 0;
-    
+
     // Count completed and in-progress manga
-    if (entry.status === 'completed') {
+    if (entry.status === "completed") {
       completedManga++;
-    } else if (entry.status === 'reading') {
+    } else if (entry.status === "reading") {
       inProgressManga++;
     }
-    
+
     // Track status breakdown
     statusBreakdown[entry.status] = (statusBreakdown[entry.status] || 0) + 1;
   });
-  
+
   return {
     totalChapters,
     totalVolumes,
@@ -172,14 +178,14 @@ export async function processMangaInBatches<T>(
   batchSize = 50,
 ): Promise<T[]> {
   const results: T[] = [];
-  
+
   // Process in batches
   for (let i = 0; i < entries.length; i += batchSize) {
     const batch = entries.slice(i, i + batchSize);
     const batchResults = await processFn(batch);
     results.push(...batchResults);
   }
-  
+
   return results;
 }
 
@@ -198,27 +204,34 @@ export function filterMangaEntries(
     hasScore?: boolean;
   },
 ): KenmeiManga[] {
-  return entries.filter(entry => {
+  return entries.filter((entry) => {
     // Filter by status
     if (criteria.status && !criteria.status.includes(entry.status)) {
       return false;
     }
-    
+
     // Filter by minimum chapters
-    if (criteria.minChapters !== undefined && entry.chapters_read < criteria.minChapters) {
+    if (
+      criteria.minChapters !== undefined &&
+      entry.chapters_read < criteria.minChapters
+    ) {
       return false;
     }
-    
+
     // Filter by having progress
-    if (criteria.hasProgress && entry.chapters_read <= 0 && (!entry.volumes_read || entry.volumes_read <= 0)) {
+    if (
+      criteria.hasProgress &&
+      entry.chapters_read <= 0 &&
+      (!entry.volumes_read || entry.volumes_read <= 0)
+    ) {
       return false;
     }
-    
+
     // Filter by having score
     if (criteria.hasScore && (!entry.score || entry.score <= 0)) {
       return false;
     }
-    
+
     return true;
   });
-} 
+}

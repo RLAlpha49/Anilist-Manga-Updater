@@ -31,7 +31,9 @@ export function parseKenmeiExport(
     // Validate the structure of the data
     if (parseOptions.validateStructure) {
       if (!data.manga || !Array.isArray(data.manga)) {
-        throw new Error("Invalid Kenmei export: missing or invalid manga array");
+        throw new Error(
+          "Invalid Kenmei export: missing or invalid manga array",
+        );
       }
 
       // Validate each manga entry
@@ -74,38 +76,43 @@ export function processKenmeiMangaBatches(
   const parseOptions = { ...DEFAULT_PARSE_OPTIONS, ...options };
   const validationErrors: ValidationError[] = [];
   const processedEntries: KenmeiManga[] = [];
-  
+
   // Process in batches
   for (let i = 0; i < mangaList.length; i += batchSize) {
     const batch = mangaList.slice(i, i + batchSize);
-    
+
     // Process each manga in the batch
     for (let j = 0; j < batch.length; j++) {
       const manga = batch[j];
       const index = i + j;
-      
+
       try {
-        const validatedManga = validateAndNormalizeManga(manga, index, parseOptions);
+        const validatedManga = validateAndNormalizeManga(
+          manga,
+          index,
+          parseOptions,
+        );
         processedEntries.push(validatedManga);
       } catch (error) {
         if (error instanceof Error) {
           validationErrors.push({
             mangaTitle: manga.title || `Unknown manga at index ${index}`,
-            field: 'general',
+            field: "general",
             message: error.message,
             index,
           });
         }
-        
+
         // If we allow partial data, continue processing despite errors
         if (parseOptions.allowPartialData && manga.title) {
           processedEntries.push({
             ...manga,
             status: manga.status || parseOptions.defaultStatus,
-            chapters_read: typeof manga.chapters_read === 'number' ? manga.chapters_read : 0,
-            score: typeof manga.score === 'number' ? manga.score : 0,
+            chapters_read:
+              typeof manga.chapters_read === "number" ? manga.chapters_read : 0,
+            score: typeof manga.score === "number" ? manga.score : 0,
             id: manga.id || index,
-            url: manga.url || '',
+            url: manga.url || "",
             created_at: manga.created_at || new Date().toISOString(),
             updated_at: manga.updated_at || new Date().toISOString(),
           });
@@ -113,7 +120,7 @@ export function processKenmeiMangaBatches(
       }
     }
   }
-  
+
   return {
     processedEntries,
     validationErrors,
@@ -136,31 +143,35 @@ function validateAndNormalizeManga(
   options: KenmeiParseOptions,
 ): KenmeiManga {
   const errors: string[] = [];
-  
+
   // Check required fields
   if (!manga.title) {
-    errors.push('Missing title');
+    errors.push("Missing title");
   }
-  
+
   // Validate status
   if (!manga.status || !isValidStatus(manga.status)) {
     manga.status = options.defaultStatus;
   }
-  
+
   // Normalize numeric fields
-  manga.chapters_read = typeof manga.chapters_read === 'number' ? manga.chapters_read : 0;
-  manga.volumes_read = typeof manga.volumes_read === 'number' ? manga.volumes_read : 0;
-  manga.score = typeof manga.score === 'number' ? manga.score : 0;
-  
+  manga.chapters_read =
+    typeof manga.chapters_read === "number" ? manga.chapters_read : 0;
+  manga.volumes_read =
+    typeof manga.volumes_read === "number" ? manga.volumes_read : 0;
+  manga.score = typeof manga.score === "number" ? manga.score : 0;
+
   // Ensure we have dates
   manga.created_at = manga.created_at || new Date().toISOString();
   manga.updated_at = manga.updated_at || new Date().toISOString();
-  
+
   // If we have critical errors and don't allow partial data, throw
   if (errors.length > 0 && !options.allowPartialData) {
-    throw new Error(`Validation failed for manga at index ${index}: ${errors.join(', ')}`);
+    throw new Error(
+      `Validation failed for manga at index ${index}: ${errors.join(", ")}`,
+    );
   }
-  
+
   return manga;
 }
 
@@ -190,19 +201,20 @@ export const parseKenmeiCsvExport = (
   options: Partial<KenmeiParseOptions> = {},
 ): KenmeiExport => {
   const parseOptions = { ...DEFAULT_PARSE_OPTIONS, ...options };
-  
+
   try {
-    // Split the CSV into lines and remove any empty lines
-    const lines = csvString
-      .split("\n")
-      .filter((line) => line.trim().length > 0);
-    
-    if (lines.length < 2) {
+    // Replace Windows line breaks with Unix style
+    const normalizedCsv = csvString.replace(/\r\n/g, "\n");
+
+    // Parse CSV rows properly, respecting quoted fields
+    const rows = parseCSVRows(normalizedCsv);
+
+    if (rows.length < 2) {
       throw new Error("CSV file does not contain enough data");
     }
 
     // Get headers from the first line, normalize them to avoid issues with spaces or case
-    const headers = lines[0].split(",").map((header) => header.trim().toLowerCase());
+    const headers = rows[0].map((header) => header.trim().toLowerCase());
 
     // Validate required headers
     const requiredHeaders = ["title"];
@@ -214,52 +226,52 @@ export const parseKenmeiCsvExport = (
 
     // Create mapping for various possible column names
     const columnMappings = {
-      chapter: ['last_chapter_read', 'chapters_read', 'chapter', 'current_chapter'],
-      volume: ['last_volume_read', 'volumes_read', 'volume', 'current_volume'],
-      status: ['status', 'reading_status'],
-      score: ['score', 'rating'],
-      url: ['series_url', 'url', 'link'],
-      notes: ['notes', 'comments'],
-      date: ['last_read_at', 'updated_at', 'date'],
+      chapter: [
+        "last_chapter_read",
+        "chapters_read",
+        "chapter",
+        "current_chapter",
+      ],
+      volume: ["last_volume_read", "volumes_read", "volume", "current_volume"],
+      status: ["status", "reading_status"],
+      score: ["score", "rating"],
+      url: ["series_url", "url", "link"],
+      notes: ["notes", "comments"],
+      date: ["last_read_at", "updated_at", "date"],
     };
 
     // Parse manga entries
     const manga: KenmeiManga[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      // Handle potential quoted CSV values that might contain commas
-      const values: string[] = [];
-      const currentLine = lines[i];
-      
-      // Basic CSV parsing that handles quoted fields containing commas
-      let inQuote = false;
-      let currentValue = '';
-      
-      for (let j = 0; j < currentLine.length; j++) {
-        const char = currentLine[j];
-        
-        if (char === '"') {
-          inQuote = !inQuote;
-        } else if (char === ',' && !inQuote) {
-          values.push(currentValue.trim());
-          currentValue = '';
-        } else {
-          currentValue += char;
-        }
+
+    // Skip the header row
+    for (let i = 1; i < rows.length; i++) {
+      const values = rows[i];
+
+      // Skip rows that don't have enough fields (likely incomplete/malformed data)
+      if (values.length < 2) {
+        console.warn(
+          `Skipping row ${i + 1} with insufficient fields: ${values.join(",")}`,
+        );
+        continue;
       }
-      
-      // Add the last value
-      values.push(currentValue.trim());
-      
+
+      // Skip rows where the title is just a number or looks like a chapter reference
+      const potentialTitle = values[headers.indexOf("title")];
+      if (
+        /^(Chapter|Ch\.|Vol\.|Volume) \d+$/i.test(potentialTitle) ||
+        /^\d+$/.test(potentialTitle)
+      ) {
+        console.warn(
+          `Skipping row ${i + 1} with invalid title: "${potentialTitle}"`,
+        );
+        continue;
+      }
+
       // Create an object mapping headers to values
       const entry: Record<string, string> = {};
       headers.forEach((header, index) => {
         if (index < values.length) {
-          // Remove quotes if present
-          let value = values[index];
-          if (value.startsWith('"') && value.endsWith('"')) {
-            value = value.substring(1, value.length - 1);
-          }
-          entry[header] = value;
+          entry[header] = values[index];
         }
       });
 
@@ -272,12 +284,12 @@ export const parseKenmeiCsvExport = (
         }
         return undefined;
       };
-      
+
       // Parse numeric values safely
       const parseIntSafe = (value: string | undefined): number | undefined => {
         if (!value) return undefined;
         // Remove any non-numeric characters except decimal point
-        const cleanValue = value.replace(/[^\d.]/g, '');
+        const cleanValue = value.replace(/[^\d.]/g, "");
         if (!cleanValue) return undefined;
         const parsed = parseInt(cleanValue, 10);
         return isNaN(parsed) ? undefined : parsed;
@@ -291,7 +303,7 @@ export const parseKenmeiCsvExport = (
       const urlValue = findValue(columnMappings.url);
       const notesValue = findValue(columnMappings.notes);
       const dateValue = findValue(columnMappings.date);
-      
+
       // Parse chapter and volume numbers
       const chaptersRead = parseIntSafe(chapterValue);
       const volumesRead = parseIntSafe(volumeValue);
@@ -305,14 +317,20 @@ export const parseKenmeiCsvExport = (
         url: urlValue || "",
         cover_url: entry.cover_url,
         chapters_read: chaptersRead !== undefined ? chaptersRead : 0,
-        total_chapters: entry.total_chapters ? parseInt(entry.total_chapters) : undefined,
+        total_chapters: entry.total_chapters
+          ? parseInt(entry.total_chapters)
+          : undefined,
         volumes_read: volumesRead,
-        total_volumes: entry.total_volumes ? parseInt(entry.total_volumes) : undefined,
+        total_volumes: entry.total_volumes
+          ? parseInt(entry.total_volumes)
+          : undefined,
         notes: notesValue || "",
         created_at: dateValue || new Date().toISOString(),
         updated_at: dateValue || new Date().toISOString(),
         author: entry.author,
-        alternative_titles: entry.alternative_titles ? entry.alternative_titles.split(";") : undefined,
+        alternative_titles: entry.alternative_titles
+          ? entry.alternative_titles.split(";")
+          : undefined,
       };
 
       manga.push(mangaEntry);
@@ -321,11 +339,16 @@ export const parseKenmeiCsvExport = (
     // Process in batches if needed and validation is enabled
     if (parseOptions.validateStructure) {
       const result = processKenmeiMangaBatches(manga, 100, parseOptions);
-      
-      if (result.validationErrors.length > 0 && !parseOptions.allowPartialData) {
-        throw new Error(`${result.validationErrors.length} validation errors found in CSV import`);
+
+      if (
+        result.validationErrors.length > 0 &&
+        !parseOptions.allowPartialData
+      ) {
+        throw new Error(
+          `${result.validationErrors.length} validation errors found in CSV import`,
+        );
       }
-      
+
       // Use the processed entries if we have them
       if (result.processedEntries.length > 0) {
         manga.length = 0; // Clear the array
@@ -343,6 +366,7 @@ export const parseKenmeiCsvExport = (
       manga,
     };
 
+    console.log(`Successfully parsed ${manga.length} manga entries from CSV`);
     return kenmeiExport;
   } catch (error) {
     if (error instanceof Error) {
@@ -353,6 +377,60 @@ export const parseKenmeiCsvExport = (
     throw new Error("Failed to parse CSV: Unknown error");
   }
 };
+
+/**
+ * Parse CSV content into rows and columns, properly handling quoted fields
+ * @param csvContent The CSV content as a string
+ * @returns Array of arrays, where each inner array contains the values for a row
+ */
+function parseCSVRows(csvContent: string): string[][] {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentValue: string = "";
+  let inQuotes: boolean = false;
+
+  // Process each character in the CSV
+  for (let i = 0; i < csvContent.length; i++) {
+    const char = csvContent[i];
+    const nextChar = i < csvContent.length - 1 ? csvContent[i + 1] : "";
+
+    // Handle quotes
+    if (char === '"') {
+      // If this is an escaped quote (i.e., "")
+      if (nextChar === '"') {
+        currentValue += '"';
+        i++; // Skip the next quote
+      } else {
+        // Toggle in-quotes state
+        inQuotes = !inQuotes;
+      }
+    }
+    // Handle commas
+    else if (char === "," && !inQuotes) {
+      currentRow.push(currentValue);
+      currentValue = "";
+    }
+    // Handle newlines
+    else if (char === "\n" && !inQuotes) {
+      currentRow.push(currentValue);
+      rows.push(currentRow);
+      currentRow = [];
+      currentValue = "";
+    }
+    // Handle all other characters
+    else {
+      currentValue += char;
+    }
+  }
+
+  // Add the last value and row if there is one
+  if (currentValue || currentRow.length > 0) {
+    currentRow.push(currentValue);
+    rows.push(currentRow);
+  }
+
+  return rows;
+}
 
 /**
  * Map a Kenmei status string to a valid status enum
@@ -407,31 +485,31 @@ export function extractMangaMetadata(manga: KenmeiManga[]): {
     dropped: 0,
     plan_to_read: 0,
   };
-  
+
   let totalScore = 0;
   let scoredEntries = 0;
   let totalChaptersRead = 0;
   let hasVolumesData = false;
-  
-  manga.forEach(entry => {
+
+  manga.forEach((entry) => {
     // Count statuses
     statusCounts[entry.status]++;
-    
+
     // Track scores
     if (entry.score > 0) {
       totalScore += entry.score;
       scoredEntries++;
     }
-    
+
     // Track chapters
     totalChaptersRead += entry.chapters_read || 0;
-    
+
     // Check if we have volume data
     if (entry.volumes_read !== undefined || entry.total_volumes !== undefined) {
       hasVolumesData = true;
     }
   });
-  
+
   return {
     totalManga: manga.length,
     statusCounts,

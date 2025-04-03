@@ -27,6 +27,7 @@ export interface KenmeiManga {
   updated_at: string;
   author?: string;
   alternative_titles?: string[];
+  anilistId?: number; // Optional AniList ID for direct fetching
 }
 
 export interface KenmeiExport {

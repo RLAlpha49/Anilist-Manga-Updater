@@ -28,28 +28,28 @@ Story Points: 3
 ## Tasks
 
 - [x] Enhance Kenmei Data Processing
+
   - [x] Implement batch processing for large collections
   - [x] Add validation and error handling for import files
   - [x] Extract reading progress and status information
   - [x] Create mapping functionality between Kenmei and AniList status values
   - [x] Add support for handling multiple formats (chapters, volumes) correctly
 
-- [ ] Implement AniList Search and Matching
-  - [ ] Create robust search functionality using AniList GraphQL API
-  - [ ] Implement fuzzy matching algorithm for title comparison
-  - [ ] Support alternative title matching for better accuracy
-  - [ ] Add language preference for title matching
-  - [ ] Implement confidence score for matches
-  - [ ] Create caching mechanism to reduce API calls for common titles
+- [x] Implement AniList Search and Matching
 
-- [ ] Develop Match Review UI
+  - [x] Set up AniList API client
+  - [x] Create search functionality
+  - [x] Develop title matching algorithms
+  - [x] Implement caching for search results
+  - [x] Handle batch processing with rate limiting
 
-  - [ ] Create a review interface to display all matches
-  - [ ] Highlight low-confidence matches for manual review
-  - [ ] Allow users to manually search and select alternative matches
-  - [ ] Implement a batch confirmation mechanism
-  - [ ] Add filtering options (e.g., show only conflicts)
-  - [ ] Create detailed view for each manga entry
+- [x] Develop Match Review UI
+
+  - [x] Create interface for reviewing matches
+  - [x] Display confidence scores and match details
+  - [x] Allow selection of alternate matches
+  - [x] Implement manual search functionality
+  - [x] Add batch approval/rejection options
 
 - [ ] Build Synchronization System
 
