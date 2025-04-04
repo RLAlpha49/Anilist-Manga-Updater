@@ -1,6 +1,5 @@
 // TODO: Fix confidence match scores being set incorrectly when resuming from a previous process
 // TODO: Fix statuses being reset to pending when resuming from a previous process (Happens when canceling a process, maybe when it finished too).
-// TODO: Fix the amount of manga displayed as being processed being incorrect when canceling a resume processing operation (maybe when it finished too). This seems to set the amount of manga processed to before the process was started. It fixes itself when resuming again.
 
 // TODO: Add a button to accept the main match of all pending manga matches.
 // TODO: Add a button to skip all pending manga matches without any matches from searching.
@@ -147,7 +146,7 @@ export function MatchingPage() {
     if (importedManga.length > 0) {
       console.log(`Found ${importedManga.length} imported manga from storage`);
       // Store the imported manga data for later use
-      setManga(importedManga);
+      setManga(importedManga as KenmeiManga[]);
     } else {
       console.log("No imported manga found in storage");
     }
@@ -201,8 +200,8 @@ export function MatchingPage() {
           );
           const calculatedPendingManga =
             pendingMangaState.calculatePendingManga(
-              savedResults,
-              importedManga,
+              savedResults as MangaMatchResult[],
+              importedManga as KenmeiManga[],
             );
           if (calculatedPendingManga.length > 0) {
             console.log(
@@ -234,7 +233,9 @@ export function MatchingPage() {
                 console.log(
                   `Forced calculation found ${pendingManga.length} pending manga`,
                 );
-                pendingMangaState.savePendingManga(pendingManga);
+                pendingMangaState.savePendingManga(
+                  pendingManga as KenmeiManga[],
+                );
               }
             }
           }
@@ -243,7 +244,7 @@ export function MatchingPage() {
         // Mark as initialized
         matchingProcess.matchingInitialized.current = true;
         // Set the saved results directly
-        setMatchResults(savedResults);
+        setMatchResults(savedResults as MangaMatchResult[]);
         console.log("*** INITIALIZATION COMPLETE - Using saved results ***");
         hasInitialized.current = true;
         return; // Skip further initialization
@@ -260,7 +261,11 @@ export function MatchingPage() {
         hasInitialized.current = true;
 
         // Start matching process automatically
-        matchingProcess.startMatching(importedManga, false, setMatchResults);
+        matchingProcess.startMatching(
+          importedManga as KenmeiManga[],
+          false,
+          setMatchResults,
+        );
       } else if (!importedManga.length) {
         // Redirect back to import page if no data
         console.log("No imported manga found, redirecting to import page");
@@ -959,7 +964,7 @@ export function MatchingPage() {
         isOpen={isSearchOpen}
         searchTarget={searchTarget}
         accessToken={authState.accessToken || ""}
-        bypassCache={matchingProcess.bypassCache}
+        bypassCache={true}
         onClose={() => {
           setIsSearchOpen(false);
           setSearchTarget(undefined);

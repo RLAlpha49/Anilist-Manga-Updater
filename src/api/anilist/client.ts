@@ -109,6 +109,7 @@ export async function request<T>(
   variables?: Record<string, unknown>,
   token?: string,
   abortSignal?: AbortSignal,
+  bypassCache?: boolean,
 ): Promise<AniListResponse<T>> {
   // Check if we're running in a browser or Electron environment
   const isElectron = typeof window !== "undefined" && window.electronAPI;
@@ -141,7 +142,7 @@ export async function request<T>(
       // Use the correct call format for the main process
       const response = await window.electronAPI.anilist.request(
         query,
-        variables,
+        { ...variables, bypassCache }, // Pass bypassCache flag to main process
         token,
         // We can't pass AbortSignal through IPC, but we'll check it after
       );
@@ -289,7 +290,7 @@ export async function searchManga(
     const response = await request<{
       data?: { Page: SearchResult<AniListManga>["Page"] };
       Page?: SearchResult<AniListManga>["Page"];
-    }>(SEARCH_MANGA, { search, page, perPage }, token);
+    }>(SEARCH_MANGA, { search, page, perPage }, token, undefined, bypassCache);
     console.log("Query:", SEARCH_MANGA);
     console.log("Variables:", { search, page, perPage, bypassCache });
     console.log("🔍 searchManga response:", response);
@@ -443,7 +444,7 @@ export async function advancedSearchManga(
     const response = await request<{
       data?: { Page: SearchResult<AniListManga>["Page"] };
       Page?: SearchResult<AniListManga>["Page"];
-    }>(ADVANCED_SEARCH_MANGA, variables, token);
+    }>(ADVANCED_SEARCH_MANGA, variables, token, undefined, bypassCache);
 
     console.log("🔍 advancedSearchManga response:", response);
 

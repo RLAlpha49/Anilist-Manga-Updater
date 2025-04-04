@@ -197,10 +197,19 @@ export function setupAniListAPI() {
     try {
       console.log("Handling AniList API request in main process");
 
+      // Extract and remove bypassCache from variables to avoid sending it to the API
+      const bypassCache = variables?.bypassCache;
+      if (variables && "bypassCache" in variables) {
+        // Create a copy without the bypassCache property
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { bypassCache: removed, ...cleanVariables } = variables;
+        variables = cleanVariables;
+      }
+
       // Check if it's a search request and if we should use cache
       const isSearchQuery = query.includes("Page(") && variables?.search;
 
-      if (isSearchQuery) {
+      if (isSearchQuery && !bypassCache) {
         const cacheKey = generateCacheKey(query, variables);
 
         if (isCacheValid(searchCache, cacheKey)) {
@@ -212,10 +221,14 @@ export function setupAniListAPI() {
         }
       }
 
+      if (isSearchQuery && bypassCache) {
+        console.log(`Bypassing cache for search: ${variables.search}`);
+      }
+
       const response = await requestAniList(query, variables, token);
 
-      // Cache search results
-      if (isSearchQuery && response.data) {
+      // Cache search results only if not bypassing cache
+      if (isSearchQuery && response.data && !bypassCache) {
         const cacheKey = generateCacheKey(query, variables);
         searchCache[cacheKey] = {
           data: response,

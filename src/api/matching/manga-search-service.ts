@@ -1225,8 +1225,8 @@ export async function batchMatchManga(
 
     // Now process remaining uncached manga with strict concurrency control
     if (uncachedManga.length > 0) {
-      // Create a semaphore to strictly limit concurrency
-      const MAX_CONCURRENT = 3;
+      // Create a semaphore to strictly limit concurrency - process one manga at a time
+      const MAX_CONCURRENT = 1;
       let activeCount = 0;
 
       // Track processed manga to prevent duplicates
@@ -1709,7 +1709,7 @@ export const cacheDebugger = {
     const titleLower = title.toLowerCase().trim();
 
     // Track entries to remove (to avoid modifying while iterating)
-    const keysToRemove = [];
+    const keysToRemove: string[] = [];
 
     // Look for entries that may be this exact manga but stored under a different title variant
     Object.keys(mangaCache).forEach((key) => {

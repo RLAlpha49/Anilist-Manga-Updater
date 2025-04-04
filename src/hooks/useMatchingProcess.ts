@@ -2,7 +2,12 @@ import { useState, useRef, useCallback } from "react";
 import { KenmeiManga } from "../api/kenmei/types";
 import { MangaMatchResult } from "../api/anilist/types";
 import { batchMatchManga } from "../api/matching/manga-search-service";
-import { STORAGE_KEYS, storage, mergeMatchResults } from "../utils/storage";
+import {
+  STORAGE_KEYS,
+  storage,
+  mergeMatchResults,
+  MatchResult,
+} from "../utils/storage";
 import { ApiError, MatchingProgress } from "../types/matching";
 import { useTimeEstimate } from "./useTimeEstimate";
 import { usePendingManga } from "./usePendingManga";
@@ -304,24 +309,49 @@ export const useMatchingProcess = (authState: {
         if (cancelMatchingRef.current) {
           console.log("Operation was cancelled - handling partial results");
           if (results.length > 0) {
-            setMatchResults(results);
+            // Merge with existing results to preserve user progress
+            const mergedResults = mergeMatchResults(results as MatchResult[]);
 
-            // Save whatever results we have
+            // Log details about the merging process
+            console.log(
+              `Original results count: ${results.length}, Merged results count: ${mergedResults.length}`,
+            );
+
+            if (mergedResults.length !== results.length) {
+              console.log(
+                "Results count changed during merge - this may indicate a merging issue",
+              );
+            }
+
+            // Update state with the merged results
+            setMatchResults(mergedResults as MangaMatchResult[]);
+
+            // Save the merged results to storage
             try {
               storage.setItem(
                 STORAGE_KEYS.MATCH_RESULTS,
-                JSON.stringify(results),
+                JSON.stringify(mergedResults),
+              );
+              console.log(
+                `Saved merged match results after cancellation with ${mergedResults.filter((m) => m.status !== "pending").length} preserved matches`,
               );
 
-              // Save the remaining manga that weren't processed yet
-              const remainingManga = calculatePendingManga(results, mangaList);
+              // Calculate and save the remaining manga that weren't processed yet
+              // based on the merged results, not just the partial results
+              const remainingManga = calculatePendingManga(
+                mergedResults as MangaMatchResult[],
+                mangaList,
+              );
 
               if (remainingManga.length > 0) {
+                console.log(
+                  `Saving ${remainingManga.length} remaining manga for future resume`,
+                );
                 savePendingManga(remainingManga);
               }
             } catch (storageError) {
               console.error(
-                "Failed to save partial match results to storage:",
+                "Failed to save merged match results to storage:",
                 storageError,
               );
             }
@@ -340,10 +370,21 @@ export const useMatchingProcess = (authState: {
         );
 
         // Merge with existing results to preserve user progress
-        const mergedResults = mergeMatchResults(results);
+        const mergedResults = mergeMatchResults(results as MatchResult[]);
+
+        // Log details about the merging process
+        console.log(
+          `Original results count: ${results.length}, Merged results count: ${mergedResults.length}`,
+        );
+
+        if (mergedResults.length !== results.length) {
+          console.log(
+            "Results count changed during merge - this may indicate a merging issue",
+          );
+        }
 
         // Update state with the merged results
-        setMatchResults(mergedResults);
+        setMatchResults(mergedResults as MangaMatchResult[]);
 
         // Save the merged results to storage
         try {

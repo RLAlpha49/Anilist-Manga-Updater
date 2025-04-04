@@ -277,7 +277,13 @@ export function SettingsPage() {
       const cacheKeysByType = {
         search: ["anilist_search_cache"],
         manga: ["anilist_manga_cache"],
-        review: ["match_results", "manga_matches", "review_progress"],
+        review: [
+          "match_results",
+          "manga_matches",
+          "review_progress",
+          "pending_manga",
+          "matching_progress",
+        ],
         import: ["kenmei_data", "import_history", "import_stats"],
         other: [
           "title_cache",
@@ -338,8 +344,10 @@ export function SettingsPage() {
       const keysToRemove: string[] = [];
 
       Object.entries(cachesToClear).forEach(([type, selected]) => {
-        if (selected && cacheKeysByType[type]) {
-          keysToRemove.push(...cacheKeysByType[type]);
+        if (selected && cacheKeysByType[type as keyof typeof cacheKeysByType]) {
+          keysToRemove.push(
+            ...cacheKeysByType[type as keyof typeof cacheKeysByType],
+          );
         }
       });
 

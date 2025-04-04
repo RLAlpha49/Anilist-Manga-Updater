@@ -337,7 +337,7 @@ export function mergeMatchResults(newResults: MatchResult[]): MatchResult[] {
     });
 
     // Process new results, preserving user progress from existing matches
-    const mergedResults = newResults.map((newMatch) => {
+    const processedResults = newResults.map((newMatch) => {
       // Try to find existing match by ID first
       let existingMatch = newMatch.kenmeiManga?.id
         ? existingById.get(newMatch.kenmeiManga.id.toString())
@@ -368,6 +368,53 @@ export function mergeMatchResults(newResults: MatchResult[]): MatchResult[] {
       // Otherwise use the new match
       return newMatch;
     });
+
+    // Create sets to track what we've processed
+    const processedIds = new Set<string>();
+    const processedTitles = new Set<string>();
+
+    // Add all processed results to the tracking sets
+    processedResults.forEach((result) => {
+      if (result.kenmeiManga?.id) {
+        processedIds.add(result.kenmeiManga.id.toString());
+      }
+      if (result.kenmeiManga?.title) {
+        processedTitles.add(result.kenmeiManga.title.toLowerCase());
+      }
+    });
+
+    // Find existing results that weren't in the new results and add them
+    const unprocessedExistingResults = existingResults.filter(
+      (existingMatch) => {
+        // Skip if we already processed this manga by ID
+        if (
+          existingMatch.kenmeiManga?.id &&
+          processedIds.has(existingMatch.kenmeiManga.id.toString())
+        ) {
+          return false;
+        }
+
+        // Skip if we already processed this manga by title
+        if (
+          existingMatch.kenmeiManga?.title &&
+          processedTitles.has(existingMatch.kenmeiManga.title.toLowerCase())
+        ) {
+          return false;
+        }
+
+        // This is an existing result that wasn't in the new batch, so include it
+        return true;
+      },
+    );
+
+    if (unprocessedExistingResults.length > 0) {
+      console.log(
+        `Adding ${unprocessedExistingResults.length} existing results that weren't in the new batch`,
+      );
+    }
+
+    // Combine processed results with unprocessed existing results
+    const mergedResults = [...processedResults, ...unprocessedExistingResults];
 
     console.log(`Merged results: ${mergedResults.length} total items`);
 
