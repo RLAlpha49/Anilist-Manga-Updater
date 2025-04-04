@@ -278,7 +278,7 @@ export interface SearchServiceConfig {
 export const DEFAULT_SEARCH_CONFIG: SearchServiceConfig = {
   matchConfig: DEFAULT_MATCH_CONFIG,
   batchSize: 10,
-  searchPerPage: 20,
+  searchPerPage: 50,
   maxSearchResults: 50,
   useAdvancedSearch: false,
   enablePreSearch: true,
@@ -363,7 +363,7 @@ async function processRateLimitQueue(): Promise<void> {
 async function searchWithRateLimit(
   query: string,
   page: number = 1,
-  perPage: number = 20,
+  perPage: number = 50,
   token?: string,
   acquireLimit: boolean = true,
   retryCount: number = 0,
@@ -411,7 +411,7 @@ async function advancedSearchWithRateLimit(
     formats?: string[];
   } = {},
   page: number = 1,
-  perPage: number = 20,
+  perPage: number = 50,
   token?: string,
   acquireLimit: boolean = true,
   retryCount: number = 0,
@@ -479,7 +479,7 @@ function checkTitleMatch(title: string, searchName: string): boolean {
     .toLowerCase()
     .split(/\s+/)
     .filter((word) => word.length > 0);
-  
+
   const searchWordsArray = cleanSearchName
     .toLowerCase()
     .split(/\s+/)
@@ -491,18 +491,20 @@ function checkTitleMatch(title: string, searchName: string): boolean {
   }
 
   // For multi-word searches, check if all words are present
-  const allWordsPresent = searchWordsArray.every(word => titleWordsArray.includes(word));
+  const allWordsPresent = searchWordsArray.every((word) =>
+    titleWordsArray.includes(word),
+  );
   if (!allWordsPresent) return false;
 
   // If all words are present, check for order preservation and proximity
   // Find indexes of search words in the title
-  const indexes = searchWordsArray.map(word => titleWordsArray.indexOf(word));
-  
+  const indexes = searchWordsArray.map((word) => titleWordsArray.indexOf(word));
+
   // Check if the words appear in the same order (indexes should be increasing)
-  const sameOrder = indexes.every((index, i) => 
-    i === 0 || index > indexes[i - 1]
+  const sameOrder = indexes.every(
+    (index, i) => i === 0 || index > indexes[i - 1],
   );
-  
+
   // Count how many words are adjacent (index difference of 1)
   let adjacentCount = 0;
   for (let i = 1; i < indexes.length; i++) {
@@ -510,10 +512,10 @@ function checkTitleMatch(title: string, searchName: string): boolean {
       adjacentCount++;
     }
   }
-  
+
   // Calculate proximity score (what percentage of words are adjacent)
   const proximityScore = adjacentCount / (searchWordsArray.length - 1);
-  
+
   // Return true if words are in same order OR if at least 50% are adjacent
   return sameOrder || proximityScore >= 0.5;
 }
@@ -632,8 +634,8 @@ function normalizeForMatching(str: string): string {
   return str
     .toLowerCase()
     .replace(/[^\w\s]/g, "") // Remove punctuation
-    .replace(/\s+/g, " ")    // Normalize spaces (replace multiple spaces with a single space)
-    .replace(/_/g, " ")      // Replace underscores with spaces
+    .replace(/\s+/g, " ") // Normalize spaces (replace multiple spaces with a single space)
+    .replace(/_/g, " ") // Replace underscores with spaces
     .trim();
 }
 
@@ -655,32 +657,32 @@ function calculateStringSimilarity(str1: string, str2: string): number {
 
   // Use Levenshtein distance for more accurate similarity calculation
   const matrix: number[][] = [];
-  
+
   // Initialize the matrix
   for (let i = 0; i <= str1.length; i++) {
     matrix[i] = [i];
   }
-  
+
   for (let j = 0; j <= str2.length; j++) {
     matrix[0][j] = j;
   }
-  
+
   // Fill the matrix
   for (let i = 1; i <= str1.length; i++) {
     for (let j = 1; j <= str2.length; j++) {
       const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
       matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,      // deletion
-        matrix[i][j - 1] + 1,      // insertion
-        matrix[i - 1][j - 1] + cost // substitution
+        matrix[i - 1][j] + 1, // deletion
+        matrix[i][j - 1] + 1, // insertion
+        matrix[i - 1][j - 1] + cost, // substitution
       );
     }
   }
-  
+
   // Calculate similarity as 1 - normalized distance
   const distance = matrix[str1.length][str2.length];
-  const similarity = 1 - (distance / Math.max(str1.length, str2.length));
-  
+  const similarity = 1 - distance / Math.max(str1.length, str2.length);
+
   return similarity;
 }
 
@@ -828,10 +830,25 @@ export async function searchMangaByTitle(
 ): Promise<MangaMatch[]> {
   const searchConfig = { ...DEFAULT_SEARCH_CONFIG, ...config };
 
-  // Check if we should bypass cache
-  if (!searchConfig.bypassCache) {
-    // Check cache first (existing logic)
-    const cacheKey = generateCacheKey(title);
+  // Generate cache key for this title
+  const cacheKey = generateCacheKey(title);
+
+  // If bypassing cache, explicitly clear any existing cache for this title
+  if (searchConfig.bypassCache && cacheKey) {
+    console.log(`🔥 Fresh search: Explicitly clearing cache for "${title}"`);
+
+    // Check if we have this title in cache first
+    if (mangaCache[cacheKey]) {
+      delete mangaCache[cacheKey];
+      console.log(`🧹 Removed existing cache entry for "${title}"`);
+
+      // Also save the updated cache to persist the removal
+      saveCache();
+    } else {
+      console.log(`🔍 No existing cache entry found for "${title}" to clear`);
+    }
+  } else if (!searchConfig.bypassCache) {
+    // Check cache first (existing logic - only if not bypassing)
     if (isCacheValid(cacheKey)) {
       console.log(`Using cache for ${title}`);
       // Filter out Light Novels from cache results
@@ -1184,39 +1201,51 @@ export async function batchMatchManga(
     // Track manga IDs if we have them (for batch fetching)
     const knownMangaIds: { index: number; id: number }[] = [];
 
-    console.log(`Checking cache for ${mangaList.length} manga titles...`);
+    // If we're bypassing cache, treat all manga as uncached
+    if (searchConfig.bypassCache) {
+      console.log(
+        `🚨 FRESH SEARCH: Bypassing cache for all ${mangaList.length} manga titles`,
+      );
 
-    // Check cache for all manga first
-    mangaList.forEach((manga, index) => {
-      const cacheKey = generateCacheKey(manga.title);
-
-      // If manga has a known AniList ID, we can batch fetch it
-      if (manga.anilistId && Number.isInteger(manga.anilistId)) {
-        knownMangaIds.push({ index, id: manga.anilistId });
-      }
-      // Otherwise check the cache
-      else if (isCacheValid(cacheKey)) {
-        // This manga is in cache
-        cachedResults[index] = mangaCache[cacheKey].manga;
-        console.log(`Found cached results for: ${manga.title}`);
-
-        // Immediately update progress for cached manga
-        updateProgress(index, manga.title);
-      } else {
-        // This manga needs to be fetched by search
+      // Put all manga in the uncached list
+      mangaList.forEach((manga, index) => {
         uncachedManga.push({ index, manga });
-      }
-    });
+      });
+    } else {
+      console.log(`Checking cache for ${mangaList.length} manga titles...`);
 
-    console.log(
-      `Found ${Object.keys(cachedResults).length} cached manga, ${knownMangaIds.length} have known IDs, ${uncachedManga.length} require searching`,
-    );
+      // Check cache for all manga first
+      mangaList.forEach((manga, index) => {
+        const cacheKey = generateCacheKey(manga.title);
+
+        // If manga has a known AniList ID, we can batch fetch it
+        if (manga.anilistId && Number.isInteger(manga.anilistId)) {
+          knownMangaIds.push({ index, id: manga.anilistId });
+        }
+        // Otherwise check the cache
+        else if (isCacheValid(cacheKey)) {
+          // This manga is in cache
+          cachedResults[index] = mangaCache[cacheKey].manga;
+          console.log(`Found cached results for: ${manga.title}`);
+
+          // Immediately update progress for cached manga
+          updateProgress(index, manga.title);
+        } else {
+          // This manga needs to be fetched by search
+          uncachedManga.push({ index, manga });
+        }
+      });
+
+      console.log(
+        `Found ${Object.keys(cachedResults).length} cached manga, ${knownMangaIds.length} have known IDs, ${uncachedManga.length} require searching`,
+      );
+    }
 
     // Check for cancellation
     checkCancellation();
 
-    // First, fetch all manga with known IDs in batches
-    if (knownMangaIds.length > 0) {
+    // First, fetch all manga with known IDs in batches (only if not bypassing cache)
+    if (knownMangaIds.length > 0 && !searchConfig.bypassCache) {
       const ids = knownMangaIds.map((item) => item.id);
       console.log(`Fetching ${ids.length} manga with known IDs...`);
 
@@ -1338,7 +1367,7 @@ export async function batchMatchManga(
 
           // Double-check cache one more time before searching
           const cacheKey = generateCacheKey(manga.title);
-          if (isCacheValid(cacheKey)) {
+          if (!searchConfig.bypassCache && isCacheValid(cacheKey)) {
             cachedResults[index] = mangaCache[cacheKey].manga;
             console.log(
               `Using cache for ${manga.title} (found during processing)`,
@@ -1347,9 +1376,8 @@ export async function batchMatchManga(
             updateProgress(index, manga.title);
           } else {
             // Search for this manga
-            const queuePosition = uncachedManga.length - queue.length;
             console.log(
-              `Searching for manga: ${manga.title} (${queuePosition}/${uncachedManga.length})`,
+              `Searching for manga: ${manga.title} (${reportedIndices.size}/${mangaList.length})`,
             );
 
             // Update progress for this manga before search
@@ -1484,9 +1512,9 @@ export async function batchMatchManga(
       const potentialMatchesFixed = potentialMatches.map((match) => ({
         manga: match,
         confidence: calculateConfidence(
-          typeof manga.title === "object" && manga.title
-            ? manga.title.romaji || manga.title.english || ""
-            : String(manga.title || ""),
+          typeof match.title === "object" && match.title
+            ? match.title.romaji || match.title.english || ""
+            : String(match.title || ""),
           match,
         ),
       }));
@@ -1820,6 +1848,46 @@ export const cacheDebugger = {
     );
     return entriesCleared;
   },
+
+  clearAllCaches() {
+    // Clear in-memory cache
+    Object.keys(mangaCache).forEach((key) => {
+      delete mangaCache[key];
+    });
+
+    // Clear localStorage caches
+    try {
+      localStorage.removeItem("anilist_manga_cache");
+      localStorage.removeItem("anilist_search_cache");
+      console.log("All AniList caches cleared successfully");
+    } catch (e) {
+      console.error("Error clearing localStorage caches:", e);
+    }
+
+    return this.getCacheStatus();
+  },
+
+  printCacheKeysFor(title: string) {
+    const key = generateCacheKey(title);
+    console.log(`Cache key for "${title}": ${key}`);
+
+    // Check if we have a cache entry for this title
+    if (mangaCache[key]) {
+      console.log(
+        `Found in-memory cache entry for "${title}" with ${mangaCache[key].manga.length} results`,
+      );
+    } else {
+      console.log(`No in-memory cache entry found for "${title}"`);
+    }
+
+    return key;
+  },
+
+  dumpCache() {
+    return {
+      ...mangaCache,
+    };
+  },
 };
 
 /**
@@ -1891,18 +1959,62 @@ function calculateConfidence(searchTitle: string, manga: AniListManga): number {
     return 95;
   } else if (score >= 0.85) {
     // Strong match - high confidence (85-90%)
-    return 85 + (score - 0.85) * 50; 
+    return 85 + (score - 0.85) * 50;
   } else if (score >= 0.7) {
     // Good match - medium-high confidence (75-85%)
-    return 75 + (score - 0.7) * 67; 
+    return 75 + (score - 0.7) * 67;
   } else if (score >= 0.5) {
     // Reasonable match - medium confidence (60-75%)
-    return 60 + (score - 0.5) * 75; 
+    return 60 + (score - 0.5) * 75;
   } else if (score >= 0.3) {
     // Weak match - low confidence (40-60%)
-    return 40 + (score - 0.3) * 100; 
+    return 40 + (score - 0.3) * 100;
   } else {
     // Very weak match - very low confidence (10-40%)
-    return Math.max(10, score * 100); 
+    return Math.max(10, score * 100);
   }
+}
+
+/**
+ * Clear cache for multiple manga titles at once
+ * Use this when doing a batch rematch operation with bypassCache=true
+ * @param titles List of manga titles to clear from cache
+ * @returns Object with count of cleared entries and remaining cache size
+ */
+export function clearCacheForTitles(titles: string[]): {
+  clearedCount: number;
+  remainingCacheSize: number;
+  titlesWithNoCache: number;
+} {
+  console.log(`Clearing cache for ${titles.length} manga titles...`);
+
+  let clearedCount = 0;
+  let titlesWithNoCache = 0;
+
+  // Clear each title's cache entry
+  for (const title of titles) {
+    const cacheKey = generateCacheKey(title);
+
+    if (mangaCache[cacheKey]) {
+      delete mangaCache[cacheKey];
+      clearedCount++;
+    } else {
+      titlesWithNoCache++;
+    }
+  }
+
+  // Save the updated cache to localStorage
+  if (clearedCount > 0) {
+    saveCache();
+  }
+
+  console.log(
+    `Cleared ${clearedCount} cache entries (${titlesWithNoCache} titles had no existing cache entries)`,
+  );
+
+  return {
+    clearedCount,
+    remainingCacheSize: Object.keys(mangaCache).length,
+    titlesWithNoCache,
+  };
 }

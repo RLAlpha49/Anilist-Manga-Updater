@@ -15,7 +15,7 @@ import { searchMangaByTitle } from "../../api/matching/manga-search-service";
 const searchTracker = {
   lastMangaId: undefined as number | undefined,
   lastSearchTime: 0,
-  searchInProgress: false
+  searchInProgress: false,
 };
 
 interface MangaSearchPanelProps {
@@ -43,31 +43,35 @@ export function MangaSearchPanel({
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Need to prevent duplicate searches within a short time window
   const initiateSearch = (title: string) => {
     const now = Date.now();
     const currentMangaId = kenmeiManga?.id;
-    
+
     // Don't search if:
     // 1. A search is already in progress
     // 2. We've searched for this manga ID very recently (within 2 seconds)
     // 3. This is the same manga ID as the last search
-    if (searchTracker.searchInProgress || 
-        (currentMangaId === searchTracker.lastMangaId && 
-         now - searchTracker.lastSearchTime < 2000)) {
-      console.log(`🔍 Skipping duplicate search for "${title}" - searched recently or in progress`);
+    if (
+      searchTracker.searchInProgress ||
+      (currentMangaId === searchTracker.lastMangaId &&
+        now - searchTracker.lastSearchTime < 2000)
+    ) {
+      console.log(
+        `🔍 Skipping duplicate search for "${title}" - searched recently or in progress`,
+      );
       return;
     }
-    
+
     // Update tracker before starting search
     searchTracker.lastMangaId = currentMangaId;
     searchTracker.lastSearchTime = now;
     searchTracker.searchInProgress = true;
-    
+
     console.log(`🔍 Initiating search for "${title}"`);
     setSearchQuery(title);
-    
+
     // Small delay to ensure state is set
     setTimeout(() => {
       handleSearch(title).finally(() => {
@@ -123,7 +127,7 @@ export function MangaSearchPanel({
       const searchConfig = {
         bypassCache: !!bypassCache,
         maxSearchResults: 30,
-        searchPerPage: 10,
+        searchPerPage: 50,
         exactMatchingOnly: false, // Always false for manual searches
       };
 

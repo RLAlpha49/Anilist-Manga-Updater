@@ -10,11 +10,13 @@ import { KenmeiManga } from "../api/kenmei/types";
 import { MangaMatchResult } from "../api/anilist/types";
 import { MangaMatchingPanel } from "../components/import/MangaMatchingPanel";
 import { useAuth } from "../hooks/useAuth";
-import { getKenmeiData, getSavedMatchResults } from "../utils/storage";
+import { getKenmeiData } from "../utils/storage";
 import { StatusFilterOptions } from "../types/matching";
 import { useMatchingProcess } from "../hooks/useMatchingProcess";
 import { usePendingManga } from "../hooks/usePendingManga";
 import { useMatchHandlers } from "../hooks/useMatchHandlers";
+import { getSavedMatchResults } from "../utils/storage";
+import { clearCacheForTitles } from "../api/matching/manga-search-service";
 
 // Components
 import { MatchingProgressPanel } from "../components/matching/MatchingProgress";
@@ -566,7 +568,7 @@ export function MatchingPage() {
         `📊 Initial cache status: ${initialCacheStatus.inMemoryCache} entries in memory, ${initialCacheStatus.localStorage.mangaCache} in localStorage`,
       );
 
-      // Clear cache entries for each manga being rematched - use batch method for better performance
+      // Clear cache entries for each manga being rematched - use our new dedicated function
       const mangaTitles = pendingMangaToProcess.map((manga) => manga.title);
       console.log(
         `🔄 Clearing cache for ${mangaTitles.length} manga titles at once`,
@@ -575,20 +577,14 @@ export function MatchingPage() {
         `Clearing cache for ${mangaTitles.length} manga titles...`,
       );
 
-      // Use the new batch clearing method instead of looping individually
-      const clearedEntries = cacheDebugger.clearCacheForTitles(mangaTitles);
+      // Use our new function to clear cache entries efficiently
+      const clearResult = clearCacheForTitles(mangaTitles);
 
-      // Check final cache status to ensure we haven't cleared too much
-      const finalCacheStatus = cacheDebugger.getCacheStatus();
-
-      // Calculate how many entries were cleared
-      const entriesRemoved =
-        initialCacheStatus.inMemoryCache - finalCacheStatus.inMemoryCache;
-
+      // Log the results
       console.log(
-        `🧹 Cleared ${clearedEntries} cache entries for selected manga`,
+        `🧹 Cleared ${clearResult.clearedCount} cache entries for selected manga`,
       );
-      if (clearedEntries > 0 && mangaTitles.length > 0) {
+      if (clearResult.clearedCount > 0 && mangaTitles.length > 0) {
         console.log(
           "Cleared titles:",
           mangaTitles.slice(0, 5).join(", ") +
@@ -598,27 +594,15 @@ export function MatchingPage() {
         );
       }
 
-      // Check if we cleared everything by accident
-      if (
-        finalCacheStatus.inMemoryCache === 0 &&
-        initialCacheStatus.inMemoryCache > mangaTitles.length * 2
-      ) {
-        console.warn(
-          "⚠️ WARNING: All cache entries were cleared, which was not intended!",
-        );
-        console.warn(
-          `Initial: ${initialCacheStatus.inMemoryCache}, Final: ${finalCacheStatus.inMemoryCache}, Expected to clear ~${mangaTitles.length}`,
-        );
-      } else {
-        console.log(
-          `📊 Final cache status: ${finalCacheStatus.inMemoryCache} entries in memory (removed ${entriesRemoved})`,
-        );
-      }
+      // Log final cache status
+      console.log(
+        `📊 Final cache status: ${clearResult.remainingCacheSize} entries in memory (removed ${clearResult.clearedCount})`,
+      );
 
       // Hide cache clearing notification
       matchingProcess.setIsCacheClearing(false);
       matchingProcess.setStatusMessage(
-        `Cleared ${clearedEntries} cache entries - preparing fresh searches from AniList...`,
+        `Cleared ${clearResult.clearedCount} cache entries - preparing fresh searches from AniList...`,
       );
 
       // Reset the options panel and start matching

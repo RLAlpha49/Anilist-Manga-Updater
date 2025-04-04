@@ -211,7 +211,7 @@ export const useMatchingProcess = (authState: {
           authState.accessToken || "",
           {
             batchSize: 5,
-            searchPerPage: 10,
+            searchPerPage: 50,
             maxSearchResults: 20,
             matchConfig: {
               confidenceThreshold: 75,

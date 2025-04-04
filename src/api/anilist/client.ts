@@ -235,7 +235,7 @@ export async function getAccessToken(
 function generateCacheKey(
   search: string,
   page: number = 1,
-  perPage: number = 10,
+  perPage: number = 50,
   additionalParams: Record<string, unknown> = {},
 ): string {
   return `${search.toLowerCase()}_${page}_${perPage}_${JSON.stringify(additionalParams)}`;
@@ -264,7 +264,7 @@ function isCacheValid<T>(cache: Cache<T>, key: string): boolean {
 export async function searchManga(
   search: string,
   page: number = 1,
-  perPage: number = 10,
+  perPage: number = 50,
   token?: string,
   bypassCache?: boolean,
 ): Promise<SearchResult<AniListManga>> {
@@ -402,7 +402,7 @@ export async function advancedSearchManga(
     formats?: string[];
   } = {},
   page: number = 1,
-  perPage: number = 10,
+  perPage: number = 50,
   token?: string,
   bypassCache?: boolean,
 ): Promise<SearchResult<AniListManga>> {
