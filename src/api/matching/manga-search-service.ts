@@ -466,35 +466,56 @@ function removePunctuation(str: string): string {
 }
 
 /**
- * Check if all words in search term are in the title (similar to Python implementation)
+ * Check if words from search term appear in title with consideration for word order and proximity
+ * Returns true if there's a good match, with stricter criteria than before
  */
 function checkTitleMatch(title: string, searchName: string): boolean {
   // Remove punctuation from the title and the search name
   const cleanTitle = removePunctuation(title);
   const cleanSearchName = removePunctuation(searchName);
 
-  // Split into words and create sets for comparison
-  const titleWords = new Set(
-    cleanTitle
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((word) => word.length > 0),
-  );
-  const searchWords = new Set(
-    cleanSearchName
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((word) => word.length > 0),
-  );
+  // Split into words
+  const titleWordsArray = cleanTitle
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word.length > 0);
+  
+  const searchWordsArray = cleanSearchName
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word.length > 0);
 
-  // Check if all search words are in the title words (subset check)
-  for (const word of searchWords) {
-    if (!titleWords.has(word)) {
-      return false;
-    }
+  // If search is a single word, just check if it exists in the title
+  if (searchWordsArray.length === 1) {
+    return titleWordsArray.includes(searchWordsArray[0]);
   }
 
-  return true;
+  // For multi-word searches, check if all words are present
+  const allWordsPresent = searchWordsArray.every(word => titleWordsArray.includes(word));
+  if (!allWordsPresent) return false;
+
+  // If all words are present, check for order preservation and proximity
+  // Find indexes of search words in the title
+  const indexes = searchWordsArray.map(word => titleWordsArray.indexOf(word));
+  
+  // Check if the words appear in the same order (indexes should be increasing)
+  const sameOrder = indexes.every((index, i) => 
+    i === 0 || index > indexes[i - 1]
+  );
+  
+  // Count how many words are adjacent (index difference of 1)
+  let adjacentCount = 0;
+  for (let i = 1; i < indexes.length; i++) {
+    if (indexes[i] - indexes[i - 1] === 1) {
+      adjacentCount++;
+    }
+  }
+  
+  // Calculate proximity score (what percentage of words are adjacent)
+  const proximityScore = adjacentCount / (searchWordsArray.length - 1);
+  
+  // Return true if words are in same order OR if at least 50% are adjacent
+  return sameOrder || proximityScore >= 0.5;
 }
 
 /**
@@ -604,14 +625,15 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
 }
 
 /**
- * Normalize a string for matching by removing spaces, punctuation, and standardizing case
+ * Normalize a string for matching by removing punctuation and standardizing case
+ * Preserves word boundaries to maintain distinction between separate words
  */
 function normalizeForMatching(str: string): string {
   return str
     .toLowerCase()
     .replace(/[^\w\s]/g, "") // Remove punctuation
-    .replace(/\s+/g, "") // Remove spaces
-    .replace(/_/g, "") // Remove underscores
+    .replace(/\s+/g, " ")    // Normalize spaces (replace multiple spaces with a single space)
+    .replace(/_/g, " ")      // Replace underscores with spaces
     .trim();
 }
 
@@ -626,24 +648,40 @@ function calculateStringSimilarity(str1: string, str2: string): number {
   // If either string is empty, no match
   if (str1.length === 0 || str2.length === 0) return 0;
 
-  // If strings are very different in length, low similarity
+  // If strings are very different in length, reduce similarity
   const lengthDiff = Math.abs(str1.length - str2.length);
   const maxLength = Math.max(str1.length, str2.length);
   if (lengthDiff / maxLength > 0.5) return 0.2;
 
-  // Calculate simple matching coefficient by counting matching characters
-  let matches = 0;
-  const shorter = str1.length < str2.length ? str1 : str2;
-  const longer = str1.length < str2.length ? str2 : str1;
-
-  for (let i = 0; i < shorter.length; i++) {
-    // Check if the character appears anywhere in the other string
-    if (longer.includes(shorter[i])) {
-      matches++;
+  // Use Levenshtein distance for more accurate similarity calculation
+  const matrix: number[][] = [];
+  
+  // Initialize the matrix
+  for (let i = 0; i <= str1.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str2.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  // Fill the matrix
+  for (let i = 1; i <= str1.length; i++) {
+    for (let j = 1; j <= str2.length; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
     }
   }
-
-  return matches / shorter.length;
+  
+  // Calculate similarity as 1 - normalized distance
+  const distance = matrix[str1.length][str2.length];
+  const similarity = 1 - (distance / Math.max(str1.length, str2.length));
+  
+  return similarity;
 }
 
 /**
@@ -1839,6 +1877,7 @@ export async function getBatchedMangaIds(
 /**
  * Calculate confidence percentage from match score
  * Converts the 0-1 match score to a 0-100 confidence percentage
+ * Now uses more conservative thresholds to avoid inflated confidence scores
  */
 function calculateConfidence(searchTitle: string, manga: AniListManga): number {
   // Calculate the match score first - we use search term and manga
@@ -1848,19 +1887,22 @@ function calculateConfidence(searchTitle: string, manga: AniListManga): number {
     // No match found
     return 0;
   } else if (score >= 0.95) {
-    // Almost perfect match - very high confidence
+    // Almost perfect match - very high confidence, but capped at 95% to be cautious
     return 95;
-  } else if (score >= 0.8) {
-    // Good match - high confidence
-    return 85 + (score - 0.8) * 100; // 85-95%
-  } else if (score >= 0.6) {
-    // Reasonable match - medium confidence
-    return 70 + (score - 0.6) * 75; // 70-85%
-  } else if (score >= 0.4) {
-    // Weak match - low confidence
-    return 50 + (score - 0.4) * 100; // 50-70%
+  } else if (score >= 0.85) {
+    // Strong match - high confidence (85-90%)
+    return 85 + (score - 0.85) * 50; 
+  } else if (score >= 0.7) {
+    // Good match - medium-high confidence (75-85%)
+    return 75 + (score - 0.7) * 67; 
+  } else if (score >= 0.5) {
+    // Reasonable match - medium confidence (60-75%)
+    return 60 + (score - 0.5) * 75; 
+  } else if (score >= 0.3) {
+    // Weak match - low confidence (40-60%)
+    return 40 + (score - 0.3) * 100; 
   } else {
-    // Very weak match - very low confidence
-    return Math.max(10, score * 100); // 10-40%
+    // Very weak match - very low confidence (10-40%)
+    return Math.max(10, score * 100); 
   }
 }

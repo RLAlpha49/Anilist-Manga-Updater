@@ -1,4 +1,3 @@
-// TODO: Fix confidence match scores being set incorrectly when resuming from a previous process
 // TODO: Fix statuses being reset to pending when resuming from a previous process (Happens when canceling a process, maybe when it finished too).
 
 // TODO: Add a button to accept the main match of all pending manga matches.
