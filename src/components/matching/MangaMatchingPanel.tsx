@@ -46,6 +46,12 @@ export function MangaMatchingPanel({
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Add sort state
+  const [sortOption, setSortOption] = useState<{
+    field: "title" | "status" | "confidence" | "chapters_read";
+    direction: "asc" | "desc";
+  }>({ field: "title", direction: "asc" });
+
   // Items per page
   const itemsPerPage = 10;
 
@@ -126,12 +132,73 @@ export function MangaMatchingPanel({
     return statusMatch && searchMatch;
   });
 
+  // Sort the filtered matches
+  const sortedMatches = [...filteredMatches].sort((a, b) => {
+    // Declare variables outside switch to avoid linter errors
+    let titleA: string, titleB: string;
+    let statusA: number, statusB: number;
+    let confidenceA: number, confidenceB: number;
+    let chaptersA: number, chaptersB: number;
+
+    // Define status priority for sorting (matched > manual > conflict > pending > skipped)
+    const statusPriority: Record<string, number> = {
+      matched: 1,
+      manual: 2,
+      conflict: 3,
+      pending: 4,
+      skipped: 5,
+    };
+
+    switch (sortOption.field) {
+      case "title":
+        titleA = a.kenmeiManga.title.toLowerCase();
+        titleB = b.kenmeiManga.title.toLowerCase();
+        return sortOption.direction === "asc"
+          ? titleA.localeCompare(titleB)
+          : titleB.localeCompare(titleA);
+
+      case "status":
+        statusA = statusPriority[a.status] || 999;
+        statusB = statusPriority[b.status] || 999;
+        return sortOption.direction === "asc"
+          ? statusA - statusB
+          : statusB - statusA;
+
+      case "confidence":
+        // Get confidence scores
+        // Entries with actual matches but 0 confidence should rank higher than entries with no matches at all
+        confidenceA =
+          a.anilistMatches?.length && a.anilistMatches.length > 0
+            ? (a.anilistMatches[0].confidence ?? 0)
+            : -1; // No matches at all should be lowest
+
+        confidenceB =
+          b.anilistMatches?.length && b.anilistMatches.length > 0
+            ? (b.anilistMatches[0].confidence ?? 0)
+            : -1; // No matches at all should be lowest
+
+        return sortOption.direction === "asc"
+          ? confidenceA - confidenceB
+          : confidenceB - confidenceA;
+
+      case "chapters_read":
+        chaptersA = a.kenmeiManga.chapters_read || 0;
+        chaptersB = b.kenmeiManga.chapters_read || 0;
+        return sortOption.direction === "asc"
+          ? chaptersA - chaptersB
+          : chaptersB - chaptersA;
+
+      default:
+        return 0;
+    }
+  });
+
   // Pagination logic
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredMatches.length / itemsPerPage),
+    Math.ceil(sortedMatches.length / itemsPerPage),
   );
-  const currentMatches = filteredMatches.slice(
+  const currentMatches = sortedMatches.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
@@ -174,8 +241,46 @@ export function MangaMatchingPanel({
     setCurrentPage(page);
   };
 
+  // Handle sort change
+  const handleSortChange = (
+    field: "title" | "status" | "confidence" | "chapters_read",
+  ) => {
+    setSortOption((prev) => {
+      // If clicking the same field, toggle direction
+      if (prev.field === field) {
+        return {
+          ...prev,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      // If clicking a new field, default to ascending for title, descending for others
+      return {
+        field,
+        direction: field === "title" ? "asc" : "desc",
+      };
+    });
+  };
+
+  // Function to render sort indicator
+  const renderSortIndicator = (
+    field: "title" | "status" | "confidence" | "chapters_read",
+  ) => {
+    if (sortOption.field !== field) return null;
+
+    return (
+      <span className="ml-1 text-xs">
+        {sortOption.direction === "asc" ? "▲" : "▼"}
+      </span>
+    );
+  };
+
   // Render confidence badge
-  const renderConfidenceBadge = (confidence: number) => {
+  const renderConfidenceBadge = (confidence: number | undefined) => {
+    // If confidence is undefined, null, or NaN, return null (don't render anything)
+    if (confidence === undefined || confidence === null || isNaN(confidence)) {
+      return null;
+    }
+
     // Round the confidence value for display and comparison
     const roundedConfidence = Math.min(99, Math.round(confidence)); // Cap at 99%
 
@@ -184,6 +289,7 @@ export function MangaMatchingPanel({
     let barColorClass = "";
     let label = "";
 
+    // Even if confidence is 0, we'll still show it with styling
     if (roundedConfidence >= 90) {
       colorClass =
         "bg-green-50 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
@@ -512,6 +618,61 @@ export function MangaMatchingPanel({
         </div>
       </div>
 
+      {/* Sort options */}
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Sort by:
+        </span>
+
+        <button
+          onClick={() => handleSortChange("title")}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+            sortOption.field === "title"
+              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+              : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          }`}
+          aria-label={`Sort by title ${sortOption.field === "title" && sortOption.direction === "asc" ? "descending" : "ascending"}`}
+        >
+          Title{renderSortIndicator("title")}
+        </button>
+
+        <button
+          onClick={() => handleSortChange("status")}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+            sortOption.field === "status"
+              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+              : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          }`}
+          aria-label={`Sort by status ${sortOption.field === "status" && sortOption.direction === "asc" ? "descending" : "ascending"}`}
+        >
+          Status{renderSortIndicator("status")}
+        </button>
+
+        <button
+          onClick={() => handleSortChange("confidence")}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+            sortOption.field === "confidence"
+              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+              : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          }`}
+          aria-label={`Sort by confidence ${sortOption.field === "confidence" && sortOption.direction === "asc" ? "descending" : "ascending"}`}
+        >
+          Confidence{renderSortIndicator("confidence")}
+        </button>
+
+        <button
+          onClick={() => handleSortChange("chapters_read")}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+            sortOption.field === "chapters_read"
+              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+              : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          }`}
+          aria-label={`Sort by chapters read ${sortOption.field === "chapters_read" && sortOption.direction === "asc" ? "descending" : "ascending"}`}
+        >
+          Chapters Read{renderSortIndicator("chapters_read")}
+        </button>
+      </div>
+
       {/* Match list */}
       <div className="space-y-6" aria-live="polite">
         {currentMatches.length > 0 ? (
@@ -705,7 +866,7 @@ export function MangaMatchingPanel({
                       <div className="flex items-center space-x-3">
                         {match.anilistMatches &&
                           match.anilistMatches.length > 0 &&
-                          match.anilistMatches[0]?.confidence &&
+                          match.anilistMatches[0]?.confidence !== undefined &&
                           renderConfidenceBadge(
                             match.anilistMatches[0].confidence,
                           )}
@@ -1045,7 +1206,7 @@ export function MangaMatchingPanel({
                                 {altMatch.confidence !== undefined &&
                                   renderConfidenceBadge(altMatch.confidence)}
                                 <button
-                                  className="inline-flex min-w-[120px] items-center justify-center rounded-md bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-1 focus:outline-none"
+                                  className="inline-flex min-w-[140px] items-center justify-center rounded-md bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-1 focus:outline-none"
                                   onClick={() => {
                                     // Directly accept the alternative as the match without swapping
                                     if (onSelectAlternative) {
@@ -1061,13 +1222,13 @@ export function MangaMatchingPanel({
                                     altMatch.manga?.title?.english ||
                                     altMatch.manga?.title?.romaji ||
                                     "Unknown manga"
-                                  } as match`}
+                                  } as match (${altMatch.confidence !== undefined ? Math.round(altMatch.confidence) + '%' : 'Unknown confidence'})`}
                                 >
                                   <Check
                                     className="mr-1 h-3 w-3"
                                     aria-hidden="true"
                                   />
-                                  Accept Match
+                                  Accept Match {altMatch.confidence !== undefined ? `(${Math.round(altMatch.confidence)}%)` : ''}
                                 </button>
                                 <a
                                   href={`https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`}
@@ -1116,9 +1277,9 @@ export function MangaMatchingPanel({
             </span>{" "}
             to{" "}
             <span className="font-medium">
-              {Math.min(currentPage * itemsPerPage, filteredMatches.length)}
+              {Math.min(currentPage * itemsPerPage, sortedMatches.length)}
             </span>{" "}
-            of <span className="font-medium">{filteredMatches.length}</span>{" "}
+            of <span className="font-medium">{sortedMatches.length}</span>{" "}
             results
           </div>
           <div className="inline-flex items-center space-x-1">

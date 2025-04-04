@@ -241,13 +241,19 @@ export const useMatchHandlers = (
             selectedAlternative.manga.title?.english ||
             selectedAlternative.manga.title?.romaji ||
             "Unknown"
-          }" as the match`,
+          }" as the match with confidence ${selectedAlternative.confidence}%`,
         );
 
         // Update the match with the selected alternative, don't change alternatives array
+        // Move the selected alternative to the front of the array to ensure its confidence is preserved
+        const rearrangedMatches = [...currentMatch.anilistMatches];
+        rearrangedMatches.splice(alternativeIndex, 1); // Remove from current position
+        rearrangedMatches.unshift(selectedAlternative); // Add to beginning
+        
         updatedResults[index] = {
           ...currentMatch,
           selectedMatch: { ...selectedAlternative.manga },
+          anilistMatches: rearrangedMatches, // Use the rearranged array where selected alt is first
           status: "matched" as const,
           matchDate: new Date(),
         };
@@ -274,7 +280,7 @@ export const useMatchHandlers = (
             selectedAlternative.manga.title?.english ||
             selectedAlternative.manga.title?.romaji ||
             "Unknown"
-          }"`,
+          }" with confidence ${selectedAlternative.confidence}%`,
         );
 
         // Create a fresh copy of the alternatives array
@@ -296,6 +302,15 @@ export const useMatchHandlers = (
 
         // Insert the current main match as the first alternative
         newAnilistMatches.unshift(mainAsAlternative);
+        
+        // Insert the selected alternative's confidence as the first item's confidence
+        // This ensures the confidence is displayed in the main match section
+        if (selectedAlternative.confidence !== undefined) {
+          newAnilistMatches[0] = {
+            ...selectedAlternative,
+            manga: { ...selectedAlternative.manga },
+          };
+        }
 
         // Update the match object with the new selected match and alternatives
         updatedResults[index] = {

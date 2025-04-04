@@ -580,28 +580,240 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
     },
   );
 
+  // If we have synonyms, log them explicitly for better debugging
+  if (manga.synonyms && manga.synonyms.length > 0) {
+    console.log(`📚 Synonyms for manga ID ${manga.id}:`, manga.synonyms);
+  }
+
   // Normalize the search title for better matching
   const normalizedSearchTitle = normalizeForMatching(searchTitle);
   const searchWords = normalizedSearchTitle.split(/\s+/);
   const importantWords = searchWords.filter((word) => word.length > 2); // Filter out short words for comparison
 
+  // Create a collection of all normalized titles for easier matching
+  const allTitles: { text: string; source: string }[] = [];
+
+  // Process all titles including synonyms for easier comparison
+  if (manga.title.english) {
+    allTitles.push({
+      text: normalizeForMatching(processTitle(manga.title.english)),
+      source: "english",
+    });
+  }
+
+  if (manga.title.romaji) {
+    allTitles.push({
+      text: normalizeForMatching(processTitle(manga.title.romaji)),
+      source: "romaji",
+    });
+  }
+
+  if (manga.title.native) {
+    allTitles.push({
+      text: normalizeForMatching(processTitle(manga.title.native)),
+      source: "native",
+    });
+  }
+
+  // Add all synonyms as well
+  if (manga.synonyms && Array.isArray(manga.synonyms)) {
+    manga.synonyms.forEach((synonym, index) => {
+      if (synonym) {
+        allTitles.push({
+          text: normalizeForMatching(processTitle(synonym)),
+          source: `synonym_${index}`,
+        });
+      }
+    });
+  }
+
+  // Try all normalized titles for matches
+  for (const { text, source } of allTitles) {
+    // Direct match
+    if (text === normalizedSearchTitle) {
+      console.log(`💯 Perfect match found for title: "${text}" (${source})`);
+      return 1; // Perfect match
+    }
+
+    // Check if normalized search is a substantial part of this title
+    if (
+      text.includes(normalizedSearchTitle) &&
+      normalizedSearchTitle.length > 6
+    ) {
+      console.log(
+        `✅ Search title "${searchTitle}" is a substantial part of "${text}" (${source})`,
+      );
+      // Lower score from 0.9 to 0.85 for partial matches to be more strict
+      return 0.85; // Strong match but not quite perfect
+    }
+
+    // Check if this title is a substantial part of normalized search
+    if (normalizedSearchTitle.includes(text) && text.length > 6) {
+      console.log(
+        `✅ Title "${text}" is a substantial part of search "${searchTitle}" (${source})`,
+      );
+      // Lower score from 0.85 to 0.8 to be more strict
+      return 0.8; // Good match but not as strong
+    }
+
+    // Compare word sets between titles
+    const titleWords = text.split(/\s+/);
+    const searchWords = normalizedSearchTitle.split(/\s+/);
+
+    // Count matching words
+    let matchingWords = 0;
+    for (const word of titleWords) {
+      if (word.length <= 2) continue; // Skip very short words
+
+      if (searchWords.includes(word)) {
+        matchingWords++;
+      } else {
+        // Check word stems (e.g., "becoming" vs "become")
+        for (const searchWord of searchWords) {
+          if (
+            (word.startsWith(searchWord) || searchWord.startsWith(word)) &&
+            Math.min(word.length, searchWord.length) >= 4
+          ) {
+            matchingWords += 0.5; // Partial word match
+            break;
+          }
+        }
+      }
+    }
+
+    const matchRatio =
+      matchingWords /
+      Math.max(2, Math.min(titleWords.length, searchWords.length));
+
+    // Increase threshold from 0.7 to 0.75 to be more strict
+    if (matchRatio >= 0.75) {
+      // Adjust score range to be slightly lower (0.75-0.9 instead of 0.8-0.95)
+      const wordMatchScore = 0.75 + (matchRatio - 0.75) * 0.6;
+      console.log(
+        `✅ High word match ratio (${matchRatio.toFixed(2)}) between "${text}" and "${searchTitle}" (${source}) - score: ${wordMatchScore.toFixed(2)}`,
+      );
+
+      // Higher threshold for immediate return (0.9 instead of 0.9)
+      if (wordMatchScore > 0.9) {
+        return wordMatchScore;
+      }
+
+      // Otherwise track best score
+      bestScore = Math.max(bestScore, wordMatchScore);
+    }
+
+    // Check similarity using Levenshtein distance
+    const similarity = calculateStringSimilarity(text, normalizedSearchTitle);
+    // Increase thresholds to be more strict
+    const similarityThreshold = normalizedSearchTitle.length < 10 ? 0.92 : 0.87;
+
+    if (similarity > similarityThreshold) {
+      console.log(
+        `🔍 High text similarity (${similarity.toFixed(2)}) between "${text}" and "${searchTitle}"`,
+      );
+      // Lower max score from 0.8 to 0.78 for similarity-based matches
+      const similarityScore = Math.max(0.78, similarity * 0.9);
+      bestScore = Math.max(bestScore, similarityScore);
+    }
+  }
+
   // Process each title and check for matches
   for (let i = 0; i < titles.length; i++) {
     const title = titles[i];
-    const source = titleSources[i];
 
     if (!title) continue;
 
     const processedTitle = processTitle(title);
     const normalizedTitle = normalizeForMatching(processedTitle);
 
+    // Check for similar characters that might cause false negatives
+    // For example, Cyrillic 'о' vs Latin 'o'
+    const specialCharTitle = replaceSpecialChars(normalizedTitle);
+    const specialCharSearchTitle = replaceSpecialChars(normalizedSearchTitle);
+
+    // Log the special character replacements if they differ from originals
+    if (
+      specialCharTitle !== normalizedTitle ||
+      specialCharSearchTitle !== normalizedSearchTitle
+    ) {
+      console.log(
+        `🔡 Special character replacement: "${normalizedTitle}" → "${specialCharTitle}"`,
+      );
+      console.log(
+        `🔡 Special character replacement: "${normalizedSearchTitle}" → "${specialCharSearchTitle}"`,
+      );
+    }
+
+    // Check for partial title matches - common case where search term is a subset or simplification
+    // For example, "Level-Up Doctor" vs "Level-Up Doctor Choe Gi-Seok"
+    if (
+      normalizedTitle.includes(normalizedSearchTitle) ||
+      specialCharTitle.includes(specialCharSearchTitle)
+    ) {
+      // If search title is a substantial part of the full title (not just a few letters)
+      if (normalizedSearchTitle.length > 6) {
+        console.log(
+          `✅ Found search title as substantial part of full title: "${title}" contains "${searchTitle}"`,
+        );
+        return 0.85; // High confidence for substantial partial matches
+      }
+    }
+
     // APPROACH 1: Check for exact match first (highest confidence)
-    if (normalizedTitle === normalizedSearchTitle) {
-      console.log(`💯 Perfect match found for "${title}" (${source})`);
+    if (
+      normalizedTitle === normalizedSearchTitle ||
+      specialCharTitle === specialCharSearchTitle
+    ) {
+      console.log(`💯 Perfect match found for "${title}"`);
       return 1; // Perfect match
     }
 
-    // APPROACH 2: Check for contained titles (e.g. "Slime" in "That Time I Got Reincarnated as a Slime")
+    // APPROACH 2: Check for title with suffix/prefix removed
+    const titleWithoutSuffix = normalizedTitle
+      .replace(/@\w+$|[@(（][^)）]*[)）]$/, "")
+      .trim();
+    if (titleWithoutSuffix === normalizedSearchTitle) {
+      console.log(`💯 Perfect match found after removing suffix: "${title}"`);
+      return 0.95; // Almost perfect match
+    }
+
+    // If we have a suffix that's causing issues, also check the special char version
+    const specialCharTitleWithoutSuffix = specialCharTitle
+      .replace(/@\w+$|[@(（][^)）]*[)）]$/, "")
+      .trim();
+    if (specialCharTitleWithoutSuffix === specialCharSearchTitle) {
+      console.log(
+        `💯 Perfect match found after removing suffix and fixing special chars: "${title}"`,
+      );
+      return 0.95; // Almost perfect match
+    }
+
+    // APPROACH 3: Check for very high word similarity - handle spelling variations
+    // Count how many words match exactly between the two titles
+    const titleWords = specialCharTitle.split(/\s+/);
+    const searchWords = specialCharSearchTitle.split(/\s+/);
+
+    // Count matching words
+    let matchingWordCount = 0;
+    const totalWords = Math.max(titleWords.length, searchWords.length);
+
+    for (const word of titleWords) {
+      if (searchWords.includes(word) && word.length > 1) {
+        matchingWordCount++;
+      }
+    }
+
+    // If most words match (>75%), consider it a strong match
+    const wordMatchRatio = matchingWordCount / totalWords;
+    if (wordMatchRatio >= 0.75) {
+      console.log(
+        `🔤 High word match ratio (${wordMatchRatio.toFixed(2)}) between "${title}" and "${searchTitle}"`,
+      );
+      const wordScore = 0.8 + (wordMatchRatio - 0.75) * 0.8; // Score 0.8-0.95 based on match ratio
+      bestScore = Math.max(bestScore, wordScore);
+    }
+
+    // APPROACH 4: Check for contained titles (e.g. "Slime" in "That Time I Got Reincarnated as a Slime")
     // Often manga have longer official titles but are searched by their common short name
     const completeTitleBonus = containsCompleteTitle(
       normalizedTitle,
@@ -615,7 +827,7 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
       bestScore = Math.max(bestScore, containedScore);
     }
 
-    // APPROACH 3: Check for high similarity (handles minor differences in romanization)
+    // APPROACH 5: Check for high similarity (handles minor differences in romanization)
     const similarity = calculateStringSimilarity(
       normalizedTitle,
       normalizedSearchTitle,
@@ -626,14 +838,14 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
 
     if (similarity > similarityThreshold) {
       console.log(
-        `🔍 High similarity (${similarity.toFixed(2)}) between "${title}" (${source}) and "${searchTitle}"`,
+        `🔍 High similarity (${similarity.toFixed(2)}) between "${title}" and "${searchTitle}"`,
       );
 
       const similarityScore = Math.max(0.8, similarity);
       bestScore = Math.max(bestScore, similarityScore);
     }
 
-    // APPROACH 4: Check for season/numbered sequel patterns (like "Title 2nd Season" or "Title II")
+    // APPROACH 6: Check for season/numbered sequel patterns (like "Title 2nd Season" or "Title II")
     const seasonMatchScore = checkSeasonPattern(
       normalizedTitle,
       normalizedSearchTitle,
@@ -645,7 +857,7 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
       bestScore = Math.max(bestScore, seasonMatchScore);
     }
 
-    // APPROACH 5: Check for word subset match (all search words in title)
+    // APPROACH 7: Check for word subset match (all search words in title)
     // This is useful for titles that have additional descriptive words
     if (checkTitleMatch(processedTitle, searchTitle)) {
       // Calculate weighted score based on:
@@ -681,7 +893,7 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
         baseScore + lengthFactor + coverageFactor + orderFactor;
 
       console.log(
-        `🔍 Word match for "${title}" (${source}) with composite score ${wordMatchScore.toFixed(2)} ` +
+        `🔍 Word match for "${title}" with composite score ${wordMatchScore.toFixed(2)} ` +
           `(length: ${lengthFactor.toFixed(2)}, coverage: ${coverageFactor.toFixed(2)}, order: ${orderFactor.toFixed(2)})`,
       );
 
@@ -926,9 +1138,10 @@ function rankMangaResults(
         const normalTitle = normalizeForMatching(title);
 
         // Check if titles are very similar after normalization
+        // Increased threshold from 0.85 to 0.88 for stricter matching
         if (
           normalTitle === normalSearch ||
-          calculateStringSimilarity(normalTitle, normalSearch) > 0.85
+          calculateStringSimilarity(normalTitle, normalSearch) > 0.88
         ) {
           console.log(
             `✅ Found good title match: "${title}" for "${searchTitle}"`,
@@ -948,7 +1161,8 @@ function rankMangaResults(
         const allWordsFound = searchWords.every((word) =>
           titleLower.includes(word),
         );
-        if (allWordsFound && searchWords.length > 1) {
+        // Require at least 2 words for this to be valid, otherwise matches might be too loose
+        if (allWordsFound && searchWords.length >= 2) {
           console.log(`✅ All search words found in title: "${title}"`);
           foundGoodMatch = true;
           break;
@@ -956,13 +1170,15 @@ function rankMangaResults(
       }
 
       // If this is an exact match run and we have a good score or manually found a good match
-      if (score > 0.5 || foundGoodMatch || results.length <= 3) {
+      // Increased threshold from 0.5 to 0.6 for stricter inclusion
+      if (score > 0.6 || foundGoodMatch || results.length <= 2) {
         console.log(
           `✅ Including manga "${manga.title?.romaji || manga.title?.english}" with score: ${score}`,
         );
         scoredResults.push({
           manga,
-          score: foundGoodMatch ? Math.max(score, 0.7) : score,
+          // Adjust the score for foundGoodMatch to be more conservative
+          score: foundGoodMatch ? Math.max(score, 0.75) : score,
         });
       } else {
         console.log(
@@ -971,7 +1187,8 @@ function rankMangaResults(
       }
     } else {
       // Non-exact matching mode - just use the score
-      if (score > 0 || results.length <= 3) {
+      // Increased threshold from 0 to 0.15 to filter out more low-quality matches
+      if (score > 0.15 || results.length <= 2) {
         console.log(
           `✅ Including manga "${manga.title?.romaji || manga.title?.english}" with score: ${score}`,
         );
@@ -2145,7 +2362,7 @@ export async function getBatchedMangaIds(
 /**
  * Calculate confidence percentage from match score
  * Converts the 0-1 match score to a 0-100 confidence percentage
- * Uses a more nuanced algorithm with 99% maximum to avoid overconfidence
+ * Uses a more conservative algorithm to avoid inflated confidence scores
  */
 function calculateConfidence(searchTitle: string, manga: AniListManga): number {
   // Calculate the match score first - always use original search title, not manga's own title
@@ -2158,27 +2375,30 @@ function calculateConfidence(searchTitle: string, manga: AniListManga): number {
   if (score <= 0) {
     // No match found
     return 0;
-  } else if (score >= 0.95) {
-    // Almost perfect match - very high confidence, but cap at 99%
-    return Math.min(99, Math.round(90 + (score - 0.95) * 180)); // 90-99% range
-  } else if (score >= 0.85) {
+  } else if (score >= 0.97) {
+    // Near-perfect match - cap at 99% to avoid overconfidence
+    return 99;
+  } else if (score >= 0.94) {
+    // Almost perfect match - very high confidence
+    return Math.round(90 + (score - 0.94) * 125); // 90-96% range
+  } else if (score >= 0.87) {
     // Strong match - high confidence (80-90%)
-    return Math.round(80 + (score - 0.85) * 100);
-  } else if (score >= 0.7) {
+    return Math.round(80 + (score - 0.87) * 143);
+  } else if (score >= 0.75) {
     // Good match - medium-high confidence (65-80%)
-    return Math.round(65 + (score - 0.7) * 100);
-  } else if (score >= 0.5) {
+    return Math.round(65 + (score - 0.75) * 125);
+  } else if (score >= 0.6) {
     // Reasonable match - medium confidence (50-65%)
-    return Math.round(50 + (score - 0.5) * 75);
-  } else if (score >= 0.3) {
+    return Math.round(50 + (score - 0.6) * 100);
+  } else if (score >= 0.4) {
     // Weak match - low confidence (30-50%)
-    return Math.round(30 + (score - 0.3) * 100);
-  } else if (score >= 0.15) {
+    return Math.round(30 + (score - 0.4) * 100);
+  } else if (score >= 0.2) {
     // Very weak match - very low confidence (15-30%)
-    return Math.round(15 + (score - 0.15) * 100);
+    return Math.round(15 + (score - 0.2) * 75);
   } else {
     // Extremely weak match - minimal confidence (1-15%)
-    return Math.max(1, Math.round(score * 100));
+    return Math.max(1, Math.round(score * 75));
   }
 }
 
@@ -2224,4 +2444,25 @@ export function clearCacheForTitles(titles: string[]): {
     remainingCacheSize: Object.keys(mangaCache).length,
     titlesWithNoCache,
   };
+}
+
+/**
+ * Replace special characters that might cause matching issues
+ * This handles cases like Cyrillic characters that look like Latin ones
+ */
+function replaceSpecialChars(text: string): string {
+  // First replace Cyrillic lookalikes
+  const result = text
+    .replace(/\u043e/g, "o") // Cyrillic 'о' to Latin 'o'
+    .replace(/\u0430/g, "a") // Cyrillic 'а' to Latin 'a'
+    .replace(/\u0435/g, "e") // Cyrillic 'е' to Latin 'e'
+    .replace(/\u0441/g, "c") // Cyrillic 'с' to Latin 'c'
+    .replace(/\u0440/g, "p") // Cyrillic 'р' to Latin 'p'
+    .replace(/\u0445/g, "x") // Cyrillic 'х' to Latin 'x'
+    // Remove common suffixes
+    .replace(/@comic$/, "")
+    .replace(/@コミック$/, "")
+    .replace(/ comic$/, "");
+
+  return result;
 }
