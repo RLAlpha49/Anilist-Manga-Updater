@@ -369,15 +369,32 @@ export const useMatchHandlers = (
    * Handle resetting a match status back to pending
    */
   const handleResetToPending = useCallback(
-    (match: MangaMatchResult) => {
+    (
+      match:
+        | MangaMatchResult
+        | { isBatchOperation: boolean; matches: MangaMatchResult[] },
+    ) => {
       console.log("handleResetToPending called with match:", match);
 
+      // Check if this is a batch operation
+      if ("isBatchOperation" in match && match.isBatchOperation) {
+        console.log(
+          `Processing batch reset operation for ${match.matches.length} matches`,
+        );
+
+        // For batch operations, we simply replace the entire match results array
+        // with the new one that already has the pending statuses applied
+        updateMatchResults(match.matches);
+        return;
+      }
+
+      // Regular single match processing (existing code)
       // Find the match
-      const index = findMatchIndex(match);
+      const index = findMatchIndex(match as MangaMatchResult);
       if (index === -1) return;
 
       console.log(
-        `Resetting match for ${match.kenmeiManga.title} from ${match.status} to pending`,
+        `Resetting match for ${(match as MangaMatchResult).kenmeiManga.title} from ${(match as MangaMatchResult).status} to pending`,
       );
 
       // Create a copy of the results and update the status
@@ -398,7 +415,7 @@ export const useMatchHandlers = (
 
       // Create a new object reference to ensure React detects the change
       const updatedMatch = {
-        ...match,
+        ...(match as MangaMatchResult),
         status: "pending" as const,
         // Restore the original main match as the selectedMatch
         selectedMatch: originalMainMatch,
@@ -409,7 +426,7 @@ export const useMatchHandlers = (
       updatedResults[index] = updatedMatch;
 
       console.log(
-        `Updated match status from ${match.status} to pending for: ${updatedMatch.kenmeiManga.title}`,
+        `Updated match status from ${(match as MangaMatchResult).status} to pending for: ${updatedMatch.kenmeiManga.title}`,
       );
 
       updateMatchResults(updatedResults);

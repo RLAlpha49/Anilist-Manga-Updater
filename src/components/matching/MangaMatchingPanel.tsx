@@ -1,17 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
-import { MangaMatchResult } from "../../api/anilist/types";
+import React, { useState, useEffect, useRef } from "react";
 import { KenmeiManga } from "../../api/kenmei/types";
+import { MangaMatchResult } from "../../api/anilist/types";
 import {
   Search,
   Check,
   X,
-  AlertTriangle,
   ExternalLink,
   Filter,
-  ChevronLeft,
   ChevronRight,
-  ArrowLeft,
+  ChevronLeft,
   Info,
+  RefreshCw,
+  AlertTriangle,
+  ArrowLeft,
 } from "lucide-react";
 
 interface MangaMatchingPanelProps {
@@ -60,6 +61,10 @@ export function MangaMatchingPanel({
   const [isSkippingEmptyMatches, setIsSkippingEmptyMatches] = useState(false);
   // Add state for processing status of the accept all button
   const [isAcceptingAllMatches, setIsAcceptingAllMatches] = useState(false);
+  const [isReSearchingNoMatches, setIsReSearchingNoMatches] = useState(false);
+  // Add state for processing status of the reset skipped button
+  const [isResettingSkippedToPending, setIsResettingSkippedToPending] =
+    useState(false);
 
   // Handler for opening external links in the default browser
   const handleOpenExternal = (url: string) => (e: React.MouseEvent) => {
@@ -643,6 +648,109 @@ export function MangaMatchingPanel({
       match.anilistMatches.length > 0,
   ).length;
 
+  // Function to handle re-searching all manga without matches regardless of status
+  const handleReSearchNoMatches = () => {
+    // Set processing state to disable the button
+    setIsReSearchingNoMatches(true);
+
+    // Find all manga without any matches regardless of status
+    const mangaWithoutMatches = matches.filter(
+      (match) => !match.anilistMatches || match.anilistMatches.length === 0,
+    );
+
+    console.log(
+      `Re-searching ${mangaWithoutMatches.length} manga without any matches`,
+    );
+
+    if (mangaWithoutMatches.length > 0) {
+      // Extract the Kenmei manga objects from the matches
+      const kenmeiMangaToResearch = mangaWithoutMatches.map(
+        (match) => match.kenmeiManga,
+      );
+
+      // Create a custom event to trigger the re-search process at the page level
+      // This allows us to use the same efficient batch processing as the "Fresh Search" button
+      const customEvent = new CustomEvent("reSearchEmptyMatches", {
+        detail: {
+          mangaToResearch: kenmeiMangaToResearch,
+        },
+      });
+
+      // Dispatch the event to be handled by the MatchingPage component
+      window.dispatchEvent(customEvent);
+
+      // Reset processing state after a short delay
+      setTimeout(() => {
+        setIsReSearchingNoMatches(false);
+      }, 1000);
+    } else {
+      // Reset processing state if no matching items found
+      setIsReSearchingNoMatches(false);
+    }
+  };
+
+  // Get count of manga without any matches
+  const noMatchesCount = matches.filter(
+    (match) => !match.anilistMatches || match.anilistMatches.length === 0,
+  ).length;
+
+  // Function to handle resetting all skipped manga to pending
+  const handleResetSkippedToPending = () => {
+    // Set processing state to disable the button
+    setIsResettingSkippedToPending(true);
+
+    // Find all skipped manga
+    const skippedManga = matches.filter((match) => match.status === "skipped");
+
+    console.log(
+      `Resetting ${skippedManga.length} skipped manga to pending status`,
+    );
+
+    // Reset all these manga to pending status
+    if (skippedManga.length > 0 && onResetToPending) {
+      // Create a batched update by modifying the matches
+      const batchedReset = matches.map((match) => {
+        // Only modify the matches that are skipped
+        if (match.status === "skipped") {
+          // Return a modified version with pending status
+          return {
+            ...match,
+            status: "pending" as const,
+            selectedMatch: undefined,
+            matchDate: new Date(),
+          };
+        }
+        // Return the original for all other matches
+        return match;
+      });
+
+      // Pass the full array with modifications to the parent
+      if (onResetToPending) {
+        // Special flag to indicate this is a batch operation
+        const batchOperation = {
+          isBatchOperation: true,
+          matches: batchedReset,
+        };
+
+        // @ts-expect-error - We're adding a special property for the batch handler to recognize
+        onResetToPending(batchOperation);
+
+        // Short delay to ensure state updates have time to process
+        setTimeout(() => {
+          setIsResettingSkippedToPending(false);
+        }, 500);
+      }
+    } else {
+      // Reset processing state if no matching items found
+      setIsResettingSkippedToPending(false);
+    }
+  };
+
+  // Get count of skipped manga
+  const skippedMangaCount = matches.filter(
+    (match) => match.status === "skipped",
+  ).length;
+
   return (
     <div
       className="flex flex-col space-y-4"
@@ -754,6 +862,96 @@ export function MangaMatchingPanel({
             </button>
             <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">
               This will mark all pending manga with no matches as skipped.
+            </span>
+          </div>
+        )}
+
+        {/* Re-Search Empty Matches button */}
+        {noMatchesCount > 0 && (
+          <div className="flex items-center">
+            <button
+              className="inline-flex items-center rounded-md border border-purple-300 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 shadow-sm hover:bg-purple-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-purple-600 dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-800/30"
+              onClick={handleReSearchNoMatches}
+              disabled={isReSearchingNoMatches}
+            >
+              {isReSearchingNoMatches ? (
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Re-search Empty Matches ({noMatchesCount})
+                </>
+              )}
+            </button>
+            <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">
+              This will attempt to find matches for all manga without results.
+            </span>
+          </div>
+        )}
+
+        {/* Reset Skipped to Pending button */}
+        {skippedMangaCount > 0 && (
+          <div className="flex items-center">
+            <button
+              className="inline-flex items-center rounded-md border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 shadow-sm hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-orange-600 dark:bg-orange-900/20 dark:text-orange-300 dark:hover:bg-orange-800/30"
+              onClick={handleResetSkippedToPending}
+              disabled={isResettingSkippedToPending}
+            >
+              {isResettingSkippedToPending ? (
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Reset Skipped to Pending ({skippedMangaCount})
+                </>
+              )}
+            </button>
+            <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">
+              This will reset all skipped manga back to pending status.
             </span>
           </div>
         )}

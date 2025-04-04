@@ -350,6 +350,123 @@ export function MatchingPage() {
     };
   }, []); // Only run once when component mounts
 
+  // Add an effect to listen for re-search empty matches events
+  useEffect(() => {
+    // Handler for the reSearchEmptyMatches custom event
+    const handleReSearchEmptyMatches = (
+      event: CustomEvent<{ mangaToResearch: KenmeiManga[] }>,
+    ) => {
+      const { mangaToResearch } = event.detail;
+
+      console.log(
+        `Received request to re-search ${mangaToResearch.length} manga without matches`,
+      );
+
+      // Reset any previous warnings or cancel state
+      setRematchWarning(null);
+      matchingProcess.cancelMatchingRef.current = false;
+      matchingProcess.setDetailMessage(null);
+
+      if (mangaToResearch.length === 0) {
+        console.log("No manga to re-search, ignoring request");
+        return;
+      }
+
+      // Show cache clearing notification with count
+      matchingProcess.setIsCacheClearing(true);
+      matchingProcess.setCacheClearingCount(mangaToResearch.length);
+      matchingProcess.setStatusMessage(
+        "Preparing to clear cache for manga without matches...",
+      );
+
+      // Use a Promise to handle the async operations
+      (async () => {
+        try {
+          // Small delay to ensure UI updates
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Get the cache service to clear specific entries
+          await import("../api/matching/manga-search-service");
+
+          // Clear cache entries for each manga being re-searched
+          const mangaTitles = mangaToResearch.map((manga) => manga.title);
+          console.log(
+            `🔄 Clearing cache for ${mangaTitles.length} manga titles`,
+          );
+          matchingProcess.setStatusMessage(
+            `Clearing cache for ${mangaTitles.length} manga titles...`,
+          );
+
+          // Use the clearCacheForTitles function to clear entries efficiently
+          const clearResult = clearCacheForTitles(mangaTitles);
+
+          // Log results
+          console.log(
+            `🧹 Cleared ${clearResult.clearedCount} cache entries for re-search`,
+          );
+
+          // Before starting fresh search, preserve existing results but reset re-searched manga to pending
+          if (matchResults.length > 0) {
+            // Create a set of titles being re-searched (for quick lookup)
+            const reSearchTitles = new Set(
+              mangaTitles.map((title) => title.toLowerCase()),
+            );
+
+            // Update the match results to set re-searched items back to pending
+            const updatedResults = matchResults.map((match) => {
+              // If this manga is being re-searched, reset its status to pending
+              if (reSearchTitles.has(match.kenmeiManga.title.toLowerCase())) {
+                return {
+                  ...match,
+                  status: "pending" as const,
+                  selectedMatch: undefined, // Clear any previously selected match
+                  matchDate: new Date(),
+                };
+              }
+              // Otherwise, keep it as is
+              return match;
+            });
+
+            // Update the results state
+            setMatchResults(updatedResults);
+            console.log(
+              `Reset status to pending for ${reSearchTitles.size} manga before re-searching`,
+            );
+          }
+
+          // Hide cache clearing notification
+          matchingProcess.setIsCacheClearing(false);
+          matchingProcess.setStatusMessage(
+            `Cleared cache entries - starting fresh searches...`,
+          );
+
+          // Start fresh search for the manga
+          matchingProcess.startMatching(mangaToResearch, true, setMatchResults);
+        } catch (error) {
+          console.error("Failed to clear manga cache entries:", error);
+          matchingProcess.setIsCacheClearing(false);
+
+          // Continue with re-search even if cache clearing fails
+          matchingProcess.startMatching(mangaToResearch, true, setMatchResults);
+        }
+      })();
+    };
+
+    // Add event listener for the custom event
+    window.addEventListener(
+      "reSearchEmptyMatches",
+      handleReSearchEmptyMatches as EventListener,
+    );
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener(
+        "reSearchEmptyMatches",
+        handleReSearchEmptyMatches as EventListener,
+      );
+    };
+  }, [matchingProcess, setMatchResults]);
+
   /**
    * Handle retry button click
    */
