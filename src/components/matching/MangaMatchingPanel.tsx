@@ -58,6 +58,8 @@ export function MangaMatchingPanel({
 
   // Add state for processing status of the skip button
   const [isSkippingEmptyMatches, setIsSkippingEmptyMatches] = useState(false);
+  // Add state for processing status of the accept all button
+  const [isAcceptingAllMatches, setIsAcceptingAllMatches] = useState(false);
 
   // Handler for opening external links in the default browser
   const handleOpenExternal = (url: string) => (e: React.MouseEvent) => {
@@ -397,6 +399,17 @@ export function MangaMatchingPanel({
     );
   };
 
+  // Helper function to format status text nicely - moved outside for reuse
+  const formatStatusText = (status: string | undefined): string => {
+    if (!status) return "Unknown";
+
+    // Handle cases with underscores or spaces
+    return status
+      .split(/[_\s]+/) // Split by underscores or spaces
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   // Render match status indicator
   const renderStatusIndicator = (match: MangaMatchResult) => {
     // Extract the data for the header badges
@@ -414,66 +427,75 @@ export function MangaMatchingPanel({
       },
     ].filter((data) => !data.hideIfZero || data.value > 0);
 
-    // Continue with the switch statement
-    return match.status === "skipped" ? (
-      <div className="text-muted-foreground line-clamp-1 text-xs">
-        <span className="text-yellow-600 dark:text-yellow-400">
-          {match.kenmeiManga.status}
-        </span>
-        {headerIconData.map((data, i) => (
-          <React.Fragment key={`badge-${i}`}>
-            <span className="mx-1">•</span>
-            <span className={`inline-flex items-center`}>
-              <span>{data.value}</span>
-              <span className="ml-1">{data.text}</span>
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
-    ) : match.status === "pending" ? (
-      <div className="text-muted-foreground line-clamp-1 text-xs">
-        <span className="text-yellow-600 dark:text-yellow-400">
-          {match.kenmeiManga.status}
-        </span>
-        {headerIconData.map((data, i) => (
-          <React.Fragment key={`badge-${i}`}>
-            <span className="mx-1">•</span>
-            <span className={`inline-flex items-center`}>
-              <span>{data.value}</span>
-              <span className="ml-1">{data.text}</span>
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
-    ) : match.status === "matched" ? (
-      <div className="text-muted-foreground line-clamp-1 text-xs">
-        <span className="text-yellow-600 dark:text-yellow-400">
-          {match.kenmeiManga.status}
-        </span>
-        {headerIconData.map((data, i) => (
-          <React.Fragment key={`badge-${i}`}>
-            <span className="mx-1">•</span>
-            <span className={`inline-flex items-center`}>
-              <span>{data.value}</span>
-              <span className="ml-1">{data.text}</span>
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
-    ) : (
-      <div className="text-muted-foreground line-clamp-1 text-xs">
-        <span className="text-yellow-600 dark:text-yellow-400">
-          {match.kenmeiManga.status}
-        </span>
-        {headerIconData.map((data, i) => (
-          <React.Fragment key={`badge-${i}`}>
-            <span className="mx-1">•</span>
-            <span className={`inline-flex items-center`}>
-              <span>{data.value}</span>
-              <span className="ml-1">{data.text}</span>
-            </span>
-          </React.Fragment>
-        ))}
+    // Determine status color based on Kenmei status
+    let statusColorClass = "";
+    switch (match.kenmeiManga.status?.toLowerCase()) {
+      case "reading":
+        statusColorClass = "text-green-600 dark:text-green-400";
+        break;
+      case "completed":
+        statusColorClass = "text-blue-600 dark:text-blue-400";
+        break;
+      case "on_hold":
+        statusColorClass = "text-amber-600 dark:text-amber-400";
+        break;
+      case "dropped":
+        statusColorClass = "text-red-600 dark:text-red-400";
+        break;
+      case "plan_to_read":
+        statusColorClass = "text-purple-600 dark:text-purple-400";
+        break;
+      default:
+        statusColorClass = "text-gray-600 dark:text-gray-400";
+        break;
+    }
+
+    // Create Kenmei URL for the status indicator
+    const kenmeiUrl = createKenmeiUrl(match.kenmeiManga.title);
+
+    // Return the status indicator with correct color
+    return (
+      <div className="flex flex-col items-end">
+        <div className="text-muted-foreground line-clamp-1 text-xs">
+          <span className={statusColorClass}>
+            {formatStatusText(match.kenmeiManga.status)}
+          </span>
+          {headerIconData.map((data, i) => (
+            <React.Fragment key={`badge-${i}`}>
+              <span className="mx-1">•</span>
+              <span className={`inline-flex items-center`}>
+                <span>{data.value}</span>
+                <span className="ml-1">{data.text}</span>
+              </span>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Kenmei link below status */}
+        {kenmeiUrl && (
+          <div className="mt-1 flex items-center">
+            <a
+              href={kenmeiUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+              aria-label="View on Kenmei (opens in external browser)"
+              onClick={handleOpenExternal(kenmeiUrl)}
+            >
+              <ExternalLink className="mr-1 h-3 w-3" aria-hidden="true" />
+              View on Kenmei
+              <div className="group relative ml-1 inline-block">
+                <Info
+                  className="h-3 w-3 text-indigo-500 dark:text-indigo-400"
+                  aria-hidden="true"
+                />
+                <div className="absolute right-0 bottom-full mb-2 hidden w-48 rounded-md border-2 border-blue-400 bg-blue-100 px-3 py-2 text-xs font-medium text-blue-900 shadow-lg group-hover:block dark:border-blue-600 dark:bg-blue-900 dark:text-blue-100">
+                  This link is dynamically generated and may not work correctly.
+                </div>
+              </div>
+            </a>
+          </div>
+        )}
       </div>
     );
   };
@@ -490,23 +512,25 @@ export function MangaMatchingPanel({
   const handleSkipEmptyMatches = () => {
     // Set processing state to disable the button
     setIsSkippingEmptyMatches(true);
-    
+
     // Find all pending manga with no matches
     const pendingWithNoMatches = matches.filter(
-      (match) => 
-        match.status === "pending" && 
-        (!match.anilistMatches || match.anilistMatches.length === 0)
+      (match) =>
+        match.status === "pending" &&
+        (!match.anilistMatches || match.anilistMatches.length === 0),
     );
-    
-    console.log(`Skipping ${pendingWithNoMatches.length} pending manga with no matches`);
-    
+
+    console.log(
+      `Skipping ${pendingWithNoMatches.length} pending manga with no matches`,
+    );
+
     // Skip all matches at once if possible
     if (pendingWithNoMatches.length > 0 && onRejectMatch) {
       // Create a single batched update by using a custom handler
-      const batchedReject = matches.map(match => {
+      const batchedReject = matches.map((match) => {
         // Only modify the matches that need to be skipped
         if (
-          match.status === "pending" && 
+          match.status === "pending" &&
           (!match.anilistMatches || match.anilistMatches.length === 0)
         ) {
           // Return a modified version with skipped status
@@ -514,24 +538,24 @@ export function MangaMatchingPanel({
             ...match,
             status: "skipped" as const,
             selectedMatch: undefined,
-            matchDate: new Date()
+            matchDate: new Date(),
           };
         }
         // Return the original for all other matches
         return match;
       });
-      
+
       // Pass the full array with modifications to the parent
       if (onRejectMatch) {
         // Special flag to indicate this is a batch operation
         const batchOperation = {
           isBatchOperation: true,
-          matches: batchedReject
+          matches: batchedReject,
         };
-        
+
         // @ts-expect-error - We're adding a special property for the batch handler to recognize
         onRejectMatch(batchOperation);
-        
+
         // Short delay to ensure state updates have time to process
         setTimeout(() => {
           setIsSkippingEmptyMatches(false);
@@ -545,9 +569,78 @@ export function MangaMatchingPanel({
 
   // Get count of pending matches with no results
   const emptyMatchesCount = matches.filter(
-    (match) => 
-      match.status === "pending" && 
-      (!match.anilistMatches || match.anilistMatches.length === 0)
+    (match) =>
+      match.status === "pending" &&
+      (!match.anilistMatches || match.anilistMatches.length === 0),
+  ).length;
+
+  // Function to accept all pending matches with main matches
+  const handleAcceptAllPendingMatches = () => {
+    // Set processing state to disable the button
+    setIsAcceptingAllMatches(true);
+
+    // Find all pending manga with valid main matches
+    const pendingWithMatches = matches.filter(
+      (match) =>
+        match.status === "pending" &&
+        match.anilistMatches &&
+        match.anilistMatches.length > 0,
+    );
+
+    console.log(
+      `Accepting ${pendingWithMatches.length} pending manga with matches`,
+    );
+
+    // Accept all matches at once if possible
+    if (pendingWithMatches.length > 0 && onAcceptMatch) {
+      // Create a single batched update
+      const batchedAccept = matches.map((match) => {
+        // Only modify the matches that need to be accepted
+        if (
+          match.status === "pending" &&
+          match.anilistMatches &&
+          match.anilistMatches.length > 0
+        ) {
+          // Return a modified version with matched status
+          return {
+            ...match,
+            status: "matched" as const,
+            selectedMatch: match.anilistMatches[0].manga,
+            matchDate: new Date(),
+          };
+        }
+        // Return the original for all other matches
+        return match;
+      });
+
+      // Pass the full array with modifications to the parent
+      if (onAcceptMatch) {
+        // Special flag to indicate this is a batch operation
+        const batchOperation = {
+          isBatchOperation: true,
+          matches: batchedAccept,
+        };
+
+        // @ts-expect-error - We're adding a special property for the batch handler to recognize
+        onAcceptMatch(batchOperation);
+
+        // Short delay to ensure state updates have time to process
+        setTimeout(() => {
+          setIsAcceptingAllMatches(false);
+        }, 500);
+      }
+    } else {
+      // Reset processing state if no matching items found
+      setIsAcceptingAllMatches(false);
+    }
+  };
+
+  // Get count of pending matches with valid matches
+  const pendingMatchesCount = matches.filter(
+    (match) =>
+      match.status === "pending" &&
+      match.anilistMatches &&
+      match.anilistMatches.length > 0,
   ).length;
 
   return (
@@ -618,34 +711,110 @@ export function MangaMatchingPanel({
         </div>
       </div>
 
-      {/* Skip Empty Matches button */}
-      {emptyMatchesCount > 0 && (
-        <div className="mb-4">
-          <button
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleSkipEmptyMatches}
-            disabled={isSkippingEmptyMatches}
-          >
-            {isSkippingEmptyMatches ? (
-              <>
-                <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </>
-            ) : (
-              <>
-                <X className="mr-2 h-4 w-4" aria-hidden="true" />
-                Skip All Empty Matches ({emptyMatchesCount})
-              </>
-            )}
-          </button>
-          <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">
-            This will mark all pending manga with no matches as skipped.
-          </span>
-        </div>
-      )}
+      {/* Skip Empty Matches and Accept All Matches buttons */}
+      <div className="mb-4 flex flex-wrap gap-4">
+        {/* Skip Empty Matches button */}
+        {emptyMatchesCount > 0 && (
+          <div className="flex items-center">
+            <button
+              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              onClick={handleSkipEmptyMatches}
+              disabled={isSkippingEmptyMatches}
+            >
+              {isSkippingEmptyMatches ? (
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <X className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Skip Empty Matches ({emptyMatchesCount})
+                </>
+              )}
+            </button>
+            <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">
+              This will mark all pending manga with no matches as skipped.
+            </span>
+          </div>
+        )}
+
+        {/* Accept All Matches button */}
+        {pendingMatchesCount > 0 && (
+          <div className="flex items-center">
+            <button
+              className="inline-flex items-center rounded-md border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 shadow-sm hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-600 dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-800/30"
+              onClick={handleAcceptAllPendingMatches}
+              disabled={isAcceptingAllMatches}
+            >
+              {isAcceptingAllMatches ? (
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Accept All Matches ({pendingMatchesCount})
+                </>
+              )}
+            </button>
+            <div className="ml-2 flex items-center">
+              <div className="group relative flex">
+                <Info
+                  className="h-4 w-4 text-gray-500 dark:text-gray-400"
+                  aria-hidden="true"
+                />
+                <div className="absolute bottom-full left-1/2 mb-2 hidden w-64 -translate-x-1/2 transform rounded-md border-2 border-blue-400 bg-blue-100 px-3 py-2 text-xs font-medium text-blue-900 shadow-lg group-hover:block dark:border-blue-600 dark:bg-blue-900 dark:text-blue-100">
+                  It&apos;s still a good idea to skim over the matches to ensure
+                  everything is correct before proceeding.
+                </div>
+              </div>
+              <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">
+                Accept all pending manga with available matches.
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Filter selection */}
       <div className="mb-4 flex flex-col items-start justify-between rounded-md border border-gray-200 bg-white p-3 md:flex-row md:items-center dark:border-gray-700 dark:bg-gray-800">
@@ -899,15 +1068,9 @@ export function MangaMatchingPanel({
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                       {match.kenmeiManga.title}
                     </h3>
-                    <div className="flex items-center">
+                    <div className="ml-2 flex min-w-[250px] items-center justify-end">
                       {renderStatusIndicator(match)}
                     </div>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    {match.kenmeiManga.status} •{" "}
-                    {match.kenmeiManga.chapters_read} chapters read
-                    {match.kenmeiManga.score > 0 &&
-                      ` • Score: ${match.kenmeiManga.score}/10`}
                   </div>
                 </div>
 
@@ -1041,7 +1204,9 @@ export function MangaMatchingPanel({
                                 </span>
                               )}
                           </div>
-                          <div className="mt-2 flex items-center space-x-2 text-base text-gray-600 dark:text-gray-400">
+
+                          {/* Manga format and status info */}
+                          <div className="mt-2 flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                             {match.status !== "skipped" ||
                             match.selectedMatch ||
                             match.anilistMatches?.length ? (
@@ -1079,6 +1244,14 @@ export function MangaMatchingPanel({
                                 No match information available
                               </span>
                             )}
+                          </div>
+
+                          {/* Kenmei status info */}
+                          <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            {formatStatusText(match.kenmeiManga.status)} •{" "}
+                            {match.kenmeiManga.chapters_read} chapters read
+                            {match.kenmeiManga.score > 0 &&
+                              ` • Score: ${match.kenmeiManga.score}/10`}
                           </div>
                         </div>
                       </div>
@@ -1206,7 +1379,7 @@ export function MangaMatchingPanel({
                         Search Manually
                       </button>
                       <button
-                        className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                        className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                         onClick={() => {
                           if (onRejectMatch) onRejectMatch(match);
                         }}

@@ -1,4 +1,3 @@
-// TODO: Add a button to accept the main match of all pending manga matches.
 // TODO: Add a button to re-search all manga that don't have a match regardless of status.
 
 import React, { useState, useEffect, useRef } from "react";

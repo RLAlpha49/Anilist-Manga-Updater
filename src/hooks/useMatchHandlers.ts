@@ -116,17 +116,35 @@ export const useMatchHandlers = (
 
   /**
    * Handle accepting a match
+   * Now supports batch operations for accepting multiple matches at once
    */
   const handleAcceptMatch = useCallback(
-    (match: MangaMatchResult) => {
+    (
+      match:
+        | MangaMatchResult
+        | { isBatchOperation: boolean; matches: MangaMatchResult[] },
+    ) => {
+      // Check if this is a batch operation
+      if ("isBatchOperation" in match && match.isBatchOperation) {
+        console.log(
+          `Processing batch accept operation for ${match.matches.length} matches`,
+        );
+
+        // For batch operations, we simply replace the entire match results array
+        // with the new one that already has the matched statuses applied
+        updateMatchResults(match.matches);
+        return;
+      }
+
+      // Regular single match processing (existing code)
       console.log("handleAcceptMatch called with match:", match);
 
       // Find the match
-      const index = findMatchIndex(match);
+      const index = findMatchIndex(match as MangaMatchResult);
       if (index === -1) return;
 
       console.log(
-        `Accepting match for ${match.kenmeiManga.title}, current status: ${match.status}`,
+        `Accepting match for ${(match as MangaMatchResult).kenmeiManga.title}, current status: ${(match as MangaMatchResult).status}`,
       );
 
       // Create a copy of the results and update the status
@@ -134,9 +152,9 @@ export const useMatchHandlers = (
 
       // Create a new object reference to ensure React detects the change
       const updatedMatch = {
-        ...match,
+        ...(match as MangaMatchResult),
         status: "matched" as const,
-        selectedMatch: match.anilistMatches?.[0]?.manga,
+        selectedMatch: (match as MangaMatchResult).anilistMatches?.[0]?.manga,
         matchDate: new Date(),
       };
 
@@ -157,17 +175,23 @@ export const useMatchHandlers = (
    * Now supports batch operations for skipping multiple matches at once
    */
   const handleRejectMatch = useCallback(
-    (match: MangaMatchResult | { isBatchOperation: boolean; matches: MangaMatchResult[] }) => {
+    (
+      match:
+        | MangaMatchResult
+        | { isBatchOperation: boolean; matches: MangaMatchResult[] },
+    ) => {
       // Check if this is a batch operation
-      if ('isBatchOperation' in match && match.isBatchOperation) {
-        console.log(`Processing batch reject operation for ${match.matches.length} matches`);
-        
+      if ("isBatchOperation" in match && match.isBatchOperation) {
+        console.log(
+          `Processing batch reject operation for ${match.matches.length} matches`,
+        );
+
         // For batch operations, we simply replace the entire match results array
         // with the new one that already has the skipped statuses applied
         updateMatchResults(match.matches);
         return;
       }
-      
+
       // Regular single match processing (existing code)
       console.log("handleRejectMatch called with match:", match);
 
