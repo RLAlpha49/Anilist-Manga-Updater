@@ -14,7 +14,6 @@ import {
   Link,
   ExternalLink,
   XCircle,
-  RotateCw,
   InfoIcon,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -485,16 +484,6 @@ export function SettingsPage() {
           <h1 className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
             Settings
           </h1>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefreshPage}
-            className="flex items-center gap-1.5"
-            title="Refresh page state"
-          >
-            <RotateCw className="h-4 w-4" />
-            Refresh
-          </Button>
         </div>
         <p className="text-muted-foreground max-w-2xl">
           Configure your AniList authentication and manage application settings.
@@ -536,12 +525,18 @@ export function SettingsPage() {
       )}
 
       <Tabs defaultValue="account" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:w-auto">
-          <TabsTrigger value="account" className="flex items-center gap-1.5">
+        <TabsList className="bg-muted/50 grid w-full grid-cols-2 md:w-auto dark:bg-gray-800/50">
+          <TabsTrigger
+            value="account"
+            className="data-[state=active]:bg-background flex items-center gap-1.5 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white dark:data-[state=active]:shadow-sm"
+          >
             <UserCircle className="h-4 w-4" />
             Account
           </TabsTrigger>
-          <TabsTrigger value="data" className="flex items-center gap-1.5">
+          <TabsTrigger
+            value="data"
+            className="data-[state=active]:bg-background flex items-center gap-1.5 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white dark:data-[state=active]:shadow-sm"
+          >
             <Database className="h-4 w-4" />
             Data
           </TabsTrigger>

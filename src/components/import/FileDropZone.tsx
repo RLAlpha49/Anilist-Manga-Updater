@@ -4,6 +4,8 @@ import { Button } from "../ui/button";
 import { KenmeiData } from "../../types/kenmei";
 import { createError, ErrorType, AppError } from "../../utils/errorHandling";
 import { parseKenmeiCsvExport } from "../../api/kenmei/parser";
+import { Progress } from "../ui/progress";
+import { Badge } from "../ui/badge";
 
 interface FileDropZoneProps {
   onFileLoaded: (data: KenmeiData) => void;
@@ -14,6 +16,8 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -46,9 +50,24 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
   const processFile = (file: File) => {
     setFileName(file.name);
     setFileSize(file.size);
+    setIsLoading(true);
+    setLoadingProgress(10);
+
+    // Simulate progress for better UX
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 80) {
+          clearInterval(progressInterval);
+          return 80;
+        }
+        return prev + 10;
+      });
+    }, 100);
 
     // Validate file type
     if (!file.name.toLowerCase().endsWith(".csv")) {
+      setIsLoading(false);
+      clearInterval(progressInterval);
       onError(
         createError(
           ErrorType.VALIDATION,
@@ -60,6 +79,8 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
 
     // Check file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
+      setIsLoading(false);
+      clearInterval(progressInterval);
       onError(
         createError(
           ErrorType.VALIDATION,
@@ -73,6 +94,9 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
 
     reader.onload = (event) => {
       try {
+        clearInterval(progressInterval);
+        setLoadingProgress(100);
+
         if (!event.target?.result) {
           throw new Error("Failed to read file");
         }
@@ -109,9 +133,11 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
           })),
         };
 
+        setIsLoading(false);
         onFileLoaded(kenmeiData);
       } catch (err) {
         console.error("CSV parsing error:", err);
+        setIsLoading(false);
         onError(
           createError(
             ErrorType.VALIDATION,
@@ -122,6 +148,8 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
     };
 
     reader.onerror = () => {
+      clearInterval(progressInterval);
+      setIsLoading(false);
       onError(
         createError(ErrorType.UNKNOWN, "Error reading file. Please try again."),
       );
@@ -147,10 +175,10 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-all ${
+      className={`relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
         isDragging
-          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-          : "border-gray-300 hover:border-blue-400 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-gray-800/50"
+          ? "border-primary/50 bg-primary/5"
+          : "border-border/50 hover:border-primary/30 hover:bg-muted/50"
       }`}
       onClick={handleButtonClick}
     >
@@ -163,55 +191,85 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
       />
 
       {!fileName ? (
-        <div className="flex flex-col items-center justify-center space-y-3">
-          <div className="mb-2 rounded-full bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
+        // Empty state - show upload instructions
+        <div className="flex flex-col items-center justify-center space-y-3 p-6 text-center">
+          <div className="bg-primary/10 text-primary mb-2 rounded-full p-3">
             <UploadCloud className="h-8 w-8" />
           </div>
           <h3 className="text-lg font-medium">Upload Kenmei CSV Export</h3>
-          <p className="max-w-md text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-muted-foreground max-w-md text-sm">
             Drag and drop your Kenmei CSV export file here
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-500">
-            or click to browse your files
-          </p>
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
+            <span>or</span>
+            <Badge variant="outline" className="rounded-sm font-mono">
+              .csv
+            </Badge>
+            <span>files accepted</span>
+          </div>
+
           <div className="mt-2">
             <Button
               type="button"
               variant="outline"
-              className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
+              className="mt-2"
               onClick={(e) => {
                 e.stopPropagation();
                 handleButtonClick();
               }}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Select CSV File
+              Browse Files
             </Button>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
-            <File className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h3 className="mb-1 text-lg font-medium">{fileName}</h3>
-          <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            {fileSize && formatFileSize(fileSize)}
-          </p>
-          <Button
-            size="sm"
-            type="button"
-            className="bg-blue-600 text-white shadow-sm hover:bg-blue-700"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-                fileInputRef.current.click();
-              }
-            }}
-          >
-            Choose Different File
-          </Button>
+        // File selected state
+        <div className="flex w-full flex-col items-center p-6 text-center">
+          {isLoading ? (
+            <div className="w-full max-w-md space-y-4">
+              <div className="flex items-center justify-center">
+                <div className="bg-primary/20 mr-3 h-10 w-10 animate-pulse rounded-full">
+                  <File className="text-primary/50 h-10 w-10" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm font-medium">{fileName}</h3>
+                  <p className="text-muted-foreground text-xs">
+                    {fileSize && formatFileSize(fileSize)}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Progress value={loadingProgress} className="h-1.5 w-full" />
+                <p className="text-muted-foreground text-xs">
+                  Processing file...
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <div className="bg-primary/10 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <File className="text-primary h-8 w-8" />
+              </div>
+              <h3 className="mb-1 text-lg font-medium">{fileName}</h3>
+              <p className="text-muted-foreground mb-4 text-sm">
+                {fileSize && formatFileSize(fileSize)}
+              </p>
+              <Button
+                size="sm"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                    fileInputRef.current.click();
+                  }
+                }}
+              >
+                Choose Different File
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
