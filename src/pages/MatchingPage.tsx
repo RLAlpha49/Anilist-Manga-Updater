@@ -1,5 +1,3 @@
-// TODO: Add a button to re-search all manga that don't have a match regardless of status.
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { KenmeiManga } from "../api/kenmei/types";
