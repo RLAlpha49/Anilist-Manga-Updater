@@ -56,6 +56,9 @@ export function MangaMatchingPanel({
   // Items per page
   const itemsPerPage = 10;
 
+  // Add state for processing status of the skip button
+  const [isSkippingEmptyMatches, setIsSkippingEmptyMatches] = useState(false);
+
   // Handler for opening external links in the default browser
   const handleOpenExternal = (url: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -483,6 +486,70 @@ export function MangaMatchingPanel({
     }
   };
 
+  // Function to skip all pending matches with no results
+  const handleSkipEmptyMatches = () => {
+    // Set processing state to disable the button
+    setIsSkippingEmptyMatches(true);
+    
+    // Find all pending manga with no matches
+    const pendingWithNoMatches = matches.filter(
+      (match) => 
+        match.status === "pending" && 
+        (!match.anilistMatches || match.anilistMatches.length === 0)
+    );
+    
+    console.log(`Skipping ${pendingWithNoMatches.length} pending manga with no matches`);
+    
+    // Skip all matches at once if possible
+    if (pendingWithNoMatches.length > 0 && onRejectMatch) {
+      // Create a single batched update by using a custom handler
+      const batchedReject = matches.map(match => {
+        // Only modify the matches that need to be skipped
+        if (
+          match.status === "pending" && 
+          (!match.anilistMatches || match.anilistMatches.length === 0)
+        ) {
+          // Return a modified version with skipped status
+          return {
+            ...match,
+            status: "skipped" as const,
+            selectedMatch: undefined,
+            matchDate: new Date()
+          };
+        }
+        // Return the original for all other matches
+        return match;
+      });
+      
+      // Pass the full array with modifications to the parent
+      if (onRejectMatch) {
+        // Special flag to indicate this is a batch operation
+        const batchOperation = {
+          isBatchOperation: true,
+          matches: batchedReject
+        };
+        
+        // @ts-expect-error - We're adding a special property for the batch handler to recognize
+        onRejectMatch(batchOperation);
+        
+        // Short delay to ensure state updates have time to process
+        setTimeout(() => {
+          setIsSkippingEmptyMatches(false);
+        }, 500);
+      }
+    } else {
+      // Reset processing state if no matching items found
+      setIsSkippingEmptyMatches(false);
+    }
+  };
+
+  // Get count of pending matches with no results
+  const emptyMatchesCount = matches.filter(
+    (match) => 
+      match.status === "pending" && 
+      (!match.anilistMatches || match.anilistMatches.length === 0)
+  ).length;
+
   return (
     <div
       className="flex flex-col space-y-4"
@@ -550,6 +617,35 @@ export function MangaMatchingPanel({
           />
         </div>
       </div>
+
+      {/* Skip Empty Matches button */}
+      {emptyMatchesCount > 0 && (
+        <div className="mb-4">
+          <button
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSkipEmptyMatches}
+            disabled={isSkippingEmptyMatches}
+          >
+            {isSkippingEmptyMatches ? (
+              <>
+                <svg className="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              <>
+                <X className="mr-2 h-4 w-4" aria-hidden="true" />
+                Skip All Empty Matches ({emptyMatchesCount})
+              </>
+            )}
+          </button>
+          <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">
+            This will mark all pending manga with no matches as skipped.
+          </span>
+        </div>
+      )}
 
       {/* Filter selection */}
       <div className="mb-4 flex flex-col items-start justify-between rounded-md border border-gray-200 bg-white p-3 md:flex-row md:items-center dark:border-gray-700 dark:bg-gray-800">

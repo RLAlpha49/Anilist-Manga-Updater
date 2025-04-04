@@ -154,17 +154,29 @@ export const useMatchHandlers = (
 
   /**
    * Handle rejecting/skipping a match
+   * Now supports batch operations for skipping multiple matches at once
    */
   const handleRejectMatch = useCallback(
-    (match: MangaMatchResult) => {
+    (match: MangaMatchResult | { isBatchOperation: boolean; matches: MangaMatchResult[] }) => {
+      // Check if this is a batch operation
+      if ('isBatchOperation' in match && match.isBatchOperation) {
+        console.log(`Processing batch reject operation for ${match.matches.length} matches`);
+        
+        // For batch operations, we simply replace the entire match results array
+        // with the new one that already has the skipped statuses applied
+        updateMatchResults(match.matches);
+        return;
+      }
+      
+      // Regular single match processing (existing code)
       console.log("handleRejectMatch called with match:", match);
 
       // Find the match
-      const index = findMatchIndex(match);
+      const index = findMatchIndex(match as MangaMatchResult);
       if (index === -1) return;
 
       console.log(
-        `Skipping match for ${match.kenmeiManga.title}, current status: ${match.status}`,
+        `Skipping match for ${(match as MangaMatchResult).kenmeiManga.title}, current status: ${(match as MangaMatchResult).status}`,
       );
 
       // Create a copy of the results and update the status
@@ -172,7 +184,7 @@ export const useMatchHandlers = (
 
       // Create a new object reference to ensure React detects the change
       const updatedMatch = {
-        ...match,
+        ...(match as MangaMatchResult),
         status: "skipped" as const,
         selectedMatch: undefined,
         matchDate: new Date(),
