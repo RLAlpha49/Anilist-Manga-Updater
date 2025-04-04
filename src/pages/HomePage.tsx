@@ -533,7 +533,8 @@ export function HomePage() {
         <Card className="border-none bg-gradient-to-r from-gray-50 to-gray-100 shadow-sm transition-all hover:shadow-md dark:from-gray-950/80 dark:to-gray-900/80">
           <CardContent className="flex flex-col items-center justify-center space-y-2 py-6">
             <p className="text-muted-foreground text-sm">
-              Kenmei to AniList Sync Tool • Version 1.0.0
+              Kenmei to AniList Sync Tool • Version{" "}
+              {import.meta.env.VITE_APP_VERSION || "1.0.0"}
             </p>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs font-normal">

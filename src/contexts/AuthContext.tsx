@@ -3,43 +3,10 @@ import { storage } from "../utils/storage";
 import {
   AuthState,
   APICredentials,
-  TokenExchangeResponse,
   ViewerResponse,
   AuthContextType,
 } from "../types/auth";
 import { AuthContext } from "./AuthContextDefinition";
-
-// Declare the electron API in global window
-declare global {
-  interface Window {
-    electronAuth: {
-      openOAuthWindow: (
-        oauthUrl: string,
-        redirectUri: string,
-      ) => Promise<{ success: boolean; error?: string }>;
-      storeCredentials: (
-        credentials: APICredentials,
-      ) => Promise<{ success: boolean; error?: string }>;
-      getCredentials: (source: "default" | "custom") => Promise<{
-        success: boolean;
-        credentials?: APICredentials;
-        error?: string;
-      }>;
-      onCodeReceived: (
-        callback: (data: { code: string }) => void,
-      ) => () => void;
-      onStatus: (callback: (message: string) => void) => () => void;
-      onCancelled: (callback: () => void) => () => void;
-      cancelAuth: () => Promise<{ success: boolean; error?: string }>;
-      exchangeToken: (data: {
-        clientId: string;
-        clientSecret: string;
-        redirectUri: string;
-        code: string;
-      }) => Promise<TokenExchangeResponse>;
-    };
-  }
-}
 
 interface AuthProviderProps {
   children: ReactNode;

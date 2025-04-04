@@ -5,7 +5,6 @@ import { KenmeiData } from "../../types/kenmei";
 import { createError, ErrorType, AppError } from "../../utils/errorHandling";
 import { parseKenmeiCsvExport } from "../../api/kenmei/parser";
 import { Progress } from "../ui/progress";
-import { Badge } from "../ui/badge";
 
 interface FileDropZoneProps {
   onFileLoaded: (data: KenmeiData) => void;
@@ -200,13 +199,6 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
           <p className="text-muted-foreground max-w-md text-sm">
             Drag and drop your Kenmei CSV export file here
           </p>
-          <div className="text-muted-foreground flex items-center gap-2 text-xs">
-            <span>or</span>
-            <Badge variant="outline" className="rounded-sm font-mono">
-              .csv
-            </Badge>
-            <span>files accepted</span>
-          </div>
 
           <div className="mt-2">
             <Button

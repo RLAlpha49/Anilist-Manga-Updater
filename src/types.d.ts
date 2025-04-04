@@ -4,6 +4,19 @@
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
 
+// Augment the ImportMeta interface to include Vite's env variables
+interface ImportMeta {
+  readonly env: {
+    [key: string]: string | boolean | undefined;
+    readonly VITE_ANILIST_CLIENT_ID: string;
+    readonly VITE_ANILIST_CLIENT_SECRET: string;
+    readonly VITE_APP_VERSION?: string;
+    readonly MODE: string;
+    readonly DEV: boolean;
+    readonly PROD: boolean;
+  };
+}
+
 // Preload types
 interface ThemeModeContext {
   toggle: () => Promise<boolean>;
@@ -16,22 +29,6 @@ interface ElectronWindow {
   minimize: () => Promise<void>;
   maximize: () => Promise<void>;
   close: () => Promise<void>;
-}
-
-// Token parameters type for API calls
-interface TokenExchangeParams {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  code: string;
-}
-
-// Auth credentials interface
-interface AuthCredentials {
-  source: "default" | "custom";
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
 }
 
 declare interface Window {
@@ -83,17 +80,27 @@ declare interface Window {
     };
   };
   electronAuth: {
-    openOAuthWindow: (oauthUrl: string, redirectUri: string) => Promise<void>;
-    storeCredentials: (credentials: AuthCredentials) => Promise<void>;
-    getCredentials: (source: string) => Promise<AuthCredentials>;
-    cancelAuth: () => Promise<void>;
-    onStatus: (callback: (message: string) => void) => () => void;
-    onCodeReceived: (callback: (data: { code: string }) => void) => () => void;
-    onCancelled: (callback: () => void) => () => void;
-    exchangeToken: (params: TokenExchangeParams) => Promise<{
+    openOAuthWindow: (
+      oauthUrl: string,
+      redirectUri: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    storeCredentials: (
+      credentials: APICredentials,
+    ) => Promise<{ success: boolean; error?: string }>;
+    getCredentials: (source: "default" | "custom") => Promise<{
       success: boolean;
-      token?: { access_token: string; token_type: string; expires_in: number };
+      credentials?: APICredentials;
       error?: string;
     }>;
+    onCodeReceived: (callback: (data: { code: string }) => void) => () => void;
+    onStatus: (callback: (message: string) => void) => () => void;
+    onCancelled: (callback: () => void) => () => void;
+    cancelAuth: () => Promise<{ success: boolean; error?: string }>;
+    exchangeToken: (data: {
+      clientId: string;
+      clientSecret: string;
+      redirectUri: string;
+      code: string;
+    }) => Promise<TokenExchangeResponse>;
   };
 }

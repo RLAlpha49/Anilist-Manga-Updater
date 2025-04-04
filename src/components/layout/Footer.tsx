@@ -1,8 +1,8 @@
 import React from "react";
-import { Github, Heart, Twitter, Mail } from "lucide-react";
+import { Github, Heart, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { Separator } from "../ui/separator";
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -12,9 +12,6 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 
 export function Footer() {
-  // Get the version from package.json
-  const appVersion = "1.0.0"; // This would ideally come from environment variable or package.json
-
   const handleOpenExternal = (url: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     if (window.electronAPI?.shell?.openExternal) {
@@ -30,22 +27,22 @@ export function Footer() {
       name: "GitHub",
       icon: <Github className="h-4 w-4" />,
       url: "https://github.com/RLAlpha49/KenmeiToAnilist",
-      tooltip: "View source code on GitHub"
+      tooltip: "View source code on GitHub",
     },
     {
       name: "Contact",
       icon: <Mail className="h-4 w-4" />,
       url: "mailto:contact@alpha49.com",
-      tooltip: "Email with questions"
-    }
+      tooltip: "Email with questions",
+    },
   ];
 
   return (
     <TooltipProvider>
-      <footer className="border-t border-border bg-background/90 backdrop-blur-sm p-3 text-xs">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="border-border bg-background/90 border-t p-3 text-xs backdrop-blur-sm">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
-            <motion.div 
+            <motion.div
               className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-blue-600 to-purple-600 text-white"
               whileHover={{ rotate: 10, scale: 1.05 }}
             >
@@ -53,10 +50,12 @@ export function Footer() {
             </motion.div>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Kenmei to AniList</span>
-              <Badge variant="outline" className="px-2 h-5 font-mono">v{appVersion}</Badge>
+              <Badge variant="outline" className="h-5 px-2 font-mono">
+                v{import.meta.env.VITE_APP_VERSION || "1.0.0"}
+              </Badge>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="flex gap-2">
               {socialLinks.map((link) => (
@@ -65,32 +64,32 @@ export function Footer() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground h-7 w-7 rounded-full"
                       onClick={handleOpenExternal(link.url)}
                     >
                       {link.icon}
                       <span className="sr-only">{link.name}</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="top">
-                    {link.tooltip}
-                  </TooltipContent>
+                  <TooltipContent side="top">{link.tooltip}</TooltipContent>
                 </Tooltip>
               ))}
             </div>
-            
+
             <Separator orientation="vertical" className="h-4" />
-            
-            <motion.div 
-              className="flex items-center text-muted-foreground"
+
+            <motion.div
+              className="text-muted-foreground flex items-center"
               whileHover={{ scale: 1.05 }}
             >
               <span>Made with</span>
-              <Heart className="mx-1 h-3 w-3 text-red-500 fill-red-500" />
+              <Heart className="mx-1 h-3 w-3 fill-red-500 text-red-500" />
               <span>for manga readers</span>
             </motion.div>
-            
-            <span className="text-muted-foreground">© {new Date().getFullYear()}</span>
+
+            <span className="text-muted-foreground">
+              © {new Date().getFullYear()}
+            </span>
           </div>
         </div>
       </footer>

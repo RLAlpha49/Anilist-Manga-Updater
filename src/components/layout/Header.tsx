@@ -34,12 +34,12 @@ import { motion } from "framer-motion";
 export function Header() {
   return (
     <TooltipProvider>
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
+      <header className="border-border bg-background/90 sticky top-0 z-40 border-b backdrop-blur-sm">
         <div className="draglayer w-full">
           <div className="flex h-14 items-center justify-between px-4">
             <div className="flex items-center gap-4">
               {/* Logo and title */}
-              <Link to="/" className="flex items-center non-draggable">
+              <Link to="/" className="non-draggable flex items-center">
                 <motion.div
                   className="mr-2 flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white"
                   whileHover={{ scale: 1.05 }}
@@ -47,7 +47,7 @@ export function Header() {
                 >
                   <span className="font-bold">K2A</span>
                 </motion.div>
-                <h1 className="font-mono text-lg font-bold hidden sm:block">
+                <h1 className="hidden font-mono text-lg font-bold sm:block">
                   <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     Kenmei to AniList
                   </span>
@@ -56,70 +56,80 @@ export function Header() {
 
               {/* Always visible navigation - icon-only on small screens, icon+text on larger screens */}
               <div className="non-draggable">
-              <NavigationMenu>
-                <NavigationMenuList className="flex">
-                  <NavigationMenuItem>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link to="/">
-                          <NavigationMenuLink
-                            className={navigationMenuTriggerStyle()}
-                          >
-                            <Home className="h-4 w-4 flex-shrink-0" />
-                            <span className="ml-2 max-md:hidden">Home</span>
-                          </NavigationMenuLink>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="md:hidden">Home</TooltipContent>
-                    </Tooltip>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link to="/import">
-                          <NavigationMenuLink
-                            className={navigationMenuTriggerStyle()}
-                          >
-                            <Download className="h-4 w-4 flex-shrink-0" />
-                            <span className="ml-2 max-md:hidden">Import</span>
-                          </NavigationMenuLink>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="md:hidden">Import</TooltipContent>
-                    </Tooltip>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link to="/review">
-                          <NavigationMenuLink
-                            className={navigationMenuTriggerStyle()}
-                          >
-                            <ClipboardCheck className="h-4 w-4 flex-shrink-0" />
-                            <span className="ml-2 max-md:hidden">Review</span>
-                          </NavigationMenuLink>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="md:hidden">Review</TooltipContent>
-                    </Tooltip>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link to="/settings">
-                          <NavigationMenuLink
-                            className={navigationMenuTriggerStyle()}
-                          >
-                            <SettingsIcon className="h-4 w-4 flex-shrink-0" />
-                            <span className="ml-2 max-md:hidden">Settings</span>
-                          </NavigationMenuLink>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="md:hidden">Settings</TooltipContent>
-                    </Tooltip>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
+                <NavigationMenu>
+                  <NavigationMenuList className="flex">
+                    <NavigationMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link to="/">
+                            <NavigationMenuLink
+                              className={navigationMenuTriggerStyle()}
+                            >
+                              <Home className="h-4 w-4 flex-shrink-0" />
+                              <span className="ml-2 max-md:hidden">Home</span>
+                            </NavigationMenuLink>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="md:hidden">
+                          Home
+                        </TooltipContent>
+                      </Tooltip>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link to="/import">
+                            <NavigationMenuLink
+                              className={navigationMenuTriggerStyle()}
+                            >
+                              <Download className="h-4 w-4 flex-shrink-0" />
+                              <span className="ml-2 max-md:hidden">Import</span>
+                            </NavigationMenuLink>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="md:hidden">
+                          Import
+                        </TooltipContent>
+                      </Tooltip>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link to="/review">
+                            <NavigationMenuLink
+                              className={navigationMenuTriggerStyle()}
+                            >
+                              <ClipboardCheck className="h-4 w-4 flex-shrink-0" />
+                              <span className="ml-2 max-md:hidden">Review</span>
+                            </NavigationMenuLink>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="md:hidden">
+                          Review
+                        </TooltipContent>
+                      </Tooltip>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link to="/settings">
+                            <NavigationMenuLink
+                              className={navigationMenuTriggerStyle()}
+                            >
+                              <SettingsIcon className="h-4 w-4 flex-shrink-0" />
+                              <span className="ml-2 max-md:hidden">
+                                Settings
+                              </span>
+                            </NavigationMenuLink>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="md:hidden">
+                          Settings
+                        </TooltipContent>
+                      </Tooltip>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </NavigationMenu>
               </div>
             </div>
 
@@ -162,7 +172,7 @@ export function Header() {
                       variant="ghost"
                       size="icon"
                       onClick={closeWindow}
-                      className="h-8 w-8 rounded-full hover:bg-destructive hover:text-destructive-foreground"
+                      className="hover:bg-destructive hover:text-destructive-foreground h-8 w-8 rounded-full"
                     >
                       <X className="h-4 w-4" />
                     </Button>

@@ -22,7 +22,43 @@ import { SearchModal } from "../components/matching/SearchModal";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Loader2 } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+
+// Animation variants
+const pageVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.2,
+      when: "beforeChildren",
+    },
+  },
+};
+
+const headerVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+    },
+  },
+};
+
+const contentVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      delay: 0.15,
+      when: "beforeChildren",
+    },
+  },
+};
 
 export function MatchingPage() {
   const navigate = useNavigate();
@@ -753,64 +789,88 @@ export function MatchingPage() {
   // Loading state
   if (matchingProcess.isLoading) {
     return (
-      <div className="container mx-auto max-w-5xl space-y-6 px-4 py-8 md:px-6">
-        <div className="space-y-2">
+      <motion.div
+        className="container mx-auto max-w-5xl space-y-6 px-4 py-8 md:px-6"
+        variants={pageVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div className="space-y-2" variants={headerVariants}>
           <h1 className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
             Match Your Manga
           </h1>
           <p className="text-muted-foreground max-w-2xl">
             Automatically match your imported manga with AniList entries
           </p>
-        </div>
+        </motion.div>
 
         {/* Loading State with Progress and Cancel Button */}
-        <MatchingProgressPanel
-          isCancelling={matchingProcess.isCancelling}
-          progress={matchingProcess.progress}
-          statusMessage={matchingProcess.statusMessage}
-          detailMessage={matchingProcess.detailMessage}
-          timeEstimate={matchingProcess.timeEstimate}
-          onCancelProcess={matchingProcess.handleCancelProcess}
-          bypassCache={matchingProcess.bypassCache}
-          freshSearch={matchingProcess.freshSearch}
-        />
+        <motion.div variants={contentVariants}>
+          <MatchingProgressPanel
+            isCancelling={matchingProcess.isCancelling}
+            progress={matchingProcess.progress}
+            statusMessage={matchingProcess.statusMessage}
+            detailMessage={matchingProcess.detailMessage}
+            timeEstimate={matchingProcess.timeEstimate}
+            onCancelProcess={matchingProcess.handleCancelProcess}
+            bypassCache={matchingProcess.bypassCache}
+            freshSearch={matchingProcess.freshSearch}
+          />
+        </motion.div>
 
         {/* Error Display */}
         {matchingProcess.error && !matchResults.length && (
-          <ErrorDisplay
-            error={matchingProcess.error}
-            detailedError={matchingProcess.detailedError}
-            onRetry={handleRetry}
-            onClearPendingManga={() => pendingMangaState.savePendingManga([])}
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25, duration: 0.3 }}
+          >
+            <ErrorDisplay
+              error={matchingProcess.error}
+              detailedError={matchingProcess.detailedError}
+              onRetry={handleRetry}
+              onClearPendingManga={() => pendingMangaState.savePendingManga([])}
+            />
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="container mx-auto flex h-full max-w-full flex-col px-4 py-6 md:px-6">
-      <header className="mb-6 space-y-2">
+    <motion.div
+      className="container mx-auto flex h-full max-w-full flex-col px-4 py-6 md:px-6"
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.header className="mb-6 space-y-2" variants={headerVariants}>
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <h1 className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
             Review Your Manga
           </h1>
           {matchResults.length > 0 && !matchingProcess.isLoading && (
-            <Button
-              onClick={() => setShowRematchOptions(!showRematchOptions)}
-              variant="default"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.25 }}
             >
-              {showRematchOptions
-                ? "Hide Rematch Options"
-                : "Fresh Search (Clear Cache)"}
-            </Button>
+              <Button
+                onClick={() => setShowRematchOptions(!showRematchOptions)}
+                variant="default"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              >
+                {showRematchOptions
+                  ? "Hide Rematch Options"
+                  : "Fresh Search (Clear Cache)"}
+              </Button>
+            </motion.div>
           )}
         </div>
         <p className="text-muted-foreground max-w-2xl">
           Review the matches found between your Kenmei manga and AniList.
         </p>
-      </header>
+      </motion.header>
 
       {/* Rematch by status options */}
       <AnimatePresence>
@@ -832,24 +892,30 @@ export function MatchingPage() {
       {matchingProcess.isInitializing &&
         !matchingProcess.isLoading &&
         pendingMangaState.pendingManga.length > 0 && (
-          <Card className="mb-6 border-blue-100 bg-blue-50/50 shadow-md dark:border-blue-900/50 dark:bg-blue-900/20">
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center space-x-3">
-                <div className="relative flex h-8 w-8 items-center justify-center">
-                  <div className="absolute h-full w-full animate-ping rounded-full bg-blue-400 opacity-20"></div>
-                  <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+          >
+            <Card className="mb-6 border-blue-100 bg-blue-50/50 shadow-md dark:border-blue-900/50 dark:bg-blue-900/20">
+              <CardContent className="flex items-center justify-between p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="relative flex h-8 w-8 items-center justify-center">
+                    <div className="absolute h-full w-full animate-ping rounded-full bg-blue-400 opacity-20"></div>
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-blue-700 dark:text-blue-300">
+                      Checking for pending manga to resume...
+                    </p>
+                    <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
+                      Please wait while we analyze your previous session
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-blue-700 dark:text-blue-300">
-                    Checking for pending manga to resume...
-                  </p>
-                  <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
-                    Please wait while we analyze your previous session
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
 
       {/* Resume message when we have pending manga but aren't already in the loading state */}
@@ -857,7 +923,6 @@ export function MatchingPage() {
         manga.length > matchResults.length) &&
         !matchingProcess.isLoading &&
         !matchingProcess.isInitializing &&
-        // Make sure we actually need to process these manga (not already in matchResults)
         (() => {
           console.log(
             `Checking if ${pendingMangaState.pendingManga.length || manga.length - matchResults.length} pending manga need processing...`,
@@ -931,83 +996,94 @@ export function MatchingPage() {
 
           return needsProcessing;
         })() && (
-          <ResumeNotification
-            // Only count manga that actually need processing
-            pendingMangaCount={(() => {
-              const processedTitles = new Set(
-                matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
-              );
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
+            <ResumeNotification
+              // Only count manga that actually need processing
+              pendingMangaCount={(() => {
+                const processedTitles = new Set(
+                  matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+                );
 
-              // Check stored pending manga
-              const unprocessedFromPending =
-                pendingMangaState.pendingManga.filter(
-                  (manga) => !processedTitles.has(manga.title.toLowerCase()),
+                // Check stored pending manga
+                const unprocessedFromPending =
+                  pendingMangaState.pendingManga.filter(
+                    (manga) => !processedTitles.has(manga.title.toLowerCase()),
+                  ).length;
+
+                // Check all manga
+                const unprocessedFromAll = manga.filter(
+                  (m) => !processedTitles.has(m.title.toLowerCase()),
                 ).length;
 
-              // Check all manga
-              const unprocessedFromAll = manga.filter(
-                (m) => !processedTitles.has(m.title.toLowerCase()),
-              ).length;
-
-              // Return the larger of the two counts
-              return Math.max(unprocessedFromPending, unprocessedFromAll);
-            })()}
-            onResumeMatching={() => {
-              console.log(
-                "Resume matching clicked - ensuring unprocessed manga are processed",
-              );
-
-              // Get ALL unprocessed manga by comparing the full manga list with processed titles
-              const processedTitles = new Set(
-                matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
-              );
-
-              // Find unprocessed manga by title comparison from the ENTIRE manga list
-              const unprocessedManga = manga.filter(
-                (m) => !processedTitles.has(m.title.toLowerCase()),
-              );
-
-              if (unprocessedManga.length > 0) {
+                // Return the larger of the two counts
+                return Math.max(unprocessedFromPending, unprocessedFromAll);
+              })()}
+              onResumeMatching={() => {
                 console.log(
-                  `Found ${unprocessedManga.length} unprocessed manga from the full manga list`,
+                  "Resume matching clicked - ensuring unprocessed manga are processed",
                 );
 
-                // ALWAYS update the pendingManga with ALL unprocessed manga before resuming
-                // This ensures we're processing all 870 manga not just the 21
-                console.log(
-                  `Setting pendingManga to ${unprocessedManga.length} unprocessed manga before resuming`,
+                // Get ALL unprocessed manga by comparing the full manga list with processed titles
+                const processedTitles = new Set(
+                  matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
                 );
-                pendingMangaState.savePendingManga(unprocessedManga);
 
-                // Small delay to ensure state is updated before continuing
-                setTimeout(() => {
-                  // Now call the resume function, which will use the newly updated pendingManga
+                // Find unprocessed manga by title comparison from the ENTIRE manga list
+                const unprocessedManga = manga.filter(
+                  (m) => !processedTitles.has(m.title.toLowerCase()),
+                );
+
+                if (unprocessedManga.length > 0) {
+                  console.log(
+                    `Found ${unprocessedManga.length} unprocessed manga from the full manga list`,
+                  );
+
+                  // ALWAYS update the pendingManga with ALL unprocessed manga before resuming
+                  // This ensures we're processing all 870 manga not just the 21
+                  console.log(
+                    `Setting pendingManga to ${unprocessedManga.length} unprocessed manga before resuming`,
+                  );
+                  pendingMangaState.savePendingManga(unprocessedManga);
+
+                  // Small delay to ensure state is updated before continuing
+                  setTimeout(() => {
+                    // Now call the resume function, which will use the newly updated pendingManga
+                    matchingProcess.handleResumeMatching(
+                      matchResults,
+                      setMatchResults,
+                    );
+                  }, 100);
+                } else {
+                  console.log(
+                    "No unprocessed manga found, trying to resume anyway",
+                  );
                   matchingProcess.handleResumeMatching(
                     matchResults,
                     setMatchResults,
                   );
-                }, 100);
-              } else {
-                console.log(
-                  "No unprocessed manga found, trying to resume anyway",
-                );
-                matchingProcess.handleResumeMatching(
-                  matchResults,
-                  setMatchResults,
-                );
-              }
-            }}
-            onCancelResume={matchingProcess.handleCancelResume}
-          />
+                }
+              }}
+              onCancelResume={matchingProcess.handleCancelResume}
+            />
+          </motion.div>
         )}
 
       {/* Main content */}
-      <div className="relative flex-1">
+      <motion.div className="relative flex-1" variants={contentVariants}>
         {matchResults.length > 0 ? (
           <>
             {/* The main matching panel */}
             {
-              <div className="flex h-full flex-col">
+              <motion.div
+                className="flex h-full flex-col"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.25, duration: 0.3 }}
+              >
                 <MangaMatchingPanel
                   matches={matchResults}
                   onManualSearch={matchHandlers.handleManualSearch}
@@ -1018,7 +1094,12 @@ export function MatchingPage() {
                 />
 
                 {/* Action buttons */}
-                <div className="mt-6 flex flex-col-reverse justify-end space-y-4 space-y-reverse sm:flex-row sm:space-y-0 sm:space-x-4">
+                <motion.div
+                  className="mt-6 flex flex-col-reverse justify-end space-y-4 space-y-reverse sm:flex-row sm:space-y-0 sm:space-x-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35, duration: 0.3 }}
+                >
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -1035,14 +1116,29 @@ export function MatchingPage() {
                   >
                     Proceed to Dashboard
                   </Button>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             }
           </>
         ) : (
           // No results state
-          <div className="bg-background/50 flex h-full min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-12 text-center backdrop-blur-sm dark:border-gray-700">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+          <motion.div
+            className="bg-background/50 flex h-full min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-12 text-center backdrop-blur-sm dark:border-gray-700"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+          >
+            <motion.div
+              className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                delay: 0.3,
+                type: "spring",
+                stiffness: 200,
+                damping: 20,
+              }}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-10 w-10 text-blue-600 dark:text-blue-400"
@@ -1057,25 +1153,31 @@ export function MatchingPage() {
                   d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                 />
               </svg>
-            </div>
-            <h3 className="mb-2 text-xl font-semibold">No Manga To Match</h3>
-            <p className="text-muted-foreground mb-6 text-sm">
-              No manga data to match. Return to the import page to load your
-              data.
-            </p>
-            <Button
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              onClick={() => {
-                // Clear any pending manga data
-                pendingMangaState.savePendingManga([]);
-                navigate({ to: "/import" });
-              }}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.3 }}
             >
-              Go to Import Page
-            </Button>
-          </div>
+              <h3 className="mb-2 text-xl font-semibold">No Manga To Match</h3>
+              <p className="text-muted-foreground mb-6 text-sm">
+                No manga data to match. Return to the import page to load your
+                data.
+              </p>
+              <Button
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                onClick={() => {
+                  // Clear any pending manga data
+                  pendingMangaState.savePendingManga([]);
+                  navigate({ to: "/import" });
+                }}
+              >
+                Go to Import Page
+              </Button>
+            </motion.div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
 
       {/* Search Modal */}
       <SearchModal
@@ -1099,39 +1201,47 @@ export function MatchingPage() {
       )}
 
       {/* Error display when we have an error but also have results */}
-      {matchingProcess.error && matchResults.length > 0 && (
-        <div className="fixed right-4 bottom-4 max-w-sm rounded-md bg-red-50 p-4 shadow-lg dark:bg-red-900/30">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-red-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                {matchingProcess.error}
-              </p>
-              <div className="mt-2 flex space-x-2">
-                <button
-                  onClick={() => matchingProcess.setError(null)}
-                  className="rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700"
+      <AnimatePresence>
+        {matchingProcess.error && matchResults.length > 0 && (
+          <motion.div
+            className="fixed right-4 bottom-4 max-w-sm rounded-md bg-red-50 p-4 shadow-lg dark:bg-red-900/30"
+            initial={{ opacity: 0, x: 20, y: 20 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
                 >
-                  Dismiss
-                </button>
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  {matchingProcess.error}
+                </p>
+                <div className="mt-2 flex space-x-2">
+                  <button
+                    onClick={() => matchingProcess.setError(null)}
+                    className="rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
