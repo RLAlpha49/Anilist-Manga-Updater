@@ -11,6 +11,13 @@ import { KenmeiManga } from "../../api/kenmei/types";
 import { AniListManga } from "../../api/anilist/types";
 import { searchMangaByTitle } from "../../api/matching/manga-search-service";
 
+// Track searches globally to prevent duplicates across component remounts
+const searchTracker = {
+  lastMangaId: undefined as number | undefined,
+  lastSearchTime: 0,
+  searchInProgress: false
+};
+
 interface MangaSearchPanelProps {
   kenmeiManga?: KenmeiManga;
   onClose: () => void;
@@ -36,24 +43,50 @@ export function MangaSearchPanel({
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (kenmeiManga?.title) {
-      setSearchQuery(kenmeiManga.title);
+  
+  // Need to prevent duplicate searches within a short time window
+  const initiateSearch = (title: string) => {
+    const now = Date.now();
+    const currentMangaId = kenmeiManga?.id;
+    
+    // Don't search if:
+    // 1. A search is already in progress
+    // 2. We've searched for this manga ID very recently (within 2 seconds)
+    // 3. This is the same manga ID as the last search
+    if (searchTracker.searchInProgress || 
+        (currentMangaId === searchTracker.lastMangaId && 
+         now - searchTracker.lastSearchTime < 2000)) {
+      console.log(`🔍 Skipping duplicate search for "${title}" - searched recently or in progress`);
+      return;
     }
-  }, [kenmeiManga?.id, kenmeiManga?.title]);
+    
+    // Update tracker before starting search
+    searchTracker.lastMangaId = currentMangaId;
+    searchTracker.lastSearchTime = now;
+    searchTracker.searchInProgress = true;
+    
+    console.log(`🔍 Initiating search for "${title}"`);
+    setSearchQuery(title);
+    
+    // Small delay to ensure state is set
+    setTimeout(() => {
+      handleSearch(title).finally(() => {
+        searchTracker.searchInProgress = false;
+      });
+    }, 100);
+  };
 
   useEffect(() => {
+    // Focus the search input
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
 
+    // If we have a manga title, search for it
     if (kenmeiManga?.title) {
-      setTimeout(() => {
-        handleSearch(kenmeiManga.title);
-      }, 100);
+      initiateSearch(kenmeiManga.title);
     }
-  }, [kenmeiManga?.id]);
+  }, [kenmeiManga?.id, kenmeiManga?.title]);
 
   useEffect(() => {
     setSelectedIndex(-1);
