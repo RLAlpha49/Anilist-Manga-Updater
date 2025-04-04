@@ -1,7 +1,7 @@
 import React from "react";
 import { KenmeiManga } from "../../api/kenmei/types";
 import { AniListManga } from "../../api/anilist/types";
-import { MangaSearchPanel } from "../import/MangaSearchPanel";
+import { MangaSearchPanel } from "./MangaSearchPanel";
 
 interface SearchModalProps {
   isOpen: boolean;

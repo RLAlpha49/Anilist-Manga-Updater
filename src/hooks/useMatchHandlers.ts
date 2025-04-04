@@ -191,97 +191,124 @@ export const useMatchHandlers = (
   );
 
   /**
-   * Handle selecting an alternative match
+   * Handle selecting an alternative match - completely refactored
    */
   const handleSelectAlternative = useCallback(
-    (match: MangaMatchResult, alternativeIndex: number) => {
+    (
+      match: MangaMatchResult,
+      alternativeIndex: number,
+      autoAccept = false,
+      directAccept = false,
+    ) => {
       console.log(
-        `Swapping main match with alternative #${alternativeIndex} for "${match.kenmeiManga.title}"`,
+        `${directAccept ? "Directly accepting" : "Switching main match with"} alternative #${alternativeIndex} for "${match.kenmeiManga.title}"${autoAccept && !directAccept ? " and auto-accepting" : ""}`,
       );
 
-      // Find the match
+      // Find the match index in the current state
       const index = findMatchIndex(match);
-      if (index === -1) return;
+      if (index === -1) {
+        console.error(`Match not found for ${match.kenmeiManga.title}`);
+        return;
+      }
 
-      // Get the actual match from the most current state
+      // Get the up-to-date match from the current state
       const currentMatch = matchResults[index];
 
-      // Safety check
+      // Safety check - verify alternatives exist
       if (
         !currentMatch.anilistMatches ||
-        alternativeIndex >= currentMatch.anilistMatches.length
+        currentMatch.anilistMatches.length <= alternativeIndex
       ) {
-        console.error(
-          `Cannot select alternative: index ${alternativeIndex} out of bounds or no alternatives available`,
-        );
+        console.error(`Alternative at index ${alternativeIndex} doesn't exist`);
         return;
       }
 
-      // Get the selected alternative from the CURRENT match object, not the passed match parameter
+      // Get the selected alternative
       const selectedAlternative = currentMatch.anilistMatches[alternativeIndex];
 
-      if (!selectedAlternative) {
-        console.error(`Alternative at index ${alternativeIndex} is undefined`);
+      if (!selectedAlternative || !selectedAlternative.manga) {
+        console.error("Selected alternative is invalid");
         return;
       }
 
-      // Store the current main match information
-      const currentMainMatch = currentMatch.selectedMatch;
-
-      if (!currentMainMatch) {
-        console.error(`Current main match is undefined, cannot perform swap`);
-        return;
-      }
-
-      // Find the confidence of the current main match by looking at the first alternative
-      const currentMainConfidence =
-        currentMatch.anilistMatches?.[0]?.confidence;
-
-      console.log(
-        `Swapping main match "${
-          currentMainMatch?.title?.english ||
-          currentMainMatch?.title?.romaji ||
-          "Unknown"
-        }" with alternative "${
-          selectedAlternative.manga.title?.english ||
-          selectedAlternative.manga.title?.romaji ||
-          "Unknown"
-        }" (confidence: ${selectedAlternative.confidence}%)`,
-      );
-
-      // Create a deep copy of the alternatives array
-      const newAnilistMatches = [
-        ...currentMatch.anilistMatches.map((m) => ({ ...m })),
-      ];
-
-      // Remove the selected alternative from the array (must happen before we modify anything else)
-      newAnilistMatches.splice(alternativeIndex, 1);
-
-      // Create a new match entry for the current main that will go into alternatives
-      const mainMatchAsAlternative = {
-        id: currentMainMatch.id,
-        manga: { ...currentMainMatch },
-        confidence: currentMainConfidence || 0,
-      };
-
-      // Add the current main match as the first alternative
-      newAnilistMatches.unshift(mainMatchAsAlternative);
-
-      console.log(
-        `Swapped matches: Previous main is now alternative at position 0, selected alternative is now main`,
-      );
-
-      // Create a copy of the results and update with the swap
+      // Create a copy of all match results
       const updatedResults = [...matchResults];
-      updatedResults[index] = {
-        ...currentMatch,
-        // Keep the existing status
-        selectedMatch: { ...selectedAlternative.manga },
-        // Update the anilistMatches array with our swapped version
-        anilistMatches: newAnilistMatches,
-        matchDate: new Date(),
-      };
 
+      if (directAccept) {
+        // Direct accept mode - just select the alternative as the match without swapping
+        console.log(
+          `Directly accepting alternative "${
+            selectedAlternative.manga.title?.english ||
+            selectedAlternative.manga.title?.romaji ||
+            "Unknown"
+          }" as the match`,
+        );
+
+        // Update the match with the selected alternative, don't change alternatives array
+        updatedResults[index] = {
+          ...currentMatch,
+          selectedMatch: { ...selectedAlternative.manga },
+          status: "matched" as const,
+          matchDate: new Date(),
+        };
+      } else {
+        // Standard swap mode
+        // Get the current main match (which could be the first alternative if selectedMatch is not set)
+        const currentMainMatch =
+          currentMatch.selectedMatch ||
+          (currentMatch.anilistMatches.length > 0
+            ? currentMatch.anilistMatches[0].manga
+            : null);
+
+        if (!currentMainMatch) {
+          console.error("No main match to swap with");
+          return;
+        }
+
+        console.log(
+          `Swapping main match "${
+            currentMainMatch.title?.english ||
+            currentMainMatch.title?.romaji ||
+            "Unknown"
+          }" with alternative "${
+            selectedAlternative.manga.title?.english ||
+            selectedAlternative.manga.title?.romaji ||
+            "Unknown"
+          }"`,
+        );
+
+        // Create a fresh copy of the alternatives array
+        const newAnilistMatches = [...currentMatch.anilistMatches];
+
+        // Calculate confidence for the current main match (for when we put it in alternatives)
+        const mainMatchConfidence =
+          currentMatch.anilistMatches[0]?.confidence || 75;
+
+        // Create an entry for the current main match to add to alternatives
+        const mainAsAlternative = {
+          id: currentMainMatch.id,
+          manga: { ...currentMainMatch },
+          confidence: mainMatchConfidence,
+        };
+
+        // Remove the selected alternative from the list
+        newAnilistMatches.splice(alternativeIndex, 1);
+
+        // Insert the current main match as the first alternative
+        newAnilistMatches.unshift(mainAsAlternative);
+
+        // Update the match object with the new selected match and alternatives
+        updatedResults[index] = {
+          ...currentMatch,
+          selectedMatch: { ...selectedAlternative.manga },
+          anilistMatches: newAnilistMatches,
+          // If autoAccept is true, immediately set the status to "matched"
+          status: autoAccept ? "matched" : currentMatch.status,
+          matchDate: new Date(),
+        };
+      }
+
+      // Save the updates
       updateMatchResults(updatedResults);
     },
     [findMatchIndex, matchResults, updateMatchResults],
@@ -305,10 +332,25 @@ export const useMatchHandlers = (
       // Create a copy of the results and update the status
       const updatedResults = [...matchResults];
 
-      // Preserve the existing match data but reset status to pending
+      // Get the current match from the latest state
+      const currentMatch = matchResults[index];
+
+      // When resetting to pending, we should restore the original main match
+      // The original main match is typically the first item in the anilistMatches array
+      const originalMainMatch = currentMatch.anilistMatches?.length
+        ? currentMatch.anilistMatches[0].manga
+        : undefined;
+
+      console.log(
+        `Restoring original main match: ${originalMainMatch?.title?.english || originalMainMatch?.title?.romaji || "None"}`,
+      );
+
+      // Create a new object reference to ensure React detects the change
       const updatedMatch = {
         ...match,
         status: "pending" as const,
+        // Restore the original main match as the selectedMatch
+        selectedMatch: originalMainMatch,
         matchDate: new Date(),
       };
 
@@ -329,7 +371,13 @@ export const useMatchHandlers = (
    */
   const handleSelectSearchMatch = useCallback(
     (manga: AniListManga) => {
-      const searchTarget = setSearchTarget((current) => current);
+      // Get the current search target - this was causing the linter error
+      let searchTarget: KenmeiManga | undefined;
+      setSearchTarget((current) => {
+        searchTarget = current;
+        return current;
+      });
+
       if (!searchTarget) {
         console.error("No manga target was set for search");
         return;

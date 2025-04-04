@@ -541,6 +541,12 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
   const titleSources: string[] = []; // Track where each title came from for better logging
   let bestScore = -1;
 
+  // Handle empty search title
+  if (!searchTitle || searchTitle.trim() === "") {
+    console.log(`⚠️ Empty search title provided for manga ID ${manga.id}`);
+    return -1;
+  }
+
   // Add all available titles to check
   if (manga.title.english) {
     titles.push(manga.title.english);
@@ -570,12 +576,14 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
       english: manga.title.english,
       romaji: manga.title.romaji,
       native: manga.title.native,
-      synonyms: manga.synonyms,
+      synonyms: manga.synonyms?.slice(0, 3), // Limit to first 3 for cleaner logs
     },
   );
 
   // Normalize the search title for better matching
   const normalizedSearchTitle = normalizeForMatching(searchTitle);
+  const searchWords = normalizedSearchTitle.split(/\s+/);
+  const importantWords = searchWords.filter((word) => word.length > 2); // Filter out short words for comparison
 
   // Process each title and check for matches
   for (let i = 0; i < titles.length; i++) {
@@ -587,36 +595,97 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
     const processedTitle = processTitle(title);
     const normalizedTitle = normalizeForMatching(processedTitle);
 
-    // Check for exact match first
+    // APPROACH 1: Check for exact match first (highest confidence)
     if (normalizedTitle === normalizedSearchTitle) {
       console.log(`💯 Perfect match found for "${title}" (${source})`);
       return 1; // Perfect match
     }
 
-    // Check for high similarity (handles minor differences in romanization)
+    // APPROACH 2: Check for contained titles (e.g. "Slime" in "That Time I Got Reincarnated as a Slime")
+    // Often manga have longer official titles but are searched by their common short name
+    const completeTitleBonus = containsCompleteTitle(
+      normalizedTitle,
+      normalizedSearchTitle,
+    );
+    if (completeTitleBonus > 0) {
+      const containedScore = 0.85 + completeTitleBonus * 0.1; // 0.85-0.95 based on how well it contains
+      console.log(
+        `🔍 Search title "${searchTitle}" completely contained in "${title}" with score ${containedScore.toFixed(2)}`,
+      );
+      bestScore = Math.max(bestScore, containedScore);
+    }
+
+    // APPROACH 3: Check for high similarity (handles minor differences in romanization)
     const similarity = calculateStringSimilarity(
       normalizedTitle,
       normalizedSearchTitle,
     );
-    if (similarity > 0.85) {
+
+    // Higher threshold for shorter titles (to avoid false positives)
+    const similarityThreshold = normalizedSearchTitle.length < 10 ? 0.9 : 0.85;
+
+    if (similarity > similarityThreshold) {
       console.log(
         `🔍 High similarity (${similarity.toFixed(2)}) between "${title}" (${source}) and "${searchTitle}"`,
       );
-      return Math.max(0.8, similarity); // Score based on similarity
+
+      const similarityScore = Math.max(0.8, similarity);
+      bestScore = Math.max(bestScore, similarityScore);
     }
 
-    // Check for word subset match (all search words in title)
+    // APPROACH 4: Check for season/numbered sequel patterns (like "Title 2nd Season" or "Title II")
+    const seasonMatchScore = checkSeasonPattern(
+      normalizedTitle,
+      normalizedSearchTitle,
+    );
+    if (seasonMatchScore > 0) {
+      console.log(
+        `🔍 Season pattern match found between "${title}" and "${searchTitle}" with score ${seasonMatchScore.toFixed(2)}`,
+      );
+      bestScore = Math.max(bestScore, seasonMatchScore);
+    }
+
+    // APPROACH 5: Check for word subset match (all search words in title)
+    // This is useful for titles that have additional descriptive words
     if (checkTitleMatch(processedTitle, searchTitle)) {
-      // Calculate a score based on length difference
-      // Closer lengths = better match
+      // Calculate weighted score based on:
+      // 1. Length difference (closer lengths = better match)
+      // 2. Word coverage (what % of important words matched)
+      // 3. Word order similarity
+
       const lengthDiff =
         Math.abs(processedTitle.length - searchTitle.length) /
         Math.max(processedTitle.length, searchTitle.length);
-      const score = 0.8 - lengthDiff * 0.3; // Score between 0.5-0.8
-      bestScore = Math.max(bestScore, score);
-      console.log(
-        `🔍 Word match found for "${title}" (${source}) with score ${score.toFixed(2)}`,
+
+      // Calculate word coverage
+      const matchedWords = importantWords.filter((word) =>
+        normalizedTitle.includes(word),
+      ).length;
+
+      const wordCoverage =
+        importantWords.length > 0 ? matchedWords / importantWords.length : 0;
+
+      // Calculate word order similarity
+      const orderSimilarity = calculateWordOrderSimilarity(
+        normalizedTitle.split(/\s+/),
+        normalizedSearchTitle.split(/\s+/),
       );
+
+      // Weight the factors to get final score (between 0.5-0.8)
+      const baseScore = 0.5;
+      const lengthFactor = (1 - lengthDiff) * 0.1; // 0-0.1 based on length similarity
+      const coverageFactor = wordCoverage * 0.1; // 0-0.1 based on word coverage
+      const orderFactor = orderSimilarity * 0.1; // 0-0.1 based on word order
+
+      const wordMatchScore =
+        baseScore + lengthFactor + coverageFactor + orderFactor;
+
+      console.log(
+        `🔍 Word match for "${title}" (${source}) with composite score ${wordMatchScore.toFixed(2)} ` +
+          `(length: ${lengthFactor.toFixed(2)}, coverage: ${coverageFactor.toFixed(2)}, order: ${orderFactor.toFixed(2)})`,
+      );
+
+      bestScore = Math.max(bestScore, wordMatchScore);
     }
   }
 
@@ -624,6 +693,125 @@ function calculateMatchScore(manga: AniListManga, searchTitle: string): number {
     `🔍 Final match score for "${searchTitle}": ${bestScore.toFixed(2)}`,
   );
   return bestScore;
+}
+
+/**
+ * Check if a title contains the complete search term as a unit
+ * Returns a score from 0-1 based on how significant the contained title is
+ */
+function containsCompleteTitle(
+  normalizedTitle: string,
+  normalizedSearchTitle: string,
+): number {
+  if (normalizedTitle.includes(normalizedSearchTitle)) {
+    // Calculate how significant the contained title is compared to the full title
+    // (Higher score when the search term represents more of the full title)
+    return normalizedSearchTitle.length / normalizedTitle.length;
+  }
+  return 0;
+}
+
+/**
+ * Check for common season patterns in manga/anime titles
+ * Returns a score from 0-0.9 if it looks like different seasons of the same title
+ */
+function checkSeasonPattern(
+  normalizedTitle: string,
+  normalizedSearchTitle: string,
+): number {
+  // Check for common patterns indicating different seasons of the same series
+  const seasonPatterns = [
+    /\s+season\s+\d+/i, // "Title Season 2"
+    /\s+\d+nd\s+season/i, // "Title 2nd Season"
+    /\s+\d+rd\s+season/i, // "Title 3rd Season"
+    /\s+\d+th\s+season/i, // "Title 4th Season"
+    /\s+s\d+/i, // "Title S2"
+    /\s+part\s+\d+/i, // "Title Part 2"
+    /\s+ii+$/i, // "Title II" or "Title III"
+    /\s+\d+$/i, // "Title 2" or "Title 3"
+  ];
+
+  // Check if one title has a season marker and the other doesn't
+  let title1HasSeason = false;
+  let title2HasSeason = false;
+
+  for (const pattern of seasonPatterns) {
+    if (pattern.test(normalizedTitle)) title1HasSeason = true;
+    if (pattern.test(normalizedSearchTitle)) title2HasSeason = true;
+  }
+
+  if (title1HasSeason || title2HasSeason) {
+    // Remove the season parts from both titles
+    let cleanTitle1 = normalizedTitle;
+    let cleanTitle2 = normalizedSearchTitle;
+
+    for (const pattern of seasonPatterns) {
+      cleanTitle1 = cleanTitle1.replace(pattern, "");
+      cleanTitle2 = cleanTitle2.replace(pattern, "");
+    }
+
+    // Clean up any remaining artifacts
+    cleanTitle1 = cleanTitle1.trim();
+    cleanTitle2 = cleanTitle2.trim();
+
+    // Calculate similarity between the core titles (without season markers)
+    const coreSimilarity = calculateStringSimilarity(cleanTitle1, cleanTitle2);
+
+    // If core titles are very similar, it's likely different seasons of the same series
+    if (coreSimilarity > 0.85) {
+      return 0.8 + (coreSimilarity - 0.85) * 0.66; // Score between 0.8-0.9 based on core similarity
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Calculate similarity in word order between two word arrays
+ * Returns a value between 0-1 where 1 means perfect order match
+ */
+function calculateWordOrderSimilarity(
+  words1: string[],
+  words2: string[],
+): number {
+  // If either array is empty, no match
+  if (words1.length === 0 || words2.length === 0) return 0;
+
+  // Filter for words that appear in both arrays
+  const commonWords1 = words1.filter((word) => words2.includes(word));
+
+  // If no common words, no order similarity
+  if (commonWords1.length === 0) return 0;
+
+  // Calculate the positions of common words in each array
+  const positions1 = commonWords1.map((word) => words1.indexOf(word));
+  const positions2 = commonWords1.map((word) => words2.indexOf(word));
+
+  // Check if order is preserved (all words in same relative order)
+  let orderPreserved = true;
+
+  for (let i = 1; i < positions1.length; i++) {
+    const prevDiff1 = positions1[i] - positions1[i - 1];
+    const prevDiff2 = positions2[i] - positions2[i - 1];
+
+    // If signs differ, order is not preserved
+    if (
+      (prevDiff1 > 0 && prevDiff2 <= 0) ||
+      (prevDiff1 <= 0 && prevDiff2 > 0)
+    ) {
+      orderPreserved = false;
+      break;
+    }
+  }
+
+  // Calculate how many words are in the same relative position
+  const commonWordCount = commonWords1.length;
+
+  // Return a score based on common words and if order is preserved
+  return (
+    (commonWordCount / Math.max(words1.length, words2.length)) *
+    (orderPreserved ? 1.0 : 0.7)
+  ); // Penalty if order differs
 }
 
 /**
@@ -855,15 +1043,25 @@ export async function searchMangaByTitle(
       const filteredManga = mangaCache[cacheKey].manga.filter(
         (manga) => manga.format !== "NOVEL" && manga.format !== "LIGHT_NOVEL",
       );
-      return filteredManga.map((manga) => ({
-        manga,
-        confidence: calculateConfidence(
-          typeof manga.title === "object" && manga.title
-            ? manga.title.romaji || manga.title.english || ""
-            : String(manga.title || ""),
+
+      // Always calculate fresh confidence scores, even for cached results
+      console.log(
+        `⚖️ Calculating fresh confidence scores for ${filteredManga.length} cached matches`,
+      );
+
+      return filteredManga.map((manga) => {
+        // Calculate a fresh confidence score using the original search title
+        const confidence = calculateConfidence(title, manga);
+
+        console.log(
+          `⚖️ Cached match confidence for "${manga.title?.english || manga.title?.romaji}": ${confidence}%`,
+        );
+
+        return {
           manga,
-        ),
-      }));
+          confidence,
+        };
+      });
     }
   } else {
     console.log(
@@ -1086,15 +1284,27 @@ export async function searchMangaByTitle(
     );
   }
 
-  return finalResults.map((manga) => ({
-    manga,
-    confidence: calculateConfidence(
-      typeof manga.title === "object" && manga.title
-        ? manga.title.romaji || manga.title.english || ""
-        : String(manga.title || ""),
+  // Always calculate fresh confidence scores, even on cached results
+  console.log(
+    `⚖️ Calculating fresh confidence scores for ${finalResults.length} matches`,
+  );
+
+  return finalResults.map((manga) => {
+    // Calculate a fresh confidence score using the original search title
+    const confidence = calculateConfidence(
+      typeof title === "string" ? title : "",
       manga,
-    ),
-  }));
+    );
+
+    console.log(
+      `⚖️ Confidence for "${manga.title?.english || manga.title?.romaji}": ${confidence}%`,
+    );
+
+    return {
+      manga,
+      confidence,
+    };
+  });
 }
 
 /**
@@ -1453,14 +1663,9 @@ export async function batchMatchManga(
           for (let i = 0; i < mangaList.length; i++) {
             if (cachedResults[i]) {
               const manga = mangaList[i];
-              const potentialMatches = cachedResults[i].map((manga) => ({
-                manga,
-                confidence: calculateConfidence(
-                  typeof manga.title === "object" && manga.title
-                    ? manga.title.romaji || manga.title.english || ""
-                    : String(manga.title || ""),
-                  manga,
-                ),
+              const potentialMatches = cachedResults[i].map((anilistManga) => ({
+                manga: anilistManga,
+                confidence: calculateConfidence(manga.title, anilistManga),
               }));
 
               results.push({
@@ -1511,12 +1716,7 @@ export async function batchMatchManga(
       // Fix mapping to create proper MangaMatch objects
       const potentialMatchesFixed = potentialMatches.map((match) => ({
         manga: match,
-        confidence: calculateConfidence(
-          typeof match.title === "object" && match.title
-            ? match.title.romaji || match.title.english || ""
-            : String(match.title || ""),
-          match,
-        ),
+        confidence: calculateConfidence(manga.title, match),
       }));
 
       results[i] = {
@@ -1945,33 +2145,40 @@ export async function getBatchedMangaIds(
 /**
  * Calculate confidence percentage from match score
  * Converts the 0-1 match score to a 0-100 confidence percentage
- * Now uses more conservative thresholds to avoid inflated confidence scores
+ * Uses a more nuanced algorithm with 99% maximum to avoid overconfidence
  */
 function calculateConfidence(searchTitle: string, manga: AniListManga): number {
-  // Calculate the match score first - we use search term and manga
+  // Calculate the match score first - always use original search title, not manga's own title
   const score = calculateMatchScore(manga, searchTitle);
+
+  console.log(
+    `Calculating confidence for match score: ${score.toFixed(3)} between "${searchTitle}" and "${manga.title.english || manga.title.romaji}"`,
+  );
 
   if (score <= 0) {
     // No match found
     return 0;
   } else if (score >= 0.95) {
-    // Almost perfect match - very high confidence, but capped at 95% to be cautious
-    return 95;
+    // Almost perfect match - very high confidence, but cap at 99%
+    return Math.min(99, Math.round(90 + (score - 0.95) * 180)); // 90-99% range
   } else if (score >= 0.85) {
-    // Strong match - high confidence (85-90%)
-    return 85 + (score - 0.85) * 50;
+    // Strong match - high confidence (80-90%)
+    return Math.round(80 + (score - 0.85) * 100);
   } else if (score >= 0.7) {
-    // Good match - medium-high confidence (75-85%)
-    return 75 + (score - 0.7) * 67;
+    // Good match - medium-high confidence (65-80%)
+    return Math.round(65 + (score - 0.7) * 100);
   } else if (score >= 0.5) {
-    // Reasonable match - medium confidence (60-75%)
-    return 60 + (score - 0.5) * 75;
+    // Reasonable match - medium confidence (50-65%)
+    return Math.round(50 + (score - 0.5) * 75);
   } else if (score >= 0.3) {
-    // Weak match - low confidence (40-60%)
-    return 40 + (score - 0.3) * 100;
+    // Weak match - low confidence (30-50%)
+    return Math.round(30 + (score - 0.3) * 100);
+  } else if (score >= 0.15) {
+    // Very weak match - very low confidence (15-30%)
+    return Math.round(15 + (score - 0.15) * 100);
   } else {
-    // Very weak match - very low confidence (10-40%)
-    return Math.max(10, score * 100);
+    // Extremely weak match - minimal confidence (1-15%)
+    return Math.max(1, Math.round(score * 100));
   }
 }
 

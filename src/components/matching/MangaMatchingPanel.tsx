@@ -6,7 +6,6 @@ import {
   Check,
   X,
   AlertTriangle,
-  ArrowRight,
   ExternalLink,
   Filter,
   ChevronLeft,
@@ -22,6 +21,8 @@ interface MangaMatchingPanelProps {
   onSelectAlternative?: (
     match: MangaMatchResult,
     alternativeIndex: number,
+    autoAccept?: boolean,
+    directAccept?: boolean,
   ) => void;
   onResetToPending?: (match: MangaMatchResult) => void;
 }
@@ -175,34 +176,56 @@ export function MangaMatchingPanel({
 
   // Render confidence badge
   const renderConfidenceBadge = (confidence: number) => {
+    // Round the confidence value for display and comparison
+    const roundedConfidence = Math.min(99, Math.round(confidence)); // Cap at 99%
+
+    // Determine color scheme and label based on confidence level
     let colorClass = "";
+    let barColorClass = "";
     let label = "";
 
-    if (confidence >= 90) {
+    if (roundedConfidence >= 90) {
       colorClass =
-        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+        "bg-green-50 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800";
+      barColorClass = "bg-green-500 dark:bg-green-400";
       label = "High";
-    } else if (confidence >= 75) {
+    } else if (roundedConfidence >= 75) {
       colorClass =
-        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+        "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+      barColorClass = "bg-blue-500 dark:bg-blue-400";
       label = "Good";
-    } else if (confidence >= 50) {
+    } else if (roundedConfidence >= 50) {
       colorClass =
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+        "bg-yellow-50 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800";
+      barColorClass = "bg-yellow-500 dark:bg-yellow-400";
       label = "Medium";
     } else {
-      colorClass = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      colorClass =
+        "bg-red-50 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+      barColorClass = "bg-red-500 dark:bg-red-400";
       label = "Low";
     }
 
     return (
-      <span
-        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${colorClass}`}
-        title={`${Math.round(confidence)}% confidence match`}
-        aria-label={`${label} confidence match: ${Math.round(confidence)}%`}
+      <div
+        className={`relative flex flex-col rounded-md border px-2.5 py-1 text-xs font-medium ${colorClass}`}
+        title={`${roundedConfidence}% confidence match`}
+        aria-label={`${label} confidence match: ${roundedConfidence}%`}
       >
-        {label}: {Math.round(confidence)}%
-      </span>
+        <div className="mb-1 flex items-center justify-between">
+          <span className="mr-1 font-semibold">{label}</span>
+          <span className="font-mono">{roundedConfidence}%</span>
+        </div>
+
+        {/* Progress bar background */}
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          {/* Progress bar indicator */}
+          <div
+            className={`h-full rounded-full ${barColorClass}`}
+            style={{ width: `${roundedConfidence}%` }}
+          ></div>
+        </div>
+      </div>
     );
   };
 
@@ -542,13 +565,17 @@ export function MangaMatchingPanel({
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
                           {/* Cover image with proper fallbacks */}
-                          {match.selectedMatch?.coverImage?.medium ||
-                          (match.anilistMatches &&
-                            match.anilistMatches[0]?.manga?.coverImage
-                              ?.medium) ? (
+                          {match.selectedMatch?.coverImage?.large ||
+                          match.selectedMatch?.coverImage?.medium ||
+                          match.anilistMatches?.[0]?.manga?.coverImage?.large ||
+                          match.anilistMatches?.[0]?.manga?.coverImage
+                            ?.medium ? (
                             <img
                               src={
+                                match.selectedMatch?.coverImage?.large ||
                                 match.selectedMatch?.coverImage?.medium ||
+                                match.anilistMatches[0]?.manga?.coverImage
+                                  ?.large ||
                                 match.anilistMatches[0]?.manga?.coverImage
                                   ?.medium
                               }
@@ -559,10 +586,11 @@ export function MangaMatchingPanel({
                                   ?.english ||
                                 match.anilistMatches?.[0]?.manga?.title?.romaji
                               }
-                              className="h-32 w-24 rounded-sm object-cover"
+                              className="h-40 w-28 rounded-sm object-cover shadow-sm"
+                              loading="lazy"
                             />
                           ) : (
-                            <div className="flex h-32 w-24 items-center justify-center rounded-sm bg-gray-200 dark:bg-gray-700">
+                            <div className="flex h-40 w-28 items-center justify-center rounded-sm bg-gray-200 shadow-sm dark:bg-gray-700">
                               <span className="text-xs text-gray-500 dark:text-gray-400">
                                 No Image
                               </span>
@@ -918,40 +946,40 @@ export function MangaMatchingPanel({
                               aria-label={`Select ${
                                 altMatch.manga?.title?.english ||
                                 altMatch.manga?.title?.romaji ||
-                                altMatch.title?.english ||
-                                altMatch.title?.romaji ||
-                                (typeof altMatch.title === "string"
-                                  ? altMatch.title
-                                  : "Alternative manga")
-                              } as alternative match`}
+                                "Alternative manga"
+                              } as match`}
                               onKeyDown={(e) =>
                                 handleKeyDown(e, () => {
                                   if (onSelectAlternative)
-                                    onSelectAlternative(match, index + 1);
+                                    onSelectAlternative(
+                                      match,
+                                      index + 1,
+                                      false,
+                                      true,
+                                    );
                                 })
                               }
                             >
                               <div className="flex items-center space-x-3">
                                 <div className="flex-shrink-0">
-                                  {/* Updated to check for coverImage in both possible locations */}
-                                  {altMatch.manga?.coverImage?.medium ||
-                                  altMatch.coverImage?.medium ? (
+                                  {/* Cover image with better fallbacks */}
+                                  {altMatch.manga?.coverImage?.large ||
+                                  altMatch.manga?.coverImage?.medium ? (
                                     <img
                                       src={
-                                        altMatch.manga?.coverImage?.medium ||
-                                        altMatch.coverImage?.medium
+                                        altMatch.manga.coverImage.large ||
+                                        altMatch.manga.coverImage.medium
                                       }
                                       alt={
                                         altMatch.manga?.title?.english ||
                                         altMatch.manga?.title?.romaji ||
-                                        altMatch.title?.english ||
-                                        altMatch.title?.romaji ||
                                         "Alternative manga"
                                       }
-                                      className="h-24 w-16 rounded-sm object-cover"
+                                      className="h-32 w-20 rounded-sm object-cover shadow-sm"
+                                      loading="lazy"
                                     />
                                   ) : (
-                                    <div className="flex h-24 w-16 items-center justify-center rounded-sm bg-gray-200 dark:bg-gray-700">
+                                    <div className="flex h-32 w-20 items-center justify-center rounded-sm bg-gray-200 shadow-sm dark:bg-gray-700">
                                       <span className="text-xs text-gray-500 dark:text-gray-400">
                                         No Image
                                       </span>
@@ -962,20 +990,14 @@ export function MangaMatchingPanel({
                                   <p className="text-base font-medium text-gray-900 dark:text-white">
                                     {altMatch.manga?.title?.english ||
                                       altMatch.manga?.title?.romaji ||
-                                      altMatch.title?.english ||
-                                      altMatch.title?.romaji ||
-                                      (typeof altMatch.title === "string"
-                                        ? altMatch.title
-                                        : "Unknown Manga")}
+                                      "Unknown Manga"}
                                   </p>
                                   {/* Show all available titles */}
                                   <div className="flex flex-col text-sm text-gray-500 dark:text-gray-400">
                                     {/* English title - if different from main display */}
                                     {altMatch.manga?.title?.english &&
                                       altMatch.manga.title.english !==
-                                        (altMatch.manga?.title?.romaji ||
-                                          altMatch.title?.english ||
-                                          altMatch.title?.romaji) && (
+                                        altMatch.manga?.title?.romaji && (
                                         <span>
                                           English:{" "}
                                           {altMatch.manga.title.english}
@@ -1006,44 +1028,16 @@ export function MangaMatchingPanel({
                                           {altMatch.manga.synonyms.join(", ")}
                                         </span>
                                       )}
-
-                                    {/* Fallbacks for alternative structure */}
-                                    {!altMatch.manga &&
-                                      altMatch.title?.english && (
-                                        <span>
-                                          English: {altMatch.title.english}
-                                        </span>
-                                      )}
-
-                                    {!altMatch.manga &&
-                                      altMatch.title?.romaji && (
-                                        <span>
-                                          Romaji: {altMatch.title.romaji}
-                                        </span>
-                                      )}
-
-                                    {!altMatch.manga &&
-                                      altMatch.title?.native && (
-                                        <span>
-                                          Native: {altMatch.title.native}
-                                        </span>
-                                      )}
                                   </div>
                                   <p className="text-sm text-gray-600 dark:text-gray-400">
                                     {/* Format */}
-                                    {altMatch.manga?.format ||
-                                      altMatch.format ||
-                                      "Unknown"}
+                                    {altMatch.manga?.format || "Unknown"}
                                     {/* Status */}•{" "}
-                                    {altMatch.manga?.status ||
-                                      altMatch.status ||
-                                      "Unknown"}
-                                    {/* Chapters - check both possible paths */}
-                                    {((altMatch.manga?.chapters &&
-                                      Number(altMatch.manga.chapters) > 0) ||
-                                      (altMatch.chapters &&
-                                        Number(altMatch.chapters) > 0)) &&
-                                      ` • ${altMatch.manga?.chapters || altMatch.chapters} chapters`}
+                                    {altMatch.manga?.status || "Unknown"}
+                                    {/* Chapters */}
+                                    {altMatch.manga?.chapters &&
+                                      Number(altMatch.manga.chapters) > 0 &&
+                                      ` • ${altMatch.manga.chapters} chapters`}
                                   </p>
                                 </div>
                               </div>
@@ -1051,26 +1045,29 @@ export function MangaMatchingPanel({
                                 {altMatch.confidence !== undefined &&
                                   renderConfidenceBadge(altMatch.confidence)}
                                 <button
-                                  className="inline-flex min-w-[100px] items-center justify-center rounded-md bg-green-100 px-2 py-1 text-xs text-green-700 hover:bg-green-200 focus:ring-2 focus:ring-green-500 focus:ring-offset-1 focus:outline-none dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-800/50"
+                                  className="inline-flex min-w-[120px] items-center justify-center rounded-md bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-1 focus:outline-none"
                                   onClick={() => {
-                                    if (onSelectAlternative)
-                                      onSelectAlternative(match, index + 1);
+                                    // Directly accept the alternative as the match without swapping
+                                    if (onSelectAlternative) {
+                                      onSelectAlternative(
+                                        match,
+                                        index + 1,
+                                        false,
+                                        true,
+                                      );
+                                    }
                                   }}
-                                  aria-label={`Make ${
+                                  aria-label={`Accept ${
                                     altMatch.manga?.title?.english ||
                                     altMatch.manga?.title?.romaji ||
-                                    altMatch.title?.english ||
-                                    altMatch.title?.romaji ||
-                                    (typeof altMatch.title === "string"
-                                      ? altMatch.title
-                                      : "Unknown manga")
-                                  } the main match`}
+                                    "Unknown manga"
+                                  } as match`}
                                 >
-                                  <ArrowRight
-                                    className="mr-1 h-3 w-3 rotate-90"
+                                  <Check
+                                    className="mr-1 h-3 w-3"
                                     aria-hidden="true"
                                   />
-                                  Set as Main
+                                  Accept Match
                                 </button>
                                 <a
                                   href={`https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`}

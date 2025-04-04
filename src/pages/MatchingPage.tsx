@@ -1,5 +1,3 @@
-// TODO: Fix statuses being reset to pending when resuming from a previous process (Happens when canceling a process, maybe when it finished too).
-
 // TODO: Add a button to accept the main match of all pending manga matches.
 // TODO: Add a button to skip all pending manga matches without any matches from searching.
 // TODO: Add a button to re-search all manga that don't have a match.
@@ -8,7 +6,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { KenmeiManga } from "../api/kenmei/types";
 import { MangaMatchResult } from "../api/anilist/types";
-import { MangaMatchingPanel } from "../components/import/MangaMatchingPanel";
+import { MangaMatchingPanel } from "../components/matching/MangaMatchingPanel";
 import { useAuth } from "../hooks/useAuth";
 import { getKenmeiData } from "../utils/storage";
 import { StatusFilterOptions } from "../types/matching";
@@ -672,7 +670,7 @@ export function MatchingPage() {
   }
 
   return (
-    <div className="container mx-auto flex h-full max-w-6xl flex-col px-4 py-6">
+    <div className="container mx-auto flex h-full max-w-full flex-col px-4 py-6">
       <header className="mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
