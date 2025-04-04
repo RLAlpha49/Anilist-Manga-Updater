@@ -43,7 +43,6 @@ export function MatchingPage() {
     {
       pending: true,
       skipped: true,
-      conflict: false,
       matched: false,
       manual: false,
       unmatched: true,
@@ -77,7 +76,6 @@ export function MatchingPage() {
       const statusCounts = {
         matched: matchResults.filter((m) => m.status === "matched").length,
         pending: matchResults.filter((m) => m.status === "pending").length,
-        conflict: matchResults.filter((m) => m.status === "conflict").length,
         manual: matchResults.filter((m) => m.status === "manual").length,
         skipped: matchResults.filter((m) => m.status === "skipped").length,
       };

@@ -53,7 +53,6 @@ export interface TimeEstimate {
 export interface StatusFilterOptions {
   pending: boolean;
   skipped: boolean;
-  conflict: boolean;
   matched: boolean;
   manual: boolean;
   unmatched: boolean;

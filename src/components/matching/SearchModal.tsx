@@ -32,7 +32,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       ></div>
 
       {/* Modal panel with max height and width constraints */}
-      <div className="relative z-50 m-4 max-h-[90vh] w-full max-w-4xl overflow-auto rounded-lg bg-white shadow-xl dark:bg-gray-800">
+      <div className="relative z-50 m-4 max-h-[95vh] w-full max-w-5xl overflow-auto rounded-lg bg-white shadow-xl dark:bg-gray-800">
         <MangaSearchPanel
           key={`search-${searchTarget.id}`}
           kenmeiManga={searchTarget}

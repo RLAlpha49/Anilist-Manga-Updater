@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
+  Info,
 } from "lucide-react";
 
 interface MangaMatchingPanelProps {
@@ -37,7 +38,6 @@ export function MangaMatchingPanel({
 }: MangaMatchingPanelProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilters, setStatusFilters] = useState({
-    conflicts: true,
     matched: true,
     pending: true,
     manual: true,
@@ -45,6 +45,7 @@ export function MangaMatchingPanel({
   });
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Add sort state
   const [sortOption, setSortOption] = useState<{
@@ -54,6 +55,38 @@ export function MangaMatchingPanel({
 
   // Items per page
   const itemsPerPage = 10;
+
+  // Handler for opening external links in the default browser
+  const handleOpenExternal = (url: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (window.electronAPI?.shell?.openExternal) {
+      window.electronAPI.shell.openExternal(url);
+    } else {
+      // Fallback to regular link behavior if not in Electron
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  // Helper function to create Kenmei URL from manga title
+  const createKenmeiUrl = (title: string) => {
+    if (!title) return null;
+    // 1. Convert to lowercase
+    // 2. Replace apostrophes with spaces
+    // 3. Replace special characters with spaces (except hyphens)
+    // 4. Replace multiple spaces with a single space
+    // 5. Replace spaces with hyphens
+    // 6. Trim hyphens from the beginning and end
+    const formattedTitle = title
+      .toLowerCase()
+      .replace(/'/g, " ")
+      .replace(/[^\w\s-]/g, " ") // Replace special chars with spaces instead of removing
+      .replace(/\s+/g, " ") // Normalize spaces
+      .trim() // Remove leading/trailing spaces
+      .replace(/\s/g, "-") // Replace spaces with hyphens
+      .replace(/^-+|-+$/g, ""); // Remove hyphens at start/end
+
+    return `https://www.kenmei.co/series/${formattedTitle}`;
+  };
 
   // Process matches to filter out Light Novels from alternatives
   const processedMatches = matches.map((match) => {
@@ -107,7 +140,6 @@ export function MangaMatchingPanel({
 
     // Apply status filters
     const statusMatch =
-      (match.status === "conflict" && statusFilters.conflicts) ||
       (match.status === "matched" && statusFilters.matched) ||
       (match.status === "pending" && statusFilters.pending) ||
       (match.status === "manual" && statusFilters.manual) ||
@@ -228,7 +260,6 @@ export function MangaMatchingPanel({
   const matchStats = {
     total: matches.length,
     matched: matches.filter((m) => m.status === "matched").length,
-    conflicts: matches.filter((m) => m.status === "conflict").length,
     pending: matches.filter((m) => m.status === "pending").length,
     manual: matches.filter((m) => m.status === "manual").length,
     skipped: matches.filter((m) => m.status === "skipped").length,
@@ -240,6 +271,34 @@ export function MangaMatchingPanel({
     if (page > totalPages) page = totalPages;
     setCurrentPage(page);
   };
+
+  // Add keyboard navigation for pagination
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if we're in an input field
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      // Only handle left/right arrow keys
+      if (e.key === "ArrowLeft" && currentPage > 1) {
+        goToPage(currentPage - 1);
+      } else if (e.key === "ArrowRight" && currentPage < totalPages) {
+        goToPage(currentPage + 1);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentPage, totalPages]);
 
   // Handle sort change
   const handleSortChange = (
@@ -337,57 +396,83 @@ export function MangaMatchingPanel({
 
   // Render match status indicator
   const renderStatusIndicator = (match: MangaMatchResult) => {
-    switch (match.status) {
-      case "matched":
-        return (
-          <div
-            className="flex items-center text-sm text-green-600 dark:text-green-400"
-            aria-label="Status: Matched"
-          >
-            <Check className="mr-1 h-4 w-4" aria-hidden="true" />
-            <span>Matched</span>
-          </div>
-        );
-      case "conflict":
-        return (
-          <div
-            className="flex items-center text-sm text-yellow-600 dark:text-yellow-400"
-            aria-label="Status: Review Needed"
-          >
-            <AlertTriangle className="mr-1 h-4 w-4" aria-hidden="true" />
-            <span>Review Needed</span>
-          </div>
-        );
-      case "manual":
-        return (
-          <div
-            className="flex items-center text-sm text-blue-600 dark:text-blue-400"
-            aria-label="Status: Manual Match"
-          >
-            <Search className="mr-1 h-4 w-4" aria-hidden="true" />
-            <span>Manual Match</span>
-          </div>
-        );
-      case "skipped":
-        return (
-          <div
-            className="flex items-center text-sm text-red-600 dark:text-red-400"
-            aria-label="Status: Skipped"
-          >
-            <X className="mr-1 h-4 w-4" aria-hidden="true" />
-            <span>Skipped</span>
-          </div>
-        );
-      default:
-        return (
-          <div
-            className="flex items-center text-sm text-gray-600 dark:text-gray-400"
-            aria-label="Status: Pending"
-          >
-            <span>Pending</span>
-          </div>
-        );
-    }
+    // Extract the data for the header badges
+    const headerIconData = [
+      {
+        value: match.kenmeiManga.chapters_read || 0,
+        icon: "chapters",
+        text: "chapters read",
+      },
+      {
+        value: match.kenmeiManga.score,
+        icon: "star",
+        text: "score",
+        hideIfZero: true,
+      },
+    ].filter((data) => !data.hideIfZero || data.value > 0);
+
+    // Continue with the switch statement
+    return match.status === "skipped" ? (
+      <div className="text-muted-foreground line-clamp-1 text-xs">
+        <span className="text-yellow-600 dark:text-yellow-400">
+          {match.kenmeiManga.status}
+        </span>
+        {headerIconData.map((data, i) => (
+          <React.Fragment key={`badge-${i}`}>
+            <span className="mx-1">•</span>
+            <span className={`inline-flex items-center`}>
+              <span>{data.value}</span>
+              <span className="ml-1">{data.text}</span>
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+    ) : match.status === "pending" ? (
+      <div className="text-muted-foreground line-clamp-1 text-xs">
+        <span className="text-yellow-600 dark:text-yellow-400">
+          {match.kenmeiManga.status}
+        </span>
+        {headerIconData.map((data, i) => (
+          <React.Fragment key={`badge-${i}`}>
+            <span className="mx-1">•</span>
+            <span className={`inline-flex items-center`}>
+              <span>{data.value}</span>
+              <span className="ml-1">{data.text}</span>
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+    ) : match.status === "matched" ? (
+      <div className="text-muted-foreground line-clamp-1 text-xs">
+        <span className="text-yellow-600 dark:text-yellow-400">
+          {match.kenmeiManga.status}
+        </span>
+        {headerIconData.map((data, i) => (
+          <React.Fragment key={`badge-${i}`}>
+            <span className="mx-1">•</span>
+            <span className={`inline-flex items-center`}>
+              <span>{data.value}</span>
+              <span className="ml-1">{data.text}</span>
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+    ) : (
+      <div className="text-muted-foreground line-clamp-1 text-xs">
+        <span className="text-yellow-600 dark:text-yellow-400">
+          {match.kenmeiManga.status}
+        </span>
+        {headerIconData.map((data, i) => (
+          <React.Fragment key={`badge-${i}`}>
+            <span className="mx-1">•</span>
+            <span className={`inline-flex items-center`}>
+              <span>{data.value}</span>
+              <span className="ml-1">{data.text}</span>
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+    );
   };
 
   // Handle keyboard navigation for item selection
@@ -399,7 +484,11 @@ export function MangaMatchingPanel({
   };
 
   return (
-    <div className="flex flex-col space-y-4">
+    <div
+      className="flex flex-col space-y-4"
+      ref={containerRef}
+      tabIndex={-1} // Make div focusable but not in tab order
+    >
       {/* Stats and filter controls */}
       <div className="mb-6 flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex flex-wrap gap-3">
@@ -425,14 +514,6 @@ export function MangaMatchingPanel({
             </span>
             <span className="font-bold text-green-900 dark:text-green-100">
               {matchStats.matched}
-            </span>
-          </div>
-          <div className="rounded-md bg-yellow-100 px-3 py-2 dark:bg-yellow-900/30">
-            <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-              Conflicts:{" "}
-            </span>
-            <span className="font-bold text-yellow-900 dark:text-yellow-100">
-              {matchStats.conflicts}
             </span>
           </div>
           <div className="rounded-md bg-blue-100 px-3 py-2 dark:bg-blue-900/30">
@@ -476,28 +557,7 @@ export function MangaMatchingPanel({
           <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
           Show status:
         </span>
-        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:w-auto md:grid-cols-3">
-          <label className="flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              checked={statusFilters.conflicts}
-              onChange={() =>
-                setStatusFilters({
-                  ...statusFilters,
-                  conflicts: !statusFilters.conflicts,
-                })
-              }
-              aria-label="Show conflicts"
-            />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Conflicts
-            </span>
-            <span className="ml-auto rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
-              {matchStats.conflicts}
-            </span>
-          </label>
-
+        <div className="flex flex-wrap gap-2">
           <label className="flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
             <input
               type="checkbox"
@@ -582,11 +642,10 @@ export function MangaMatchingPanel({
             </span>
           </label>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 p-2">
             <button
               onClick={() =>
                 setStatusFilters({
-                  conflicts: true,
                   matched: true,
                   pending: true,
                   manual: true,
@@ -602,7 +661,6 @@ export function MangaMatchingPanel({
             <button
               onClick={() =>
                 setStatusFilters({
-                  conflicts: false,
                   matched: false,
                   pending: false,
                   manual: false,
@@ -673,6 +731,48 @@ export function MangaMatchingPanel({
         </button>
       </div>
 
+      {/* Confidence accuracy notice */}
+      <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-900/20">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <AlertTriangle
+              className="h-5 w-5 text-amber-400 dark:text-amber-300"
+              aria-hidden="true"
+            />
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              About Confidence Percentages
+            </h3>
+            <div className="mt-2 text-sm text-amber-700 dark:text-amber-200">
+              <p>
+                Please note that confidence match percentages are approximate
+                and may not always be accurate. It&apos;s recommended to review
+                matches manually, especially for manga with similar titles or
+                multiple adaptations.
+              </p>
+              <p className="mt-2 text-sm text-amber-700 dark:text-amber-200">
+                If you encounter cases where confidence scores are severely
+                wrong or misleading, please{" "}
+                <a
+                  href="https://github.com/RLAlpha49/KenmeiToAnilist/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-amber-800 underline hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-200"
+                  onClick={handleOpenExternal(
+                    "https://github.com/RLAlpha49/KenmeiToAnilist/issues",
+                  )}
+                >
+                  open an issue on GitHub
+                </a>{" "}
+                with details about the title. This helps improve the confidence
+                system for future matching.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Match list */}
       <div className="space-y-6" aria-live="polite">
         {currentMatches.length > 0 ? (
@@ -688,13 +788,11 @@ export function MangaMatchingPanel({
                 className={`rounded-lg border ${
                   match.status === "matched"
                     ? "border-green-400 dark:border-green-600"
-                    : match.status === "conflict"
-                      ? "border-yellow-400 dark:border-yellow-600"
-                      : match.status === "manual"
-                        ? "border-blue-400 dark:border-blue-600"
-                        : match.status === "skipped"
-                          ? "border-red-400 dark:border-red-600"
-                          : "border-gray-200 dark:border-gray-700"
+                    : match.status === "manual"
+                      ? "border-blue-400 dark:border-blue-600"
+                      : match.status === "skipped"
+                        ? "border-red-400 dark:border-red-600"
+                        : "border-gray-200 dark:border-gray-700"
                 } bg-white shadow-sm transition-shadow hover:shadow-md dark:bg-gray-800`}
                 tabIndex={0}
                 role="region"
@@ -719,8 +817,8 @@ export function MangaMatchingPanel({
 
                 {/* Selected or best match */}
                 {(match.selectedMatch ||
-                  (match.anilistMatches &&
-                    match.anilistMatches.length > 0)) && (
+                  (match.anilistMatches && match.anilistMatches.length > 0) ||
+                  match.status === "skipped") && (
                   <div className="border-b border-gray-200 p-4 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
@@ -759,14 +857,26 @@ export function MangaMatchingPanel({
                           )}
                         </div>
                         <div>
-                          <h4 className="text-lg font-medium text-gray-900 dark:text-white">
-                            {match.selectedMatch?.title?.english ||
-                              match.selectedMatch?.title?.romaji ||
-                              match.anilistMatches?.[0]?.manga?.title
-                                ?.english ||
-                              match.anilistMatches?.[0]?.manga?.title?.romaji ||
-                              "Unknown Title"}
-                          </h4>
+                          {match.status === "skipped" &&
+                          !match.selectedMatch &&
+                          !match.anilistMatches?.length ? (
+                            <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                              {match.kenmeiManga.title}
+                              <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                Skipped
+                              </span>
+                            </h4>
+                          ) : (
+                            <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                              {match.selectedMatch?.title?.english ||
+                                match.selectedMatch?.title?.romaji ||
+                                match.anilistMatches?.[0]?.manga?.title
+                                  ?.english ||
+                                match.anilistMatches?.[0]?.manga?.title
+                                  ?.romaji ||
+                                "Unknown Title"}
+                            </h4>
+                          )}
                           {/* Show all available titles */}
                           <div className="mt-1 flex flex-col text-sm text-gray-500 dark:text-gray-400">
                             {/* English title - if different from main display */}
@@ -836,29 +946,42 @@ export function MangaMatchingPanel({
                               )}
                           </div>
                           <div className="mt-2 flex items-center space-x-2 text-base text-gray-600 dark:text-gray-400">
-                            <span>
-                              {match.selectedMatch?.format ||
-                                match.anilistMatches[0]?.manga?.format}
-                            </span>
-                            <span>•</span>
-                            <span>
-                              {match.selectedMatch?.status ||
-                                match.anilistMatches[0]?.manga?.status}
-                            </span>
-                            {((match.selectedMatch?.chapters &&
-                              match.selectedMatch.chapters > 0) ||
-                              (match.anilistMatches?.[0]?.manga?.chapters &&
-                                match.anilistMatches[0].manga.chapters >
-                                  0)) && (
+                            {match.status !== "skipped" ||
+                            match.selectedMatch ||
+                            match.anilistMatches?.length ? (
                               <>
+                                <span>
+                                  {match.selectedMatch?.format ||
+                                    match.anilistMatches?.[0]?.manga?.format ||
+                                    "Unknown Format"}
+                                </span>
                                 <span>•</span>
                                 <span>
-                                  {match.selectedMatch?.chapters ||
-                                    match.anilistMatches[0]?.manga
-                                      ?.chapters}{" "}
-                                  chapters
+                                  {match.selectedMatch?.status ||
+                                    match.anilistMatches?.[0]?.manga?.status ||
+                                    "Unknown Status"}
                                 </span>
+                                {((match.selectedMatch?.chapters &&
+                                  match.selectedMatch.chapters > 0) ||
+                                  (match.anilistMatches?.[0]?.manga?.chapters &&
+                                    match.anilistMatches[0].manga.chapters >
+                                      0)) && (
+                                  <>
+                                    <span>•</span>
+                                    <span>
+                                      {match.selectedMatch?.chapters ||
+                                        match.anilistMatches?.[0]?.manga
+                                          ?.chapters ||
+                                        0}{" "}
+                                      chapters
+                                    </span>
+                                  </>
+                                )}
                               </>
+                            ) : (
+                              <span className="text-gray-500 italic">
+                                No match information available
+                              </span>
                             )}
                           </div>
                         </div>
@@ -870,19 +993,67 @@ export function MangaMatchingPanel({
                           renderConfidenceBadge(
                             match.anilistMatches[0].confidence,
                           )}
-                        <a
-                          href={`https://anilist.co/manga/${match.selectedMatch?.id || match.anilistMatches?.[0]?.manga?.id || "unknown"}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-sm text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                          aria-label="View on AniList (opens in new tab)"
-                        >
-                          <ExternalLink
-                            className="mr-1 h-3 w-3"
-                            aria-hidden="true"
-                          />
-                          AniList
-                        </a>
+                        <div className="flex space-x-2">
+                          {(match.selectedMatch ||
+                            (match.anilistMatches &&
+                              match.anilistMatches.length > 0)) && (
+                            <a
+                              href={`https://anilist.co/manga/${match.selectedMatch?.id || match.anilistMatches?.[0]?.manga?.id || "unknown"}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-sm text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                              aria-label="View on AniList (opens in new tab)"
+                              onClick={handleOpenExternal(
+                                `https://anilist.co/manga/${match.selectedMatch?.id || match.anilistMatches?.[0]?.manga?.id || "unknown"}`,
+                              )}
+                            >
+                              <ExternalLink
+                                className="mr-1 h-3 w-3"
+                                aria-hidden="true"
+                              />
+                              AniList
+                            </a>
+                          )}
+                          {(() => {
+                            // Get the appropriate title for Kenmei link - for skipped items, always use Kenmei's title
+                            const title =
+                              match.kenmeiManga.title ||
+                              match.selectedMatch?.title?.english ||
+                              match.selectedMatch?.title?.romaji ||
+                              match.anilistMatches?.[0]?.manga?.title
+                                ?.english ||
+                              match.anilistMatches?.[0]?.manga?.title?.romaji;
+
+                            const kenmeiUrl = createKenmeiUrl(title);
+
+                            return kenmeiUrl ? (
+                              <a
+                                href={kenmeiUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center rounded-md bg-indigo-100 px-2.5 py-1 text-sm text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:hover:bg-indigo-800/30"
+                                aria-label="View on Kenmei (opens in new tab)"
+                                onClick={handleOpenExternal(kenmeiUrl)}
+                              >
+                                <ExternalLink
+                                  className="mr-1 h-3 w-3"
+                                  aria-hidden="true"
+                                />
+                                Kenmei
+                                <div className="group relative ml-1 inline-block">
+                                  <Info
+                                    className="h-3 w-3 text-indigo-500 dark:text-indigo-400"
+                                    aria-hidden="true"
+                                  />
+                                  <div className="absolute bottom-full left-1/2 mb-2 hidden w-48 -translate-x-1/2 transform rounded-md border border-indigo-300 bg-indigo-50 px-2 py-1.5 text-xs text-indigo-900 shadow-md group-hover:block dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-100">
+                                    This link is dynamically generated and may
+                                    not work correctly.
+                                  </div>
+                                </div>
+                              </a>
+                            ) : null;
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -890,8 +1061,7 @@ export function MangaMatchingPanel({
 
                 {/* Action buttons */}
                 <div className="flex space-x-2 p-4">
-                  {(match.status === "conflict" ||
-                    match.status === "pending") && (
+                  {match.status === "pending" && (
                     <>
                       {match.anilistMatches &&
                         match.anilistMatches.length > 0 && (
@@ -1222,28 +1392,76 @@ export function MangaMatchingPanel({
                                     altMatch.manga?.title?.english ||
                                     altMatch.manga?.title?.romaji ||
                                     "Unknown manga"
-                                  } as match (${altMatch.confidence !== undefined ? Math.round(altMatch.confidence) + '%' : 'Unknown confidence'})`}
+                                  } as match (${altMatch.confidence !== undefined ? Math.round(altMatch.confidence) + "%" : "Unknown confidence"})`}
                                 >
                                   <Check
                                     className="mr-1 h-3 w-3"
                                     aria-hidden="true"
                                   />
-                                  Accept Match {altMatch.confidence !== undefined ? `(${Math.round(altMatch.confidence)}%)` : ''}
+                                  Accept Match{" "}
+                                  {altMatch.confidence !== undefined
+                                    ? `(${Math.round(altMatch.confidence)}%)`
+                                    : ""}
                                 </button>
-                                <a
-                                  href={`https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                                  aria-label="View on AniList (opens in new tab)"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <ExternalLink
-                                    className="mr-1 h-3 w-3"
-                                    aria-hidden="true"
-                                  />
-                                  AniList
-                                </a>
+                                <div className="flex space-x-2">
+                                  <a
+                                    href={`https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                                    aria-label="View on AniList (opens in new tab)"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenExternal(
+                                        `https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`,
+                                      )(e);
+                                    }}
+                                  >
+                                    <ExternalLink
+                                      className="mr-1 h-3 w-3"
+                                      aria-hidden="true"
+                                    />
+                                    AniList
+                                  </a>
+                                  {(() => {
+                                    // Get the title for Kenmei link
+                                    const title =
+                                      altMatch.manga?.title?.english ||
+                                      altMatch.manga?.title?.romaji;
+
+                                    const kenmeiUrl = createKenmeiUrl(title);
+
+                                    return kenmeiUrl ? (
+                                      <a
+                                        href={kenmeiUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center rounded-md bg-indigo-100 px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:hover:bg-indigo-800/30"
+                                        aria-label="View on Kenmei (opens in new tab)"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenExternal(kenmeiUrl)(e);
+                                        }}
+                                      >
+                                        <ExternalLink
+                                          className="mr-1 h-3 w-3"
+                                          aria-hidden="true"
+                                        />
+                                        Kenmei
+                                        <div className="group relative ml-1 inline-block">
+                                          <Info
+                                            className="h-3 w-3 text-indigo-500 dark:text-indigo-400"
+                                            aria-hidden="true"
+                                          />
+                                          <div className="absolute bottom-full left-1/2 mb-2 hidden w-48 -translate-x-1/2 transform rounded-md border border-indigo-300 bg-indigo-50 px-2 py-1.5 text-xs text-indigo-900 shadow-md group-hover:block dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-100">
+                                            This link is dynamically generated
+                                            and may not work correctly.
+                                          </div>
+                                        </div>
+                                      </a>
+                                    ) : null;
+                                  })()}
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -1281,6 +1499,9 @@ export function MangaMatchingPanel({
             </span>{" "}
             of <span className="font-medium">{sortedMatches.length}</span>{" "}
             results
+            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+              (Use ← → arrow keys to navigate pages)
+            </span>
           </div>
           <div className="inline-flex items-center space-x-1">
             <button

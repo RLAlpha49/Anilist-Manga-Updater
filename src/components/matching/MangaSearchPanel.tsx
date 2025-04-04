@@ -44,6 +44,10 @@ export function MangaSearchPanel({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
+  // Style modifications to make everything larger
+  const headerClasses = "text-xl font-medium"; // Increased from text-lg
+  const titleClasses = "text-2xl font-semibold"; // Increased from text-lg
+
   // Need to prevent duplicate searches within a short time window
   const initiateSearch = (title: string) => {
     const now = Date.now();
@@ -257,58 +261,58 @@ export function MangaSearchPanel({
       aria-labelledby="search-title"
       aria-modal="true"
     >
-      <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div className="border-b border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button
               onClick={onClose}
-              className="mr-3 rounded-md p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              className="mr-4 rounded-md p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               aria-label="Go back"
             >
-              <ArrowLeft size={18} aria-hidden="true" />
+              <ArrowLeft size={24} aria-hidden="true" />
             </button>
             <h2
               id="search-title"
-              className="text-lg font-medium text-gray-900 dark:text-white"
+              className={`${headerClasses} text-gray-900 dark:text-white`}
             >
               Search for manga
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            className="rounded-md p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
             aria-label="Close search panel"
           >
-            <X size={18} aria-hidden="true" />
+            <X size={24} aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {kenmeiManga && (
-        <div className="border-b border-gray-200 bg-blue-50 p-4 dark:border-gray-700 dark:bg-blue-900/20">
-          <h3 className="mb-1 font-medium text-gray-900 dark:text-white">
+        <div className="border-b border-gray-200 bg-blue-50 p-5 dark:border-gray-700 dark:bg-blue-900/20">
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
             Looking for a match for:
           </h3>
-          <p className="text-lg font-semibold text-blue-700 dark:text-blue-300">
+          <p className={`${titleClasses} text-blue-700 dark:text-blue-300`}>
             {kenmeiManga.title}
           </p>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-base text-gray-600 dark:text-gray-400">
             {kenmeiManga.status} • {kenmeiManga.chapters_read} chapters read
             {kenmeiManga.score > 0 && ` • Score: ${kenmeiManga.score}/10`}
           </p>
         </div>
       )}
 
-      <div className="border-b border-gray-200 p-4 dark:border-gray-700">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <div className="border-b border-gray-200 p-5 dark:border-gray-700">
+        <form onSubmit={handleSubmit} className="flex items-center gap-3">
           <div className="relative flex-1">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+              <Search className="h-6 w-6 text-gray-400" aria-hidden="true" />
             </div>
             <input
               ref={searchInputRef}
               type="text"
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 pl-12 text-base text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
               placeholder="Search for a manga title..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -319,14 +323,14 @@ export function MangaSearchPanel({
           </div>
           <button
             type="submit"
-            className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-400 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            className="inline-flex items-center rounded-lg bg-blue-700 px-5 py-3 text-base font-medium text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:bg-blue-400 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
             disabled={isSearching || !searchQuery.trim()}
             aria-label={isSearching ? "Searching..." : "Search for manga"}
           >
             {isSearching ? (
               <>
                 <Loader2
-                  className="mr-2 h-4 w-4 animate-spin"
+                  className="mr-2 h-5 w-5 animate-spin"
                   aria-hidden="true"
                 />
                 Searching...
@@ -340,14 +344,14 @@ export function MangaSearchPanel({
 
       <div
         ref={resultsContainerRef}
-        className="flex-1 overflow-y-auto p-4"
+        className="flex-1 overflow-y-auto p-5"
         role="region"
         aria-label="Search results"
         aria-live="polite"
       >
         {error && (
           <div
-            className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400"
+            className="mb-5 rounded-md bg-red-50 p-4 text-base text-red-700 dark:bg-red-900/20 dark:text-red-400"
             role="alert"
           >
             <p>{error}</p>
@@ -355,14 +359,14 @@ export function MangaSearchPanel({
         )}
 
         {searchResults.length === 0 && !isSearching && !error && (
-          <div className="text-center text-gray-500 dark:text-gray-400">
+          <div className="text-center text-lg text-gray-500 dark:text-gray-400">
             {searchQuery.trim()
               ? "No results found"
               : "Enter a search term to find manga"}
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           {searchResults.map((result, index) => {
             const mangaId = result.id;
             const uniqueKey = mangaId
@@ -373,7 +377,7 @@ export function MangaSearchPanel({
               <div
                 key={uniqueKey}
                 data-index={index}
-                className={`relative flex cursor-pointer flex-col space-y-2 rounded-lg border p-4 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 ${
+                className={`relative flex cursor-pointer flex-col space-y-3 rounded-lg border p-5 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 ${
                   index === selectedIndex
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                     : "border-gray-200"
@@ -389,18 +393,18 @@ export function MangaSearchPanel({
                   }
                 }}
               >
-                <div className="flex w-full items-start space-x-4">
+                <div className="flex w-full items-start space-x-5">
                   {result.coverImage?.medium && (
                     <img
                       src={result.coverImage.medium}
                       alt={`Cover for ${result.title?.english || result.title?.romaji || "manga"}`}
-                      className="h-24 w-16 object-cover"
+                      className="h-40 w-28 object-cover"
                       loading="lazy"
                     />
                   )}
 
-                  <div className="flex-1 space-y-1">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                  <div className="flex-1 space-y-2">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                       {result.title?.english ||
                         result.title?.romaji ||
                         "Unknown Title"}
@@ -408,42 +412,42 @@ export function MangaSearchPanel({
 
                     {result.title?.romaji &&
                       result.title.romaji !== result.title.english && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-base text-gray-600 dark:text-gray-400">
                           {result.title.romaji}
                         </p>
                       )}
 
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {result.format && (
-                        <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        <span className="inline-flex items-center rounded-md bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                           {result.format.replace("_", " ")}
                         </span>
                       )}
 
                       {result.status && (
-                        <span className="inline-flex items-center rounded-md bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                        <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
                           {result.status.replace("_", " ")}
                         </span>
                       )}
 
                       {result.chapters && (
-                        <span className="inline-flex items-center rounded-md bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                        <span className="inline-flex items-center rounded-md bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
                           {result.chapters} chapters
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap gap-1 pt-1">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {result.genres?.slice(0, 3).map((genre, i) => (
                         <span
                           key={`${uniqueKey}-genre-${i}`}
-                          className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                          className="inline-flex items-center rounded-md bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                         >
                           {genre}
                         </span>
                       ))}
                       {result.genres && result.genres.length > 3 && (
-                        <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                        <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                           +{result.genres.length - 3} more
                         </span>
                       )}
@@ -455,22 +459,22 @@ export function MangaSearchPanel({
                       href={`https://anilist.co/manga/${result.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                      className="rounded p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                       aria-label="View on AniList"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <ExternalLink size={16} aria-hidden="true" />
+                      <ExternalLink size={20} aria-hidden="true" />
                     </a>
 
                     <button
-                      className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700"
+                      className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-base font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleSelectResult(result, index);
                       }}
                       aria-label="Select this manga match"
                     >
-                      <Check size={14} className="mr-1" aria-hidden="true" />{" "}
+                      <Check size={18} className="mr-2" aria-hidden="true" />{" "}
                       Select
                     </button>
                   </div>
@@ -481,14 +485,14 @@ export function MangaSearchPanel({
 
           {hasNextPage && (
             <button
-              className="w-full rounded-md border border-gray-200 bg-white py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="w-full rounded-md border border-gray-200 bg-white py-3 text-center text-base font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               onClick={loadMoreResults}
               disabled={isSearching}
             >
               {isSearching ? (
                 <>
                   <Loader2
-                    className="mr-2 inline h-4 w-4 animate-spin"
+                    className="mr-2 inline h-5 w-5 animate-spin"
                     aria-hidden="true"
                   />
                   Loading more...
@@ -499,30 +503,6 @@ export function MangaSearchPanel({
             </button>
           )}
         </div>
-      </div>
-
-      <div className="border-t border-gray-200 bg-gray-50 p-3 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-        <span className="mr-3 inline-block">
-          <kbd className="rounded-md border border-gray-300 bg-white px-1.5 py-0.5 font-mono text-xs dark:border-gray-600 dark:bg-gray-700">
-            ↑
-          </kbd>
-          <kbd className="ml-1 rounded-md border border-gray-300 bg-white px-1.5 py-0.5 font-mono text-xs dark:border-gray-600 dark:bg-gray-700">
-            ↓
-          </kbd>{" "}
-          Navigate
-        </span>
-        <span className="mr-3 inline-block">
-          <kbd className="rounded-md border border-gray-300 bg-white px-1.5 py-0.5 font-mono text-xs dark:border-gray-600 dark:bg-gray-700">
-            Enter
-          </kbd>{" "}
-          Select
-        </span>
-        <span className="inline-block">
-          <kbd className="rounded-md border border-gray-300 bg-white px-1.5 py-0.5 font-mono text-xs dark:border-gray-600 dark:bg-gray-700">
-            Esc
-          </kbd>{" "}
-          Close
-        </span>
       </div>
     </div>
   );

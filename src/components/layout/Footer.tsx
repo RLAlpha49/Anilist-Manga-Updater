@@ -23,12 +23,12 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-4">
           <a
-            href="https://github.com/AlexPettigrew/KenmeiToAnilist"
+            href="https://github.com/RLAlpha49/KenmeiToAnilist"
             target="_blank"
             rel="noreferrer"
             className="hover:text-foreground flex items-center gap-1"
             onClick={handleOpenExternal(
-              "https://github.com/AlexPettigrew/KenmeiToAnilist",
+              "https://github.com/RLAlpha49/KenmeiToAnilist",
             )}
           >
             <Github className="h-3 w-3" />

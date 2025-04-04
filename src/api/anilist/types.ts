@@ -109,12 +109,7 @@ export interface MangaMatch {
   confidence: number;
 }
 
-export type MatchStatus =
-  | "pending"
-  | "matched"
-  | "conflict"
-  | "manual"
-  | "skipped";
+export type MatchStatus = "pending" | "matched" | "manual" | "skipped";
 
 export interface MangaMatchResult {
   kenmeiManga: KenmeiManga;

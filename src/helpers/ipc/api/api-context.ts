@@ -14,5 +14,9 @@ export function exposeApiContext() {
       clearCache: (searchQuery?: string) =>
         ipcRenderer.invoke("anilist:clearCache", searchQuery),
     },
+    shell: {
+      openExternal: (url: string) =>
+        ipcRenderer.invoke("shell:openExternal", url),
+    },
   });
 }

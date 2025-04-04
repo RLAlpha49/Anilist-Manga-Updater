@@ -249,7 +249,7 @@ export const useMatchHandlers = (
         const rearrangedMatches = [...currentMatch.anilistMatches];
         rearrangedMatches.splice(alternativeIndex, 1); // Remove from current position
         rearrangedMatches.unshift(selectedAlternative); // Add to beginning
-        
+
         updatedResults[index] = {
           ...currentMatch,
           selectedMatch: { ...selectedAlternative.manga },
@@ -302,7 +302,7 @@ export const useMatchHandlers = (
 
         // Insert the current main match as the first alternative
         newAnilistMatches.unshift(mainAsAlternative);
-        
+
         // Insert the selected alternative's confidence as the first item's confidence
         // This ensures the confidence is displayed in the main match section
         if (selectedAlternative.confidence !== undefined) {

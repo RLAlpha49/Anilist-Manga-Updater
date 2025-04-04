@@ -300,7 +300,7 @@ export function findBestMatches(
   let status: MangaMatchResult["status"] = "pending";
 
   if (topMatches.length === 0) {
-    status = "conflict"; // No matches found
+    status = "pending"; // No matches found
   } else if (topMatches[0].isExactMatch) {
     status = "matched"; // Found an exact match
   } else if (
@@ -310,7 +310,7 @@ export function findBestMatches(
   ) {
     status = "matched"; // High confidence and significant gap to next match
   } else {
-    status = "conflict"; // Multiple potential matches or low confidence
+    status = "pending"; // Multiple potential matches or low confidence
   }
 
   // Format as MangaMatchResult

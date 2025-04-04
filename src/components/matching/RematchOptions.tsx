@@ -33,7 +33,6 @@ export const RematchOptions: React.FC<RematchOptionsProps> = ({
     onChangeSelectedStatuses({
       pending: true,
       skipped: true,
-      conflict: false,
       matched: false,
       manual: false,
       unmatched: true,
@@ -107,18 +106,6 @@ export const RematchOptions: React.FC<RematchOptionsProps> = ({
           <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
             Skipped ({matchResults.filter((m) => m.status === "skipped").length}
             )
-          </span>
-        </label>
-        <label className="flex items-center rounded p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">
-          <input
-            type="checkbox"
-            checked={selectedStatuses.conflict}
-            onChange={() => toggleStatus("conflict")}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-          />
-          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-            Conflict (
-            {matchResults.filter((m) => m.status === "conflict").length})
           </span>
         </label>
         <label className="flex items-center rounded p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">

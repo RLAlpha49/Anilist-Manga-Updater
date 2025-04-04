@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { ipcMain, shell } from "electron";
 import fetch from "node-fetch";
 
 const API_URL = "https://graphql.anilist.co";
@@ -285,6 +285,21 @@ export function setupAniListAPI() {
       };
     } catch (error) {
       console.error("Error in anilist:exchangeToken:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  });
+
+  // Handle opening external links in the default browser
+  ipcMain.handle("shell:openExternal", async (_, url) => {
+    try {
+      console.log(`Opening external URL in default browser: ${url}`);
+      await shell.openExternal(url);
+      return { success: true };
+    } catch (error) {
+      console.error("Error opening external URL:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
