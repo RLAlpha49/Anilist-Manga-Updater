@@ -1,7 +1,18 @@
 import React from "react";
 import { ApiError } from "../../types/matching";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw, Home, Settings, Database } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "../../components/ui/alert";
+import { Separator } from "../../components/ui/separator";
+import { motion } from "framer-motion";
 
 interface ErrorDisplayProps {
   error: string;
@@ -19,118 +30,139 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto flex h-full max-w-6xl flex-col px-4 py-6">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Review Your Manga
-        </h1>
-      </header>
-
-      <div className="mb-8 rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20">
-        <div className="flex items-start">
-          <AlertCircle className="mr-3 h-5 w-5 text-red-600 dark:text-red-400" />
-          <div>
-            <h3 className="text-lg font-medium text-red-800 dark:text-red-300">
-              Error Matching Manga
-            </h3>
-            <div className="mt-2 text-sm text-red-700 dark:text-red-400">
-              <p>{error}</p>
-
-              {detailedError && (
-                <div className="mt-4">
-                  <details className="cursor-pointer">
-                    <summary className="font-medium">
-                      View Technical Details
-                    </summary>
-                    <pre className="mt-2 max-h-60 overflow-auto rounded-md bg-red-100 p-4 font-mono text-xs text-red-900 dark:bg-red-950 dark:text-red-200">
-                      {JSON.stringify(detailedError, null, 2)}
-                    </pre>
-                  </details>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-6 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
-              <button
-                onClick={onRetry}
-                className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700"
-              >
-                Retry Matching
-              </button>
-              <button
-                onClick={() => {
-                  if (onClearPendingManga) {
-                    onClearPendingManga();
-                  }
-                  navigate({ to: "/import" });
-                }}
-                className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Back to Import
-              </button>
-              <button
-                onClick={() => navigate({ to: "/settings" })}
-                className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Go to Settings
-              </button>
-            </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="container mx-auto max-w-2xl"
+    >
+      <Card className="overflow-hidden border-red-200 shadow-md dark:border-red-800/50">
+        <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/40 dark:to-rose-950/40">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <CardTitle>Error Matching Manga</CardTitle>
           </div>
-        </div>
-      </div>
+        </CardHeader>
 
-      {/* Debug buttons */}
-      <div className="mt-4">
-        <button
-          onClick={async () => {
-            try {
-              const { cacheDebugger } = await import(
-                "../../api/matching/manga-search-service"
-              );
-              const status = cacheDebugger.getCacheStatus();
-              console.log("Current cache status:", status);
-              alert(
-                `Cache Status:\n- In Memory: ${status.inMemoryCache} entries\n- LocalStorage: ${status.localStorage.mangaCache} manga entries, ${status.localStorage.searchCache} search entries`,
-              );
-            } catch (e) {
-              console.error("Failed to check cache status:", e);
-            }
-          }}
-          className="text-xs text-gray-500 underline hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-          aria-label="Debug cache status"
-        >
-          Check Cache Status
-        </button>
-        <button
-          onClick={async () => {
-            try {
-              const { cacheDebugger } = await import(
-                "../../api/matching/manga-search-service"
-              );
-              if (
-                window.confirm(
-                  "Are you sure you want to clear all caches? This will require re-fetching all manga data.",
-                )
-              ) {
-                cacheDebugger.resetAllCaches();
+        <CardContent className="space-y-4 p-6">
+          <Alert
+            variant="destructive"
+            className="border-red-200 bg-red-50/70 dark:border-red-900/50 dark:bg-red-900/20"
+          >
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle className="mb-1 font-semibold">
+              Something went wrong
+            </AlertTitle>
+            <AlertDescription className="text-sm">{error}</AlertDescription>
+          </Alert>
 
-                // Also clear pending manga data
+          {detailedError && (
+            <div className="rounded-md border border-red-100 dark:border-red-900/50">
+              <details className="cursor-pointer">
+                <summary className="bg-red-50/50 p-3 font-medium dark:bg-red-900/20">
+                  Technical Details
+                </summary>
+                <div className="max-h-60 overflow-auto p-3">
+                  <pre className="rounded-md bg-slate-950 p-4 font-mono text-xs whitespace-pre-wrap text-slate-50">
+                    {JSON.stringify(detailedError, null, 2)}
+                  </pre>
+                </div>
+              </details>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="default"
+              onClick={onRetry}
+              className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry Matching
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
                 if (onClearPendingManga) {
                   onClearPendingManga();
                 }
+                navigate({ to: "/import" });
+              }}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Back to Import
+            </Button>
 
-                alert("All caches have been cleared.");
-              }
-            } catch (e) {
-              console.error("Failed to reset caches:", e);
-            }
-          }}
-          className="ml-4 text-xs text-gray-500 underline hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-          aria-label="Reset all caches"
-        >
-          Reset Caches
-        </button>
-      </div>
-    </div>
+            <Button
+              variant="outline"
+              onClick={() => navigate({ to: "/settings" })}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Go to Settings
+            </Button>
+          </div>
+        </CardContent>
+
+        <Separator />
+
+        <CardFooter className="bg-muted/20 flex justify-between p-4">
+          <div className="flex gap-3">
+            <button
+              onClick={async () => {
+                try {
+                  const { cacheDebugger } = await import(
+                    "../../api/matching/manga-search-service"
+                  );
+                  const status = cacheDebugger.getCacheStatus();
+                  console.log("Current cache status:", status);
+                  alert(
+                    `Cache Status:\n- In Memory: ${status.inMemoryCache} entries\n- LocalStorage: ${status.localStorage.mangaCache} manga entries, ${status.localStorage.searchCache} search entries`,
+                  );
+                } catch (e) {
+                  console.error("Failed to check cache status:", e);
+                }
+              }}
+              className="text-muted-foreground hover:text-foreground inline-flex items-center text-xs"
+              aria-label="Debug cache status"
+            >
+              <Database className="mr-1 h-3 w-3" />
+              Check Cache Status
+            </button>
+
+            <button
+              onClick={async () => {
+                try {
+                  const { cacheDebugger } = await import(
+                    "../../api/matching/manga-search-service"
+                  );
+                  if (
+                    window.confirm(
+                      "Are you sure you want to clear all caches? This will require re-fetching all manga data.",
+                    )
+                  ) {
+                    cacheDebugger.resetAllCaches();
+
+                    // Also clear pending manga data
+                    if (onClearPendingManga) {
+                      onClearPendingManga();
+                    }
+
+                    alert("All caches have been cleared.");
+                  }
+                } catch (e) {
+                  console.error("Failed to reset caches:", e);
+                }
+              }}
+              className="text-muted-foreground hover:text-foreground inline-flex items-center text-xs"
+              aria-label="Reset all caches"
+            >
+              <RefreshCw className="mr-1 h-3 w-3" />
+              Reset Caches
+            </button>
+          </div>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 };

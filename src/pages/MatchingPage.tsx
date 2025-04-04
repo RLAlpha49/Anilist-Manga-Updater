@@ -19,6 +19,10 @@ import { ResumeNotification } from "../components/matching/ResumeNotification";
 import { RematchOptions } from "../components/matching/RematchOptions";
 import { CacheClearingNotification } from "../components/matching/CacheClearingNotification";
 import { SearchModal } from "../components/matching/SearchModal";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Loader2 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 export function MatchingPage() {
   const navigate = useNavigate();
@@ -749,11 +753,15 @@ export function MatchingPage() {
   // Loading state
   if (matchingProcess.isLoading) {
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-4 text-3xl font-bold">Match Your Manga</h1>
-        <p className="mb-6 text-gray-600">
-          Automatically match your imported manga with AniList entries
-        </p>
+      <div className="container mx-auto max-w-5xl space-y-6 px-4 py-8 md:px-6">
+        <div className="space-y-2">
+          <h1 className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
+            Match Your Manga
+          </h1>
+          <p className="text-muted-foreground max-w-2xl">
+            Automatically match your imported manga with AniList entries
+          </p>
+        </div>
 
         {/* Loading State with Progress and Cancel Button */}
         <MatchingProgressPanel
@@ -781,66 +789,67 @@ export function MatchingPage() {
   }
 
   return (
-    <div className="container mx-auto flex h-full max-w-full flex-col px-4 py-6">
-      <header className="mb-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+    <div className="container mx-auto flex h-full max-w-full flex-col px-4 py-6 md:px-6">
+      <header className="mb-6 space-y-2">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <h1 className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
             Review Your Manga
           </h1>
           {matchResults.length > 0 && !matchingProcess.isLoading && (
-            <button
+            <Button
               onClick={() => setShowRematchOptions(!showRematchOptions)}
-              className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-800"
+              variant="default"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
               {showRematchOptions
                 ? "Hide Rematch Options"
                 : "Fresh Search (Clear Cache)"}
-            </button>
+            </Button>
           )}
         </div>
-        <p className="mt-1 text-gray-600 dark:text-gray-400">
+        <p className="text-muted-foreground max-w-2xl">
           Review the matches found between your Kenmei manga and AniList.
         </p>
       </header>
 
       {/* Rematch by status options */}
-      {showRematchOptions &&
-        !matchingProcess.isLoading &&
-        matchResults.length > 0 && (
-          <RematchOptions
-            selectedStatuses={selectedStatuses}
-            onChangeSelectedStatuses={setSelectedStatuses}
-            matchResults={matchResults}
-            allManga={manga}
-            rematchWarning={rematchWarning}
-            onRematchByStatus={handleRematchByStatus}
-            onCloseOptions={() => setShowRematchOptions(false)}
-          />
-        )}
+      <AnimatePresence>
+        {showRematchOptions &&
+          !matchingProcess.isLoading &&
+          matchResults.length > 0 && (
+            <RematchOptions
+              selectedStatuses={selectedStatuses}
+              onChangeSelectedStatuses={setSelectedStatuses}
+              matchResults={matchResults}
+              rematchWarning={rematchWarning}
+              onRematchByStatus={handleRematchByStatus}
+              onCloseOptions={() => setShowRematchOptions(false)}
+            />
+          )}
+      </AnimatePresence>
 
       {/* Initialization state - only show if not already loading and we have pending manga */}
       {matchingProcess.isInitializing &&
         !matchingProcess.isLoading &&
         pendingMangaState.pendingManga.length > 0 && (
-          <div className="mb-6 rounded-md bg-blue-50 p-4 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-            <div className="flex justify-between">
-              <div className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="mr-2 h-5 w-5 animate-spin"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-                </svg>
-                <p>Checking for pending manga to resume...</p>
+          <Card className="mb-6 border-blue-100 bg-blue-50/50 shadow-md dark:border-blue-900/50 dark:bg-blue-900/20">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center space-x-3">
+                <div className="relative flex h-8 w-8 items-center justify-center">
+                  <div className="absolute h-full w-full animate-ping rounded-full bg-blue-400 opacity-20"></div>
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-blue-700 dark:text-blue-300">
+                    Checking for pending manga to resume...
+                  </p>
+                  <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
+                    Please wait while we analyze your previous session
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
       {/* Resume message when we have pending manga but aren't already in the loading state */}
@@ -1009,9 +1018,9 @@ export function MatchingPage() {
                 />
 
                 {/* Action buttons */}
-                <div className="mt-6 flex justify-end space-x-4">
-                  <button
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                <div className="mt-6 flex flex-col-reverse justify-end space-y-4 space-y-reverse sm:flex-row sm:space-y-0 sm:space-x-4">
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       // Clear any pending manga data
                       pendingMangaState.savePendingManga([]);
@@ -1019,26 +1028,43 @@ export function MatchingPage() {
                     }}
                   >
                     Back to Import
-                  </button>
-                  <button
-                    className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-800"
+                  </Button>
+                  <Button
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                     onClick={handleProceedToSync}
                   >
                     Proceed to Dashboard
-                  </button>
+                  </Button>
                 </div>
               </div>
             }
           </>
         ) : (
           // No results state
-          <div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800">
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="bg-background/50 flex h-full min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-12 text-center backdrop-blur-sm dark:border-gray-700">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 text-blue-600 dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-xl font-semibold">No Manga To Match</h3>
+            <p className="text-muted-foreground mb-6 text-sm">
               No manga data to match. Return to the import page to load your
               data.
             </p>
-            <button
-              className="mt-4 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            <Button
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
               onClick={() => {
                 // Clear any pending manga data
                 pendingMangaState.savePendingManga([]);
@@ -1046,7 +1072,7 @@ export function MatchingPage() {
               }}
             >
               Go to Import Page
-            </button>
+            </Button>
           </div>
         )}
       </div>
