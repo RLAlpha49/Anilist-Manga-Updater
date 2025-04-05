@@ -2,11 +2,18 @@
  * AniList API client for making GraphQL requests
  */
 
-import { AniListManga, AniListResponse, SearchResult } from "./types";
+import {
+  AniListManga,
+  AniListResponse,
+  SearchResult,
+  UserMediaList,
+} from "./types";
 import {
   SEARCH_MANGA,
   ADVANCED_SEARCH_MANGA,
   GET_MANGA_BY_IDS,
+  GET_USER_MANGA_LIST,
+  GET_VIEWER,
 } from "./queries";
 
 // Simple in-memory cache
@@ -591,4 +598,257 @@ export async function getMangaByIds(
     console.error(`Error fetching manga by IDs [${ids.join(", ")}]:`, error);
     throw error;
   }
+}
+
+/**
+ * Gets the current user's manga list from AniList
+ * @param token The user's access token
+ * @param abortSignal Optional AbortSignal to cancel the request
+ * @returns The user's manga list organized by status
+ */
+export async function getUserMangaList(
+  token: string,
+  abortSignal?: AbortSignal,
+): Promise<UserMediaList> {
+  if (!token) {
+    throw new Error("Access token required to fetch user manga list");
+  }
+
+  try {
+    // Get the user's ID first
+    const viewerId = await getAuthenticatedUserID(token, abortSignal);
+    console.log("Successfully retrieved user ID:", viewerId);
+
+    if (!viewerId) {
+      throw new Error("Failed to get your AniList user ID");
+    }
+
+    // Fetch all manga lists using multiple chunks if needed
+    return await fetchCompleteUserMediaList(viewerId, token, abortSignal);
+  } catch (error) {
+    console.error("Error fetching user manga list:", error);
+    throw error;
+  }
+}
+
+/**
+ * Attempts to get the authenticated user's ID through various methods
+ */
+async function getAuthenticatedUserID(
+  token: string,
+  abortSignal?: AbortSignal,
+): Promise<number | undefined> {
+  try {
+    // First, try to get user's ID using the Viewer query
+    const viewerResponse = await request<any>(
+      GET_VIEWER,
+      {},
+      token,
+      abortSignal,
+    );
+
+    console.log("Raw viewer response:", viewerResponse);
+
+    // Handle multiple possible response formats
+    let viewerId: number | undefined;
+
+    // Try to extract the Viewer data from different potential structures
+    if (viewerResponse?.data?.Viewer?.id) {
+      // Standard structure
+      viewerId = viewerResponse.data.Viewer.id;
+    } else if (viewerResponse?.data?.data?.Viewer?.id) {
+      // Nested data structure
+      viewerId = viewerResponse.data.data.Viewer.id;
+    } else if (
+      viewerResponse?.success &&
+      viewerResponse?.data?.data?.Viewer?.id
+    ) {
+      // Success wrapper with nested data
+      viewerId = viewerResponse.data.data.Viewer.id;
+    }
+
+    if (viewerId) {
+      return viewerId;
+    }
+
+    // If the above approach failed, try a direct query
+    console.log("First viewer query failed, trying direct query approach");
+    const directViewerResponse = await request<any>(
+      `query { Viewer { id name } }`,
+      {},
+      token,
+      abortSignal,
+    );
+
+    console.log("Direct viewer query response:", directViewerResponse);
+
+    // Try to extract user ID from various response formats
+    if (directViewerResponse?.data?.Viewer?.id) {
+      return directViewerResponse.data.Viewer.id;
+    } else if (directViewerResponse?.data?.data?.Viewer?.id) {
+      return directViewerResponse.data.data.Viewer.id;
+    } else if (
+      directViewerResponse?.success &&
+      directViewerResponse?.data?.data?.Viewer?.id
+    ) {
+      return directViewerResponse.data.data.Viewer.id;
+    }
+
+    console.error(
+      "Could not extract user ID from any response:",
+      directViewerResponse,
+    );
+    return undefined;
+  } catch (error) {
+    console.error("Error getting authenticated user ID:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches the complete user media list using multiple chunks if needed
+ */
+async function fetchCompleteUserMediaList(
+  userId: number,
+  token: string,
+  abortSignal?: AbortSignal,
+): Promise<UserMediaList> {
+  const mediaMap: UserMediaList = {};
+  let hasNextChunk = true;
+  let currentChunk = 1;
+  const perChunk = 500; // Maximum supported by AniList API
+  let totalEntriesProcessed = 0;
+
+  console.log(
+    `Fetching complete user manga list for user ID ${userId} using chunked approach`,
+  );
+
+  try {
+    // Keep fetching chunks until we've got everything
+    while (hasNextChunk && !abortSignal?.aborted) {
+      console.log(
+        `Fetching chunk ${currentChunk} (${perChunk} entries per chunk)...`,
+      );
+
+      const response = await request<any>(
+        GET_USER_MANGA_LIST,
+        { userId, chunk: currentChunk, perChunk },
+        token,
+        abortSignal,
+      );
+
+      // Extract media list collection, handling potential nested structure
+      let mediaListCollection;
+
+      if (response?.data?.MediaListCollection) {
+        mediaListCollection = response.data.MediaListCollection;
+      } else if (response?.data?.data?.MediaListCollection) {
+        mediaListCollection = response.data.data.MediaListCollection;
+      }
+
+      if (!mediaListCollection?.lists) {
+        console.error(
+          `Invalid media list response for chunk ${currentChunk}:`,
+          response,
+        );
+        break; // Stop trying if we get an invalid response
+      }
+
+      const chunkEntryCount = processMediaListCollectionChunk(
+        mediaListCollection,
+        mediaMap,
+      );
+      totalEntriesProcessed += chunkEntryCount;
+
+      console.log(
+        `Processed ${chunkEntryCount} entries from chunk ${currentChunk}`,
+      );
+
+      // Check if we need to fetch more chunks
+      // If this chunk has fewer entries than the perChunk limit, we've reached the end
+      if (chunkEntryCount < perChunk) {
+        hasNextChunk = false;
+        console.log("Reached the end of user's manga list");
+      } else {
+        currentChunk++;
+      }
+    }
+
+    console.log(
+      `📚 Successfully mapped ${Object.keys(mediaMap).length} manga entries (processed ${totalEntriesProcessed} total entries)`,
+    );
+    return mediaMap;
+  } catch (error) {
+    console.error(`Error fetching manga list in chunks:`, error);
+
+    // If we got any entries, return what we have
+    if (Object.keys(mediaMap).length > 0) {
+      console.log(
+        `Returning partial manga list with ${Object.keys(mediaMap).length} entries`,
+      );
+      return mediaMap;
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Process a single chunk of MediaListCollection and add to the map
+ * Returns the number of entries processed
+ */
+function processMediaListCollectionChunk(
+  mediaListCollection: {
+    lists: Array<{
+      name: string;
+      entries: Array<{
+        id: number;
+        mediaId: number;
+        status: string;
+        progress: number;
+        score: number;
+        private: boolean;
+        media: AniListManga;
+      }>;
+    }>;
+  },
+  mediaMap: UserMediaList,
+): number {
+  let entriesProcessed = 0;
+
+  console.log(
+    `Retrieved ${mediaListCollection.lists.length} lists in this chunk`,
+  );
+
+  mediaListCollection.lists.forEach((list) => {
+    if (!list.entries) {
+      console.warn(`List "${list.name}" has no entries`);
+      return;
+    }
+
+    console.log(
+      `Processing list "${list.name}" with ${list.entries.length} entries`,
+    );
+    entriesProcessed += list.entries.length;
+
+    list.entries.forEach((entry) => {
+      if (!entry.media || !entry.mediaId) {
+        console.warn("Found entry without media data:", entry);
+        return;
+      }
+
+      // Store the entry by its mediaId, potentially overwriting duplicates
+      // This is fine since we want the latest data for each unique manga
+      mediaMap[entry.mediaId] = {
+        id: entry.id,
+        mediaId: entry.mediaId,
+        status: entry.status,
+        progress: entry.progress,
+        score: entry.score,
+        title: entry.media.title,
+      };
+    });
+  });
+
+  return entriesProcessed;
 }

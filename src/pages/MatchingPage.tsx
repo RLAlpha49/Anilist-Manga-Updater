@@ -522,7 +522,7 @@ export function MatchingPage() {
    */
   const getSyncPath = () => {
     // When we have a sync route, return that instead
-    return "/";
+    return "/sync";
   };
 
   /**
@@ -541,7 +541,6 @@ export function MatchingPage() {
       return;
     }
 
-    // Navigate to sync page with the match results
     navigate({ to: getSyncPath() });
   };
 

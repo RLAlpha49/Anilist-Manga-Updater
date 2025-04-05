@@ -17,6 +17,7 @@ import {
   Download,
   ClipboardCheck,
   Settings as SettingsIcon,
+  ArrowUpDown as SyncIcon,
 } from "lucide-react";
 import {
   minimizeWindow,
@@ -106,6 +107,23 @@ export function Header() {
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="md:hidden">
                           Review
+                        </TooltipContent>
+                      </Tooltip>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link to="/sync">
+                            <NavigationMenuLink
+                              className={navigationMenuTriggerStyle()}
+                            >
+                              <SyncIcon className="h-4 w-4 flex-shrink-0" />
+                              <span className="ml-2 max-md:hidden">Sync</span>
+                            </NavigationMenuLink>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="md:hidden">
+                          Sync
                         </TooltipContent>
                       </Tooltip>
                     </NavigationMenuItem>

@@ -4,6 +4,7 @@ import { HomePage } from "../pages/HomePage";
 import { ImportPage } from "../pages/ImportPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { MatchingPage } from "../pages/MatchingPage";
+import { SyncPage } from "../pages/SyncPage";
 
 // TODO: Steps to add a new route:
 // 1. Create a new page component in the '../pages/' directory (e.g., NewPage.tsx)
@@ -42,6 +43,12 @@ export const ReviewRoute = createRoute({
   component: MatchingPage,
 });
 
+export const SyncRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/sync",
+  component: SyncPage,
+});
+
 export const SettingsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/settings",
@@ -52,5 +59,6 @@ export const rootTree = RootRoute.addChildren([
   HomeRoute,
   ImportRoute,
   ReviewRoute,
+  SyncRoute,
   SettingsRoute,
 ]);

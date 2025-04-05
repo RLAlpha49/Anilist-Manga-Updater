@@ -118,3 +118,24 @@ export interface MangaMatchResult {
   status: MatchStatus;
   matchDate?: Date;
 }
+
+/**
+ * A simplified representation of a user's AniList media entry
+ */
+export interface UserMediaEntry {
+  id: number;
+  mediaId: number;
+  status: string;
+  progress: number;
+  score: number;
+  title: {
+    romaji: string;
+    english: string | null;
+    native: string | null;
+  };
+}
+
+/**
+ * A map of mediaId to media entries for quick lookup
+ */
+export type UserMediaList = Record<number, UserMediaEntry>;
