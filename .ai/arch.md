@@ -8,17 +8,27 @@ The Kenmei to AniList Sync application is an Electron-based desktop application 
 
 ## Technology Table
 
-| Technology       | Description                                                  |
-| ---------------- | ------------------------------------------------------------ |
-| Electron         | Cross-platform desktop application framework                 |
-| TypeScript       | Strongly-typed JavaScript for improved developer experience  |
-| React            | Component-based UI library for building interfaces           |
-| TailwindCSS      | Utility-first CSS framework for styling                      |
-| GraphQL          | Query language for APIs, used for AniList integration        |
-| Electron Store   | Persistence library for storing user settings and cache data |
-| Webpack          | Module bundler for application packaging                     |
-| Fuse.js          | Fuzzy search library for title matching                      |
-| Electron Builder | Packaging and distribution tool                              |
+| Technology        | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| Electron          | Cross-platform desktop application framework                 |
+| TypeScript        | Strongly-typed JavaScript for improved developer experience  |
+| React             | Component-based UI library for building interfaces           |
+| TailwindCSS       | Utility-first CSS framework for styling                      |
+| GraphQL           | Query language for APIs, used for AniList integration        |
+| Electron Store    | Persistence library for storing user settings and cache data |
+| Vite              | Fast development server and bundler                          |
+| TanStack Router   | Type-safe routing library for React                          |
+| TanStack Query    | Data fetching and caching library                            |
+| Radix UI          | Unstyled, accessible component library                       |
+| Sonner            | Toast notification library                                   |
+| String Similarity | Library for fuzzy string matching                            |
+| Vitest            | Testing framework                                            |
+| Playwright        | End-to-end testing framework                                 |
+| Framer Motion     | Animation library for React                                  |
+| Zod               | TypeScript-first schema validation library                   |
+| Webpack           | Module bundler for application packaging                     |
+| Fuse.js           | Fuzzy search library for title matching                      |
+| Electron Builder  | Packaging and distribution tool                              |
 
 ## Architectural Diagrams
 
@@ -233,54 +243,36 @@ mutation (
 ```
 ├── package.json            # Project configuration
 ├── tsconfig.json           # TypeScript configuration
-├── webpack.config.js       # Webpack configuration
+├── vite.*.config.ts        # Vite configuration files
 ├── src/
-│   ├── main/               # Electron main process
-│   │   ├── index.ts        # Main entry point
-│   │   ├── preload.ts      # Preload script
-│   │   └── ipc/            # IPC handlers
-│   │       ├── api.ts      # API related handlers
-│   │       ├── file.ts     # File system handlers
-│   │       └── auth.ts     # Authentication handlers
-│   ├── renderer/           # Electron renderer process
-│   │   ├── index.tsx       # Renderer entry point
-│   │   ├── App.tsx         # Main React component
-│   │   ├── components/     # React components
-│   │   │   ├── Navigation.tsx
-│   │   │   ├── ImportForm.tsx
-│   │   │   ├── MangaList.tsx
-│   │   │   ├── MangaItem.tsx
-│   │   │   ├── ReviewChanges.tsx
-│   │   │   └── Settings.tsx
-│   │   ├── pages/          # Application pages
-│   │   │   ├── Home.tsx
-│   │   │   ├── Import.tsx
-│   │   │   ├── Review.tsx
-│   │   │   ├── Results.tsx
-│   │   │   └── Settings.tsx
-│   │   ├── styles/         # CSS/TailwindCSS styles
-│   │   └── utils/          # Utility functions
-│   │       ├── validation.ts
-│   │       └── formatters.ts
-│   ├── shared/             # Shared code between processes
-│   │   ├── types/          # TypeScript types
-│   │   │   ├── kenmei.ts
-│   │   │   ├── anilist.ts
-│   │   │   └── app.ts
-│   │   └── constants.ts    # Shared constants
-│   └── api/                # API related code
-│       ├── anilist/        # AniList API integration
-│       │   ├── client.ts   # API client
-│       │   ├── queries.ts  # GraphQL queries
-│       │   ├── mutations.ts # GraphQL mutations
-│       │   └── types.ts    # AniList specific types
-│       └── kenmei/         # Kenmei data processing
-│           ├── parser.ts   # Export file parser
-│           ├── matcher.ts  # Title matching logic
-│           └── types.ts    # Kenmei specific types
-└── resources/             # Application resources
-    ├── cache/             # Cache directory
-    └── icons/             # Application icons
+│   ├── main.ts             # Electron main process entry
+│   ├── preload.ts          # Preload script
+│   ├── renderer.ts         # Renderer entry point
+│   ├── App.tsx             # Main React component
+│   ├── types.d.ts          # Global type definitions
+│   ├── api/                # API related code
+│   │   ├── anilist/        # AniList API integration
+│   │   └── kenmei/         # Kenmei data processing
+│   ├── components/         # React components
+│   │   ├── ui/             # UI components (based on Radix)
+│   │   ├── layout/         # Layout components
+│   │   ├── import/         # Import-related components
+│   │   └── matching/       # Matching-related components
+│   ├── contexts/           # React context providers
+│   ├── helpers/            # Helper functions
+│   │   └── ipc/            # IPC related helpers
+│   ├── hooks/              # Custom React hooks
+│   ├── layouts/            # Page layouts
+│   ├── pages/              # Application pages
+│   ├── routes/             # Router configuration
+│   ├── services/           # Service layer
+│   ├── styles/             # Global styles
+│   ├── tests/              # Test files
+│   ├── types/              # TypeScript type definitions
+│   └── utils/              # Utility functions
+├── public/                 # Static assets
+└── resources/              # Application resources
+    └── icons/              # Application icons
 ```
 
 ## Infrastructure
@@ -308,6 +300,7 @@ The application will be packaged and distributed as an installable application f
 
 ## Change Log
 
-| Change        | Description                   |
-| ------------- | ----------------------------- |
-| Initial draft | Initial architecture document |
+| Change        | Description                                                                      |
+| ------------- | -------------------------------------------------------------------------------- |
+| Initial draft | Initial architecture document                                                    |
+| 2024-04-04    | Updated technology stack and project structure to reflect current implementation |

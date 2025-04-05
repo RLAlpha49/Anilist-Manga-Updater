@@ -102,10 +102,10 @@ Potential future improvements like additional tracking services, backup function
   - Implement Token Management
   - Create Auth Context Provider
 
-## Epic 4: Story List
+## Epic 3: Story List
 
 - Story 4: Data Processing and Synchronization
-  Status: Planned
+  Status: In Progress
   Requirements:
 
   - Implement Kenmei manga data processing pipeline
@@ -114,18 +114,56 @@ Potential future improvements like additional tracking services, backup function
   - Create batch update mechanism
   - Implement progress tracking and error handling
 
+- Story 5: UI Enhancement
+  Status: In Progress
+  Requirements:
+
+  - Implement Radix UI components
+  - Add dark/light theme support
+  - Improve application layout and navigation
+  - Add responsive design elements
+  - Implement accessibility features
+
+- Story 6: Testing Framework
+  Status: In Progress
+  Requirements:
+
+  - Set up Vitest for unit testing
+  - Configure Playwright for end-to-end testing
+  - Write tests for critical application paths
+  - Implement CI pipeline for automated testing
+
+## Epic 4: Story List
+
+- Story 7: Deployment and Distribution
+  Status: Planned
+  Requirements:
+
+  - Configure application packaging
+  - Set up auto-updates
+  - Create installation packages for Windows, macOS, and Linux
+  - Implement error tracking and reporting
+
 ## Technology Stack
 
-| Technology     | Description                                                      |
-| -------------- | ---------------------------------------------------------------- |
-| Electron       | Framework for creating native applications with web technologies |
-| TypeScript     | Primary programming language                                     |
-| React          | Frontend library for UI components                               |
-| TailwindCSS    | Utility-first CSS framework for styling                          |
-| GraphQL        | For interacting with AniList API                                 |
-| Electron Store | For persisting user settings locally                             |
-| Webpack        | For bundling the application                                     |
-| Fuse.js        | For fuzzy matching manga titles                                  |
+| Technology        | Description                                                      |
+| ----------------- | ---------------------------------------------------------------- |
+| Electron          | Framework for creating native applications with web technologies |
+| TypeScript        | Primary programming language                                     |
+| React             | Frontend library for UI components                               |
+| TailwindCSS       | Utility-first CSS framework for styling                          |
+| GraphQL           | For interacting with AniList API                                 |
+| Electron Store    | For persisting user settings locally                             |
+| Vite              | Fast development server and bundler                              |
+| TanStack Router   | Type-safe routing library for React                              |
+| TanStack Query    | Data fetching and caching library                                |
+| Radix UI          | Unstyled, accessible component library                           |
+| Sonner            | Toast notification library                                       |
+| String Similarity | Library for fuzzy string matching                                |
+| Vitest            | Testing framework                                                |
+| Playwright        | End-to-end testing framework                                     |
+| Framer Motion     | Animation library for React                                      |
+| Zod               | TypeScript-first schema validation library                       |
 
 ## Reference
 
@@ -249,7 +287,8 @@ src/
 
 ## Change Log
 
-| Change        | Story ID | Description                                       |
-| ------------- | -------- | ------------------------------------------------- |
-| Initial draft | N/A      | Initial draft PRD                                 |
-| Update        | Story-3  | Marked Stories 1-3 as completed and added Story 4 |
+| Change        | Story ID    | Description                                       | Date       |
+| ------------- | ----------- | ------------------------------------------------- | ---------- |
+| Initial draft | N/A         | Initial draft PRD                                 |            |
+| Update        | Story-3     | Marked Stories 1-3 as completed and added Story 4 |            |
+| Update        | Story-5,6,7 | Added new stories and updated technology stack    | 2024-04-04 |
