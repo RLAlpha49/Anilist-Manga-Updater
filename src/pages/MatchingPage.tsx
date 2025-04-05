@@ -123,10 +123,14 @@ export function MatchingPage() {
 
   // Initial data loading
   useEffect(() => {
-    // Add a guard to prevent multiple initializations during an active process
-    if (hasInitialized.current && window.matchingProcessState?.isRunning) {
+    // Strong initialization guard to prevent multiple runs
+    if (hasInitialized.current) {
+      console.log("Already initialized, skipping initialization");
       return;
     }
+
+    // Mark as initialized immediately to prevent any possibility of re-runs
+    hasInitialized.current = true;
 
     console.log("*** INITIALIZATION START ***");
     console.log("Initial states:", {
@@ -158,7 +162,6 @@ export function MatchingPage() {
       // Mark as initialized to prevent auto-starting
       matchingProcess.matchingInitialized.current = true;
       matchingProcess.setIsInitializing(false);
-      hasInitialized.current = true;
       return;
     }
 
@@ -168,7 +171,6 @@ export function MatchingPage() {
         "Matching already initialized, skipping duplicate initialization",
       );
       matchingProcess.setIsInitializing(false);
-      hasInitialized.current = true;
       return;
     }
 
@@ -281,7 +283,6 @@ export function MatchingPage() {
         // Set the saved results directly
         setMatchResults(savedResults as MangaMatchResult[]);
         console.log("*** INITIALIZATION COMPLETE - Using saved results ***");
-        hasInitialized.current = true;
         return; // Skip further initialization
       } else {
         console.log("No saved match results found");
@@ -293,7 +294,6 @@ export function MatchingPage() {
       ) {
         console.log("Starting initial matching process with imported manga");
         matchingProcess.matchingInitialized.current = true;
-        hasInitialized.current = true;
 
         // Start matching process automatically
         matchingProcess.startMatching(
@@ -302,19 +302,10 @@ export function MatchingPage() {
           setMatchResults,
         );
       } else if (!importedManga.length) {
-        // Redirect back to import page if no data
         console.log("No imported manga found, redirecting to import page");
         matchingProcess.setError(
           "No manga data found. Please import your data first.",
         );
-        hasInitialized.current = true;
-
-        // Delay redirect slightly to show the error
-        setTimeout(() => {
-          // Clear any pending manga data before redirecting
-          pendingMangaState.savePendingManga([]);
-          navigate({ to: "/import" });
-        }, 2000);
       }
 
       // Make sure we mark initialization as complete
@@ -325,13 +316,8 @@ export function MatchingPage() {
     // Cleanup function to ensure initialization state is reset
     return () => {
       matchingProcess.setIsInitializing(false);
-
-      // Don't reset hasInitialized if there's an active matching process
-      if (!window.matchingProcessState?.isRunning) {
-        hasInitialized.current = false;
-      }
     };
-  }, [navigate, matchingProcess, pendingMangaState, matchResults]);
+  }, [navigate, matchingProcess, pendingMangaState]); // Remove matchResults from dependencies
 
   // Add an effect to sync with the global process state while the page is mounted
   useEffect(() => {

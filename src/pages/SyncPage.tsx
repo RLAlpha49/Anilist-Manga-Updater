@@ -118,10 +118,8 @@ export function SyncPage() {
       setMangaMatches(savedResults as MangaMatchResult[]);
     } else {
       console.error("No match results found in storage");
-      // Navigate back to matching page if no data
-      navigate({ to: "/review" });
     }
-  }, [navigate]);
+  }, []);
 
   // Fetch the user's AniList library for comparison
   useEffect(() => {
