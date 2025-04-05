@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { MatchingProgress, TimeEstimate } from "../../types/matching";
 import { formatTimeRemaining } from "../../utils/timeUtils";
 import {
@@ -18,11 +18,12 @@ interface MatchingProgressProps {
   isCancelling: boolean;
   progress: MatchingProgress;
   statusMessage: string;
-  detailMessage: string | null;
+  detailMessage: ReactNode;
   timeEstimate: TimeEstimate;
   onCancelProcess: () => void;
   bypassCache?: boolean;
   freshSearch?: boolean;
+  disableControls?: boolean;
 }
 
 export const MatchingProgressPanel: React.FC<MatchingProgressProps> = ({
@@ -34,6 +35,7 @@ export const MatchingProgressPanel: React.FC<MatchingProgressProps> = ({
   onCancelProcess,
   bypassCache,
   freshSearch,
+  disableControls = false,
 }) => {
   const progressPercent = progress.total
     ? Math.min(100, Math.round((progress.current / progress.total) * 100))
@@ -119,7 +121,7 @@ export const MatchingProgressPanel: React.FC<MatchingProgressProps> = ({
           variant={isCancelling ? "outline" : "destructive"}
           size="lg"
           onClick={onCancelProcess}
-          disabled={isCancelling}
+          disabled={isCancelling || disableControls}
           className="w-full max-w-xs transition-all duration-200"
         >
           {isCancelling ? "Cancelling..." : "Cancel Process"}

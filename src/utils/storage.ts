@@ -195,10 +195,28 @@ export const STORAGE_KEYS = {
   MATCH_RESULTS: "match_results",
   PENDING_MANGA: "pending_manga",
   CACHE_VERSION: "cache_version",
+  SYNC_CONFIG: "sync_config",
 };
 
 // Current cache version - increment this when incompatible changes are made to the data structure
 export const CURRENT_CACHE_VERSION = 1;
+
+// Default sync configuration
+export interface SyncConfig {
+  prioritizeAniListStatus: boolean;
+  preserveCompletedStatus: boolean;
+  prioritizeAniListProgress: boolean;
+  prioritizeAniListScore: boolean;
+  incrementalSync: boolean;
+}
+
+export const DEFAULT_SYNC_CONFIG: SyncConfig = {
+  prioritizeAniListStatus: false,
+  preserveCompletedStatus: true,
+  prioritizeAniListProgress: true,
+  prioritizeAniListScore: false,
+  incrementalSync: true,
+};
 
 /**
  * Save Kenmei manga data to storage
@@ -430,5 +448,31 @@ export function mergeMatchResults(newResults: MatchResult[]): MatchResult[] {
   } catch (error) {
     console.error("Error merging match results", error);
     return newResults; // Fall back to new results on error
+  }
+}
+
+/**
+ * Save sync configuration to storage
+ * @param config The sync configuration to save
+ */
+export function saveSyncConfig(config: SyncConfig): void {
+  try {
+    storage.setItem(STORAGE_KEYS.SYNC_CONFIG, JSON.stringify(config));
+  } catch (error) {
+    console.error("Error saving sync config to storage", error);
+  }
+}
+
+/**
+ * Get sync configuration from storage
+ * @returns The saved sync configuration or default config if not found
+ */
+export function getSyncConfig(): SyncConfig {
+  try {
+    const config = storage.getItem(STORAGE_KEYS.SYNC_CONFIG);
+    return config ? JSON.parse(config) : DEFAULT_SYNC_CONFIG;
+  } catch (error) {
+    console.error("Error retrieving sync config from storage", error);
+    return DEFAULT_SYNC_CONFIG;
   }
 }

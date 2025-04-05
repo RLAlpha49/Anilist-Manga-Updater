@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
 import { useSynchronization } from "../hooks/useSynchronization";
+import { useRateLimit } from "../contexts/RateLimitContext";
 import {
   AniListMediaEntry,
   UserMediaList,
@@ -9,10 +10,15 @@ import {
 } from "../api/anilist/types";
 import { MangaMatchResult } from "../api/anilist/types";
 import { STATUS_MAPPING } from "../api/kenmei/types";
-import { getSavedMatchResults } from "../utils/storage";
+import {
+  getSavedMatchResults,
+  getSyncConfig,
+  saveSyncConfig,
+  SyncConfig,
+} from "../utils/storage";
 import { getUserMangaList } from "../api/anilist/client";
-import SyncManager from "../components/SyncManager";
-import SyncResultsView from "../components/SyncResultsView";
+import SyncManager from "../components/sync/SyncManager";
+import SyncResultsView from "../components/sync/SyncResultsView";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -56,21 +62,24 @@ export function SyncPage() {
   const [viewMode, setViewMode] = useState<"preview" | "sync" | "results">(
     "preview",
   );
+  const { rateLimitState, setRateLimit } = useRateLimit();
 
   // Sync configuration options
-  const [syncConfig, setSyncConfig] = useState({
-    prioritizeAniListStatus: false,
-    preserveCompletedStatus: true,
-    prioritizeAniListProgress: true,
-    prioritizeAniListScore: false,
-  });
+  const [syncConfig, setSyncConfig] = useState<SyncConfig>(getSyncConfig());
 
   // Toggle handler for sync options
-  const handleToggleOption = (option: keyof typeof syncConfig) => {
-    setSyncConfig((prev) => ({
-      ...prev,
-      [option]: !prev[option],
-    }));
+  const handleToggleOption = (option: keyof SyncConfig) => {
+    setSyncConfig((prev) => {
+      const newConfig = {
+        ...prev,
+        [option]: !prev[option],
+      };
+
+      // Save the updated config to storage
+      saveSyncConfig(newConfig);
+
+      return newConfig;
+    });
   };
 
   // View mode for displaying manga entries
@@ -79,14 +88,15 @@ export function SyncPage() {
   // State to hold manga matches
   const [mangaMatches, setMangaMatches] = useState<MangaMatchResult[]>([]);
 
-  // Lazy loading implementation
+  // Pagination and loading state
   const [visibleItems, setVisibleItems] = useState(20);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-
   // State to hold user's AniList library
   const [userLibrary, setUserLibrary] = useState<UserMediaList>({});
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [libraryError, setLibraryError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   // Sorting and filtering options
   const [sortOption, setSortOption] = useState<{
@@ -121,31 +131,107 @@ export function SyncPage() {
 
       const controller = new AbortController();
 
-      getUserMangaList(token, controller.signal)
-        .then((library) => {
-          console.log(
-            `Loaded ${Object.keys(library).length} entries from user's AniList library`,
-          );
-          setUserLibrary(library);
-          setLibraryLoading(false);
-        })
-        .catch((error) => {
-          if (error.name !== "AbortError") {
+      const fetchLibrary = (attempt = 0) => {
+        console.log(
+          `Fetching AniList library (attempt ${attempt + 1}/${maxRetries + 1})`,
+        );
+        setRetryCount(attempt);
+
+        getUserMangaList(token, controller.signal)
+          .then((library) => {
+            console.log(
+              `Loaded ${Object.keys(library).length} entries from user's AniList library`,
+            );
+            setUserLibrary(library);
+            setLibraryLoading(false);
+            setLibraryError(null);
+            setRetryCount(0);
+          })
+          .catch((error) => {
+            if (error.name === "AbortError") return;
+
             console.error("Failed to load user library:", error);
-            // Set user-friendly error message
+            console.log(
+              "Error object structure:",
+              JSON.stringify(error, null, 2),
+            );
+
+            // Check for rate limiting - with our new client updates, this should be more reliable
+            if (error.isRateLimited || error.status === 429) {
+              console.warn("📛 DETECTED RATE LIMIT in SyncPage:", {
+                isRateLimited: error.isRateLimited,
+                status: error.status,
+                retryAfter: error.retryAfter,
+              });
+
+              const retryDelay = error.retryAfter ? error.retryAfter : 60;
+
+              // Update the global rate limit state
+              setRateLimit(
+                true,
+                retryDelay,
+                "AniList API rate limit reached. Waiting to retry...",
+              );
+
+              // Set library loading state
+              setLibraryLoading(false);
+              setLibraryError(
+                "AniList API rate limit reached. Waiting to retry...",
+              );
+
+              // Set a timer to retry after the delay
+              const timer = setTimeout(() => {
+                if (!controller.signal.aborted) {
+                  console.log("Rate limit timeout complete, retrying...");
+                  setLibraryLoading(true);
+                  setLibraryError(null);
+                  fetchLibrary(0); // Reset retry count for rate limits
+                }
+              }, retryDelay * 1000);
+
+              return () => clearTimeout(timer);
+            }
+
+            // Check for server error (5xx) or network error
+            const isServerError =
+              error.message?.includes("500") ||
+              error.message?.includes("502") ||
+              error.message?.includes("503") ||
+              error.message?.includes("504") ||
+              error.message?.toLowerCase().includes("network error");
+
+            if (isServerError && attempt < maxRetries) {
+              // Exponential backoff for retries (1s, 2s, 4s)
+              const backoffDelay = Math.pow(2, attempt) * 1000;
+              setLibraryError(
+                `AniList server error. Retrying in ${backoffDelay / 1000} seconds (${attempt + 1}/${maxRetries})...`,
+              );
+
+              // Set a timer to retry
+              const timer = setTimeout(() => {
+                if (!controller.signal.aborted) {
+                  fetchLibrary(attempt + 1);
+                }
+              }, backoffDelay);
+
+              return () => clearTimeout(timer);
+            }
+
+            // If we get here, either it's not a server error or we've exceeded retry attempts
             setLibraryError(
               error.message ||
                 "Failed to load your AniList library. Synchronization can still proceed, but comparison data will not be shown.",
             );
-            // Still allow sync to proceed with empty library data
             setUserLibrary({});
             setLibraryLoading(false);
-          }
-        });
+          });
+      };
+
+      fetchLibrary(0);
 
       return () => controller.abort();
     }
-  }, [token, mangaMatches]);
+  }, [token, mangaMatches, maxRetries, setRateLimit]);
 
   // Effect for lazy loading intersection observer
   useEffect(() => {
@@ -360,7 +446,37 @@ export function SyncPage() {
           return null; // Skip this entry completely
         }
 
-        // Create AniList entry
+        // For existing entries, check if there are actual changes to be made
+        if (userEntry) {
+          // Calculate if any values will change based on sync configuration
+          const statusWillChange = syncConfig.prioritizeAniListStatus
+            ? false
+            : STATUS_MAPPING[kenmei.status] !== userEntry.status;
+
+          const progressWillChange = syncConfig.prioritizeAniListProgress
+            ? userEntry.progress && userEntry.progress > 0
+              ? (kenmei.chapters_read || 0) > userEntry.progress
+              : (kenmei.chapters_read || 0) > 0
+            : (kenmei.chapters_read || 0) !== (userEntry.progress || 0);
+
+          const anilistScore = Number(userEntry.score || 0);
+          const kenmeiScore = Number(kenmei.score || 0);
+          const scoreWillChange =
+            syncConfig.prioritizeAniListScore &&
+            userEntry.score &&
+            Number(userEntry.score) > 0
+              ? false
+              : kenmei.score > 0 &&
+                (anilistScore === 0 ||
+                  Math.abs(kenmeiScore - anilistScore) >= 0.5);
+
+          // Skip entries with no changes
+          if (!statusWillChange && !progressWillChange && !scoreWillChange) {
+            return null; // No changes needed
+          }
+        }
+
+        // Otherwise create the AniList entry normally
         const entry: AniListMediaEntry = {
           mediaId: anilist.id,
           status:
@@ -377,6 +493,16 @@ export function SyncPage() {
               : kenmei.chapters_read || 0,
           private: false,
           score: kenmei.score || 0, // Default value before applying rules
+          // Add metadata for the SyncManager to access previous values
+          previousValues: userEntry
+            ? {
+                status: userEntry.status,
+                progress: userEntry.progress || 0,
+                score: userEntry.score || 0,
+              }
+            : null,
+          title: anilist.title.romaji || kenmei.title,
+          coverImage: anilist.coverImage?.large || anilist.coverImage?.medium,
         };
 
         // Apply score prioritization rules
@@ -400,14 +526,13 @@ export function SyncPage() {
       .filter((entry) => entry !== null) as AniListMediaEntry[]; // Filter out null entries
   }, [sortedMangaMatches, userLibrary, syncConfig]);
 
-  // Start the sync process
+  // Modify handleStartSync to only change the view, not start synchronization
   const handleStartSync = () => {
     if (entriesToSync.length === 0) {
       return;
     }
 
     setViewMode("sync");
-    actions.startSync(entriesToSync, token || "");
   };
 
   // Handle sync completion
@@ -419,6 +544,8 @@ export function SyncPage() {
   const handleCancel = () => {
     if (viewMode === "sync") {
       actions.cancelSync();
+      setViewMode("preview");
+      return;
     }
 
     // Navigate back to the matching page
@@ -453,6 +580,37 @@ export function SyncPage() {
             <p className="mt-2 text-sm text-slate-500">
               Please wait while we load your matched manga data...
             </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If library is loading, show loading state
+  if (libraryLoading) {
+    return (
+      <div className="container py-6">
+        <Card className="mx-auto w-full max-w-md text-center">
+          <CardContent className="pt-6">
+            <div
+              className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent text-blue-600"
+              role="status"
+              aria-label="loading"
+            >
+              <span className="sr-only">Loading...</span>
+            </div>
+            <h3 className="text-lg font-medium">
+              {rateLimitState.isRateLimited
+                ? "Synchronization Paused"
+                : "Loading Your AniList Library"}
+            </h3>
+            {!rateLimitState.isRateLimited && (
+              <p className="mt-2 text-sm text-slate-500">
+                {retryCount > 0
+                  ? `Server error encountered. Retrying (${retryCount}/${maxRetries})...`
+                  : "Please wait while we fetch your AniList library data for comparison..."}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -612,42 +770,83 @@ export function SyncPage() {
                   {libraryError && (
                     <div className="mt-2 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
                       <AlertCircle className="h-3 w-3" />
-                      {libraryError}
-                      <Button
-                        variant="link"
-                        className="h-auto px-0 py-0 text-xs"
-                        onClick={() => {
-                          setLibraryLoading(true);
-                          setLibraryError(null);
+                      {!rateLimitState.isRateLimited && (
+                        <span>{libraryError}</span>
+                      )}
 
-                          const controller = new AbortController();
+                      {/* Only show Try Again button when not rate limited */}
+                      {!rateLimitState.isRateLimited && (
+                        <Button
+                          variant="link"
+                          className="h-auto px-0 py-0 text-xs"
+                          onClick={() => {
+                            setLibraryLoading(true);
+                            setLibraryError(null);
+                            setRetryCount(0);
+                            setRateLimit(false, undefined, undefined);
 
-                          getUserMangaList(token, controller.signal)
-                            .then((library) => {
-                              console.log(
-                                `Loaded ${Object.keys(library).length} entries from user's AniList library`,
-                              );
-                              setUserLibrary(library);
-                              setLibraryLoading(false);
-                            })
-                            .catch((error) => {
-                              if (error.name !== "AbortError") {
-                                console.error(
-                                  "Failed to load user library again:",
-                                  error,
+                            const controller = new AbortController();
+
+                            getUserMangaList(token, controller.signal)
+                              .then((library) => {
+                                console.log(
+                                  `Loaded ${Object.keys(library).length} entries from user's AniList library`,
                                 );
-                                setLibraryError(
-                                  error.message ||
-                                    "Failed to load your AniList library. Synchronization can still proceed without comparison data.",
-                                );
-                                setUserLibrary({});
+                                setUserLibrary(library);
                                 setLibraryLoading(false);
-                              }
-                            });
-                        }}
-                      >
-                        Try Again
-                      </Button>
+                              })
+                              .catch((error) => {
+                                if (error.name !== "AbortError") {
+                                  console.error(
+                                    "Failed to load user library again:",
+                                    error,
+                                  );
+
+                                  // Check for rate limiting - with our new client updates, this should be more reliable
+                                  if (
+                                    error.isRateLimited ||
+                                    error.status === 429
+                                  ) {
+                                    console.warn(
+                                      "📛 DETECTED RATE LIMIT in SyncPage:",
+                                      {
+                                        isRateLimited: error.isRateLimited,
+                                        status: error.status,
+                                        retryAfter: error.retryAfter,
+                                      },
+                                    );
+
+                                    const retryDelay = error.retryAfter
+                                      ? error.retryAfter
+                                      : 60;
+                                    const retryTimestamp =
+                                      Date.now() + retryDelay;
+
+                                    console.log(
+                                      `Setting rate limited state with retry after: ${retryTimestamp} (in ${retryDelay / 1000}s)`,
+                                    );
+
+                                    setRateLimit(
+                                      true,
+                                      retryDelay,
+                                      "AniList API rate limit reached. Waiting to retry...",
+                                    );
+                                  } else {
+                                    setLibraryError(
+                                      error.message ||
+                                        "Failed to load your AniList library. Synchronization can still proceed without comparison data.",
+                                    );
+                                  }
+
+                                  setUserLibrary({});
+                                  setLibraryLoading(false);
+                                }
+                              });
+                          }}
+                        >
+                          Try Again
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -655,15 +854,106 @@ export function SyncPage() {
                     !libraryError &&
                     userLibrary &&
                     Object.keys(userLibrary).length > 0 && (
-                      <div className="mt-2 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
-                        <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
-                        <span>
-                          Found{" "}
-                          <span className="font-semibold">
-                            {Object.keys(userLibrary).length}
-                          </span>{" "}
-                          unique entries in your AniList library for comparison
-                        </span>
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+                          <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
+                          <span>
+                            Found{" "}
+                            <span className="font-semibold">
+                              {Object.keys(userLibrary).length}
+                            </span>{" "}
+                            unique entries in your AniList library for
+                            comparison
+                          </span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            setLibraryLoading(true);
+                            setLibraryError(null);
+                            setRetryCount(0);
+                            setRateLimit(false, undefined, undefined);
+
+                            const controller = new AbortController();
+
+                            getUserMangaList(token, controller.signal)
+                              .then((library) => {
+                                console.log(
+                                  `Loaded ${Object.keys(library).length} entries from user's AniList library`,
+                                );
+                                setUserLibrary(library);
+                                setLibraryLoading(false);
+                              })
+                              .catch((error) => {
+                                if (error.name !== "AbortError") {
+                                  console.error(
+                                    "Failed to load user library again:",
+                                    error,
+                                  );
+
+                                  // Check for rate limiting - with our new client updates, this should be more reliable
+                                  if (
+                                    error.isRateLimited ||
+                                    error.status === 429
+                                  ) {
+                                    console.warn(
+                                      "📛 DETECTED RATE LIMIT in SyncPage:",
+                                      {
+                                        isRateLimited: error.isRateLimited,
+                                        status: error.status,
+                                        retryAfter: error.retryAfter,
+                                      },
+                                    );
+
+                                    const retryDelay = error.retryAfter
+                                      ? error.retryAfter
+                                      : 60;
+                                    const retryTimestamp =
+                                      Date.now() + retryDelay;
+
+                                    console.log(
+                                      `Setting rate limited state with retry after: ${retryTimestamp} (in ${retryDelay / 1000}s)`,
+                                    );
+
+                                    setRateLimit(
+                                      true,
+                                      retryDelay,
+                                      "AniList API rate limit reached. Waiting to retry...",
+                                    );
+                                  } else {
+                                    setLibraryError(
+                                      error.message ||
+                                        "Failed to load your AniList library. Synchronization can still proceed without comparison data.",
+                                    );
+                                  }
+
+                                  setUserLibrary({});
+                                  setLibraryLoading(false);
+                                }
+                              });
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="mr-1"
+                          >
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                            <path d="M21 3v5h-5" />
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                            <path d="M8 16H3v5" />
+                          </svg>
+                          Refresh
+                        </Button>
                       </div>
                     )}
 
@@ -1723,7 +2013,7 @@ export function SyncPage() {
                   disabled={entriesToSync.length === 0 || libraryLoading}
                   className="relative"
                 >
-                  Start Synchronization
+                  Sync
                 </Button>
               </CardFooter>
             </Card>
@@ -1737,6 +2027,18 @@ export function SyncPage() {
             token={token || ""}
             onComplete={handleSyncComplete}
             onCancel={handleCancel}
+            autoStart={false}
+            syncState={state}
+            syncActions={{
+              ...actions,
+              startSync: (entries, token) => actions.startSync(entries, token),
+            }}
+            incrementalSync={syncConfig.incrementalSync}
+            onIncrementalSyncChange={(value) => {
+              const newConfig = { ...syncConfig, incrementalSync: value };
+              setSyncConfig(newConfig);
+              saveSyncConfig(newConfig);
+            }}
           />
         );
 

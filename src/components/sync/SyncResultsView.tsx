@@ -1,5 +1,5 @@
 import React from "react";
-import { SyncReport } from "../api/anilist/sync-service";
+import { SyncReport } from "../../api/anilist/sync-service";
 import { CheckCircle, XCircle, Clock, Save, Download } from "lucide-react";
 import {
   Card,
@@ -8,7 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/card";
+} from "../ui/card";
 import {
   Table,
   TableBody,
@@ -16,8 +16,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table";
-import { Button } from "./ui/button";
+} from "../ui/table";
+import { Button } from "../ui/button";
 
 interface SyncResultsViewProps {
   report: SyncReport;

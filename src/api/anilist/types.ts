@@ -62,6 +62,26 @@ export interface AniListMediaEntry {
   progress: number;
   private?: boolean;
   score?: number;
+  // Additional metadata for sync UI
+  previousValues?: {
+    status: string;
+    progress: number;
+    score: number;
+  } | null;
+  title?: string;
+  coverImage?: string;
+  // Metadata for incremental sync process
+  syncMetadata?: {
+    useIncrementalSync: boolean;
+    targetProgress: number;
+    progress: number;
+    step?: number;
+    updatedStatus?: boolean;
+    updatedScore?: boolean;
+    isRetry?: boolean;
+    retryTimestamp?: number;
+    retryCount?: number;
+  } | null;
 }
 
 export interface AniListUser {
@@ -73,8 +93,18 @@ export interface AniListUser {
   };
 }
 
+// GraphQL error interface
+export interface GraphQLError {
+  message: string;
+  locations?: Array<{ line: number; column: number }>;
+  path?: string[];
+  extensions?: Record<string, unknown>;
+}
+
+// Generic API response format
 export interface AniListResponse<T> {
   data: T;
+  errors?: GraphQLError[];
 }
 
 export interface PageInfo {

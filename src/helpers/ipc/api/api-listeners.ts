@@ -138,6 +138,31 @@ async function requestAniList(
       return requestAniList(query, variables, token, retryCount + 1);
     }
 
+    // Handle server errors (500, 502, 503, 504, etc.)
+    if (response.status >= 500 && response.status < 600) {
+      if (retryCount >= MAX_RETRY_ATTEMPTS) {
+        // If we've reached max retries, throw the error
+        const errorData = await response.json().catch(() => ({}));
+        throw {
+          status: response.status,
+          statusText: response.statusText,
+          errors: errorData.errors,
+          message: `Server error ${response.status} after ${MAX_RETRY_ATTEMPTS} retry attempts`,
+        };
+      }
+
+      // Use exponential backoff starting with 3 seconds
+      const waitTime = 3000 * Math.pow(2, retryCount);
+      console.log(
+        `Server error ${response.status} for "${variables?.search || "request"}", waiting ${Math.round(waitTime / 1000)}s before retry #${retryCount + 1}`,
+      );
+
+      await sleep(waitTime);
+
+      // Try again recursively with incremented retry count
+      return requestAniList(query, variables, token, retryCount + 1);
+    }
+
     if (!response.ok) {
       const errorData = await response.json();
       throw {
@@ -324,5 +349,15 @@ export function setupAniListAPI() {
     }
 
     return { success: true };
+  });
+
+  // Get rate limit status from main process
+  ipcMain.handle("anilist:getRateLimitStatus", () => {
+    const now = Date.now();
+    return {
+      isRateLimited,
+      retryAfter: isRateLimited ? rateLimitResetTime : null,
+      timeRemaining: isRateLimited ? Math.max(0, rateLimitResetTime - now) : 0,
+    };
   });
 }

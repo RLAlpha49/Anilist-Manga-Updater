@@ -68,6 +68,11 @@ declare interface Window {
         error?: string;
       }>;
       clearCache: (searchQuery?: string) => Promise<{ success: boolean }>;
+      getRateLimitStatus: () => Promise<{
+        isRateLimited: boolean;
+        retryAfter: number | null;
+        timeRemaining: number;
+      }>;
     };
     shell: {
       openExternal: (url: string) => Promise<void>;

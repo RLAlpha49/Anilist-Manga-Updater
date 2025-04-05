@@ -110,6 +110,10 @@ initializeSearchCache();
 
 /**
  * Make a request to the AniList API
+ *
+ * This function supports dynamic mutations where variable declarations may change
+ * based on the variables object passed. It also handles both browser and Electron
+ * environments.
  */
 export async function request<T>(
   query: string,
@@ -118,6 +122,9 @@ export async function request<T>(
   abortSignal?: AbortSignal,
   bypassCache?: boolean,
 ): Promise<AniListResponse<T>> {
+  // Generate a unique request ID for tracking this request in logs
+  const requestId = Math.random().toString(36).substring(2, 8);
+
   // Check if we're running in a browser or Electron environment
   const isElectron = typeof window !== "undefined" && window.electronAPI;
 
@@ -143,6 +150,18 @@ export async function request<T>(
     };
   }
 
+  // Always log requests in development and production for debugging
+  const queryFirstLine = query.trim().split("\n")[0].substring(0, 50);
+  console.log(`📡 [${requestId}] GraphQL Request: ${queryFirstLine}...`);
+  console.log(
+    `📦 [${requestId}] Variables:`,
+    JSON.stringify(variables, null, 2),
+  );
+  console.log(
+    `📜 [${requestId}] Full Query:`,
+    query.replace(/\s+/g, " ").trim(),
+  );
+
   // For Electron, use IPC to make the request through the main process
   if (isElectron) {
     try {
@@ -159,9 +178,18 @@ export async function request<T>(
         throw new DOMException("The operation was aborted", "AbortError");
       }
 
+      // Log response for debugging
+      console.log(
+        `✅ [${requestId}] Response received:`,
+        JSON.stringify(response, null, 2),
+      );
+
       return response as AniListResponse<T>;
     } catch (error) {
-      console.error("Error during AniList API request:", error);
+      console.error(
+        `❌ [${requestId}] Error during AniList API request:`,
+        error,
+      );
       throw error;
     }
   }
@@ -171,7 +199,55 @@ export async function request<T>(
       const response = await fetch("https://graphql.anilist.co", options);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { raw: errorText };
+        }
+
+        console.error(
+          `❌ [${requestId}] HTTP Error ${response.status}:`,
+          errorData,
+        );
+
+        // Check for rate limiting
+        if (response.status === 429) {
+          // Extract the retry-after header
+          const retryAfter = response.headers.get("Retry-After");
+          const retrySeconds = retryAfter ? parseInt(retryAfter, 10) : 60;
+
+          // Notify the application about rate limiting through a custom event
+          try {
+            // Dispatch global event for rate limiting that can be caught by our context
+            window.dispatchEvent(
+              new CustomEvent("anilist:rate-limited", {
+                detail: {
+                  retryAfter: retrySeconds,
+                  message: `Rate limited by AniList API. Please retry after ${retrySeconds} seconds.`,
+                },
+              }),
+            );
+          } catch (e) {
+            console.error("Failed to dispatch rate limit event:", e);
+          }
+
+          const error = {
+            status: response.status,
+            statusText: response.statusText,
+            message: `Rate limit exceeded. Please retry after ${retrySeconds} seconds.`,
+            retryAfter: retrySeconds,
+            isRateLimited: true,
+            ...errorData,
+          };
+
+          console.warn(
+            `⏳ [${requestId}] Rate limited, retry after ${retrySeconds}s`,
+          );
+          throw error;
+        }
+
         throw {
           status: response.status,
           statusText: response.statusText,
@@ -179,9 +255,25 @@ export async function request<T>(
         };
       }
 
-      return (await response.json()) as AniListResponse<T>;
+      const jsonResponse = await response.json();
+
+      // Log response for debugging
+      console.log(
+        `✅ [${requestId}] Response received:`,
+        JSON.stringify(jsonResponse, null, 2),
+      );
+
+      // Check for GraphQL errors
+      if (jsonResponse.errors) {
+        console.error(`⚠️ [${requestId}] GraphQL Errors:`, jsonResponse.errors);
+      }
+
+      return jsonResponse as AniListResponse<T>;
     } catch (error) {
-      console.error("Error during AniList API request:", error);
+      console.error(
+        `❌ [${requestId}] Error during AniList API request:`,
+        error,
+      );
       throw error;
     }
   }
@@ -625,8 +717,66 @@ export async function getUserMangaList(
 
     // Fetch all manga lists using multiple chunks if needed
     return await fetchCompleteUserMediaList(viewerId, token, abortSignal);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching user manga list:", error);
+
+    // Type guard to check if error is an object with specific properties
+    if (error && typeof error === "object") {
+      const errorObj = error as {
+        status?: number;
+        isRateLimited?: boolean;
+        retryAfter?: number;
+        message?: string;
+      };
+
+      // Check if this is a rate limit error
+      if (errorObj.status === 429 || errorObj.isRateLimited) {
+        console.warn("📛 DETECTED RATE LIMIT in getUserMangaList", {
+          status: errorObj.status,
+          isRateLimited: errorObj.isRateLimited,
+          retryAfter: errorObj.retryAfter,
+          message: errorObj.message,
+        });
+
+        // Preserve the rate limit information when rethrowing
+        throw {
+          message: errorObj.message || "Rate limit exceeded",
+          status: errorObj.status || 429,
+          isRateLimited: true,
+          retryAfter: errorObj.retryAfter || 60,
+        };
+      }
+
+      // Also check for rate limit mentions in error messages
+      if (
+        errorObj.message &&
+        (errorObj.message.toLowerCase().includes("rate limit") ||
+          errorObj.message.toLowerCase().includes("too many requests"))
+      ) {
+        // Try to extract retry time if present
+        let retrySeconds = 60;
+        const retryMatch = errorObj.message.match(/retry after (\d+)/i);
+        if (retryMatch && retryMatch[1]) {
+          retrySeconds = parseInt(retryMatch[1], 10);
+        }
+
+        console.warn(
+          "📛 DETECTED RATE LIMIT MENTION in getUserMangaList error message",
+          {
+            message: errorObj.message,
+            extractedSeconds: retrySeconds,
+          },
+        );
+
+        throw {
+          message: errorObj.message,
+          status: 429,
+          isRateLimited: true,
+          retryAfter: retrySeconds,
+        };
+      }
+    }
+
     throw error;
   }
 }
@@ -640,7 +790,20 @@ async function getAuthenticatedUserID(
 ): Promise<number | undefined> {
   try {
     // First, try to get user's ID using the Viewer query
-    const viewerResponse = await request<any>(
+    interface ViewerResponse {
+      Viewer?: {
+        id: number;
+        name: string;
+      };
+      data?: {
+        Viewer?: {
+          id: number;
+          name: string;
+        };
+      };
+    }
+
+    const viewerResponse = await request<ViewerResponse>(
       GET_VIEWER,
       {},
       token,
@@ -659,12 +822,6 @@ async function getAuthenticatedUserID(
     } else if (viewerResponse?.data?.data?.Viewer?.id) {
       // Nested data structure
       viewerId = viewerResponse.data.data.Viewer.id;
-    } else if (
-      viewerResponse?.success &&
-      viewerResponse?.data?.data?.Viewer?.id
-    ) {
-      // Success wrapper with nested data
-      viewerId = viewerResponse.data.data.Viewer.id;
     }
 
     if (viewerId) {
@@ -673,7 +830,7 @@ async function getAuthenticatedUserID(
 
     // If the above approach failed, try a direct query
     console.log("First viewer query failed, trying direct query approach");
-    const directViewerResponse = await request<any>(
+    const directViewerResponse = await request<ViewerResponse>(
       `query { Viewer { id name } }`,
       {},
       token,
@@ -686,11 +843,6 @@ async function getAuthenticatedUserID(
     if (directViewerResponse?.data?.Viewer?.id) {
       return directViewerResponse.data.Viewer.id;
     } else if (directViewerResponse?.data?.data?.Viewer?.id) {
-      return directViewerResponse.data.data.Viewer.id;
-    } else if (
-      directViewerResponse?.success &&
-      directViewerResponse?.data?.data?.Viewer?.id
-    ) {
       return directViewerResponse.data.data.Viewer.id;
     }
 
@@ -730,47 +882,110 @@ async function fetchCompleteUserMediaList(
         `Fetching chunk ${currentChunk} (${perChunk} entries per chunk)...`,
       );
 
-      const response = await request<any>(
-        GET_USER_MANGA_LIST,
-        { userId, chunk: currentChunk, perChunk },
-        token,
-        abortSignal,
-      );
-
-      // Extract media list collection, handling potential nested structure
-      let mediaListCollection;
-
-      if (response?.data?.MediaListCollection) {
-        mediaListCollection = response.data.MediaListCollection;
-      } else if (response?.data?.data?.MediaListCollection) {
-        mediaListCollection = response.data.data.MediaListCollection;
+      interface MediaListCollectionResponse {
+        MediaListCollection?: {
+          lists: Array<{
+            name: string;
+            entries: Array<{
+              id: number;
+              mediaId: number;
+              status: string;
+              progress: number;
+              score: number;
+              private: boolean;
+              media: AniListManga;
+            }>;
+          }>;
+        };
+        data?: {
+          MediaListCollection?: {
+            lists: Array<{
+              name: string;
+              entries: Array<{
+                id: number;
+                mediaId: number;
+                status: string;
+                progress: number;
+                score: number;
+                private: boolean;
+                media: AniListManga;
+              }>;
+            }>;
+          };
+        };
       }
 
-      if (!mediaListCollection?.lists) {
-        console.error(
-          `Invalid media list response for chunk ${currentChunk}:`,
-          response,
+      try {
+        const response = await request<MediaListCollectionResponse>(
+          GET_USER_MANGA_LIST,
+          { userId, chunk: currentChunk, perChunk },
+          token,
+          abortSignal,
         );
-        break; // Stop trying if we get an invalid response
-      }
 
-      const chunkEntryCount = processMediaListCollectionChunk(
-        mediaListCollection,
-        mediaMap,
-      );
-      totalEntriesProcessed += chunkEntryCount;
+        // Extract media list collection, handling potential nested structure
+        let mediaListCollection;
 
-      console.log(
-        `Processed ${chunkEntryCount} entries from chunk ${currentChunk}`,
-      );
+        if (response?.data?.MediaListCollection) {
+          mediaListCollection = response.data.MediaListCollection;
+        } else if (response?.data?.data?.MediaListCollection) {
+          mediaListCollection = response.data.data.MediaListCollection;
+        }
 
-      // Check if we need to fetch more chunks
-      // If this chunk has fewer entries than the perChunk limit, we've reached the end
-      if (chunkEntryCount < perChunk) {
+        if (!mediaListCollection?.lists) {
+          console.error(
+            `Invalid media list response for chunk ${currentChunk}:`,
+            response,
+          );
+          break; // Stop trying if we get an invalid response
+        }
+
+        const chunkEntryCount = processMediaListCollectionChunk(
+          mediaListCollection,
+          mediaMap,
+        );
+        totalEntriesProcessed += chunkEntryCount;
+
+        console.log(
+          `Processed ${chunkEntryCount} entries from chunk ${currentChunk}`,
+        );
+
+        // Check if we need to fetch more chunks
+        // If this chunk has fewer entries than the perChunk limit, we've reached the end
+        if (chunkEntryCount < perChunk) {
+          hasNextChunk = false;
+          console.log("Reached the end of user's manga list");
+        } else {
+          currentChunk++;
+        }
+      } catch (error: unknown) {
+        // Type guard to check if error is an object with specific properties
+        if (error && typeof error === "object") {
+          const errorObj = error as {
+            status?: number;
+            isRateLimited?: boolean;
+          };
+
+          // Check if this was a rate limit error
+          if (errorObj.status === 429 || errorObj.isRateLimited) {
+            console.warn(
+              `Chunk ${currentChunk} request was rate limited, propagating error`,
+            );
+            // Propagate rate limit error to be handled by the UI
+            throw error;
+          }
+        }
+
+        // For other errors, log and continue if we have some data
+        console.error(`Error fetching chunk ${currentChunk}:`, error);
+
+        // If we have some data already, we'll return it, otherwise propagate the error
+        if (Object.keys(mediaMap).length === 0) {
+          throw error;
+        }
+
+        // Break the loop to return what we have so far
         hasNextChunk = false;
-        console.log("Reached the end of user's manga list");
-      } else {
-        currentChunk++;
       }
     }
 

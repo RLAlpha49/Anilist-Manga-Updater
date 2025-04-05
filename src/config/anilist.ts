@@ -11,11 +11,8 @@ let clientId = "";
 let clientSecret = "";
 
 try {
-  // @ts-expect-error - Vite's import.meta.env is not recognized by TypeScript
   if (typeof import.meta !== "undefined" && import.meta.env) {
-    // @ts-expect-error - VITE_ANILIST_CLIENT_ID is a dynamic property from Vite
     clientId = import.meta.env.VITE_ANILIST_CLIENT_ID || "";
-    // @ts-expect-error - VITE_ANILIST_CLIENT_SECRET is a dynamic property from Vite
     clientSecret = import.meta.env.VITE_ANILIST_CLIENT_SECRET || "";
   }
 } catch (error) {

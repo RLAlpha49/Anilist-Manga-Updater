@@ -13,6 +13,8 @@ export function exposeApiContext() {
         ipcRenderer.invoke("anilist:exchangeToken", params),
       clearCache: (searchQuery?: string) =>
         ipcRenderer.invoke("anilist:clearCache", searchQuery),
+      getRateLimitStatus: () =>
+        ipcRenderer.invoke("anilist:getRateLimitStatus"),
     },
     shell: {
       openExternal: (url: string) =>
