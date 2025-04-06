@@ -38,6 +38,7 @@ import { Switch } from "../components/ui/switch";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { motion } from "framer-motion";
+import { getAppVersion } from "../utils/app-version";
 
 // Animation variants
 const containerVariants = {
@@ -1100,7 +1101,7 @@ export function SettingsPage() {
                 variant="outline"
                 className="bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
               >
-                Version {import.meta.env.VITE_APP_VERSION || "1.0.0"}
+                Version {getAppVersion() || "1.0.0"}
               </Badge>
             </div>
           </div>

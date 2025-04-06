@@ -10,6 +10,7 @@ import {
 } from "../ui/tooltip";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { getAppVersion } from "../../utils/app-version";
 
 export function Footer() {
   const handleOpenExternal = (url: string) => (e: React.MouseEvent) => {
@@ -51,7 +52,7 @@ export function Footer() {
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Kenmei to AniList</span>
               <Badge variant="outline" className="h-5 px-2 font-mono">
-                v{import.meta.env.VITE_APP_VERSION || "1.0.0"}
+                v{getAppVersion()}
               </Badge>
             </div>
           </div>

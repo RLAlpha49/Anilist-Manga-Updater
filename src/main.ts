@@ -10,6 +10,9 @@ import {
 
 const inDevelopment = process.env.NODE_ENV === "development";
 
+// Make app version available to the renderer process
+process.env.VITE_APP_VERSION = app.getVersion();
+
 function createWindow() {
   const preload = path.join(__dirname, "preload.js");
   const mainWindow = new BrowserWindow({

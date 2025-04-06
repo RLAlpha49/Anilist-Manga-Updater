@@ -2,6 +2,12 @@ import path from "path";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { readFileSync } from "fs";
+
+// Get package version from package.json
+const packageJson = JSON.parse(
+  readFileSync(path.resolve(__dirname, "package.json"), "utf-8"),
+);
 
 export default defineConfig({
   plugins: [
@@ -17,6 +23,10 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  // Define environment variables that will be available to the client
+  define: {
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(packageJson.version),
   },
   build: {
     assetsInlineLimit: 0,
