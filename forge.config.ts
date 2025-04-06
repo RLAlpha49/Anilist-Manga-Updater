@@ -12,7 +12,7 @@ const config: ForgeConfig = {
     executableName: "kenmei-to-anilist",
     asar: true,
     appCopyright: `Copyright © ${new Date().getFullYear()}`,
-    //icon: "./src/assets/KenmeiToAnilistIconTransparent",
+    icon: "./src/assets/k2a-icon-512x512.png",
     appVersion: "1.0.0",
     buildVersion: "1.0.0",
     appBundleId: "com.rlapps.kenmeitoanilist",
@@ -21,9 +21,9 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      //setupIcon: "./src/assets/KenmeiToAnilistIconTransparent.ico",
-      //iconUrl:
-      //  "https://raw.githubusercontent.com/RLAlpha49/Kenmei-to-Anilist/refs/heads/master/src/assets/KenmeiToAnilistIconTransparent.ico",
+      setupIcon: "./src/assets/k2a-icon-512x512.ico",
+      iconUrl:
+        "https://raw.githubusercontent.com/RLAlpha49/Kenmei-to-Anilist/refs/heads/master/src/assets/k2a-icon-512x512.ico",
       setupExe: "Kenmei-to-Anilist-Setup.exe",
       noMsi: false,
       name: "KenmeiToAnilist",
@@ -32,7 +32,7 @@ const config: ForgeConfig = {
     new MakerDMG(
       {
         name: "Kenmei-to-Anilist",
-        //icon: "./src/assets/KenmeiToAnilistIconTransparent.icns",
+        icon: "./src/assets/k2a-icon-512x512.icns",
         format: "ULFO",
       },
       ["darwin"],
@@ -43,8 +43,8 @@ const config: ForgeConfig = {
         name: "kenmei-to-anilist",
         productName: "Kenmei to Anilist",
         maintainer: "Alex Pettigrew",
-        //homepage: "https://github.com/RLAlpha49/Kenmei-to-Anilist",
-        //icon: "./src/assets/KenmeiToAnilistIconTransparent.png",
+        homepage: "https://github.com/RLAlpha49/Kenmei-to-Anilist",
+        icon: "./src/assets/k2a-icon-512x512.png",
         version: "1.0.0",
       },
     }),

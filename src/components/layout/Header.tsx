@@ -31,6 +31,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { motion } from "framer-motion";
+import appIcon from "../../assets/k2a-icon-512x512.png";
 
 export function Header() {
   return (
@@ -42,11 +43,11 @@ export function Header() {
               {/* Logo and title */}
               <Link to="/" className="non-draggable flex items-center">
                 <motion.div
-                  className="mr-2 flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-purple-600 text-white"
+                  className="mr-2"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <span className="font-bold">K2A</span>
+                  <img src={appIcon} alt="K2A Logo" className="h-8 w-8" />
                 </motion.div>
                 <h1 className="overflow-hidden font-mono text-lg font-bold whitespace-nowrap">
                   <span className="hidden bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent min-[44rem]:inline">

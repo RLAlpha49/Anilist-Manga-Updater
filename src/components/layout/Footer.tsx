@@ -11,6 +11,7 @@ import {
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { getAppVersion } from "../../utils/app-version";
+import appIcon from "../../assets/k2a-icon-512x512.png";
 
 export function Footer() {
   const handleOpenExternal = (url: string) => (e: React.MouseEvent) => {
@@ -44,10 +45,10 @@ export function Footer() {
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
             <motion.div
-              className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-blue-600 to-purple-600 text-white"
+              className="h-6 w-6"
               whileHover={{ rotate: 10, scale: 1.05 }}
             >
-              <span className="text-xs font-bold">K2A</span>
+              <img src={appIcon} alt="K2A Logo" className="h-6 w-6" />
             </motion.div>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Kenmei to AniList</span>
