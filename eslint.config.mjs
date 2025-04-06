@@ -15,6 +15,22 @@ const prettierIgnorePath = path.resolve(__dirname, ".prettierignore");
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   includeIgnoreFile(prettierIgnorePath),
+  // Ignore patterns
+  {
+    ignores: [
+      // Build output
+      "dist/**",
+      ".vite/**",
+      "out/**",
+      
+      // Node modules
+      "node_modules/**",
+      
+      // Configuration files that use CommonJS
+      "**/*.config.js",
+      "forge.config.js"
+    ]
+  },
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
     plugins: {

@@ -4,6 +4,7 @@
   "version": "3.0.0",
   "description": "Kenmei to Anilist",
   "main": ".vite/build/main.js",
+  "type": "commonjs",
   "private": true,
   "scripts": {
     "start": "electron-forge start",
@@ -54,6 +55,7 @@
     "electron": "35.1.4",
     "electron-devtools-installer": "^4.0.0",
     "electron-playwright-helpers": "^1.7.1",
+    "electron-winstaller": "^5.4.0",
     "eslint": "^9.24.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
