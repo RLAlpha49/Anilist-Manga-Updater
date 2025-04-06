@@ -83,7 +83,11 @@ export function SyncPage() {
 
     // Check if there are match results to sync
     const savedResults = getSavedMatchResults();
-    if (!savedResults || !Array.isArray(savedResults) || savedResults.length === 0) {
+    if (
+      !savedResults ||
+      !Array.isArray(savedResults) ||
+      savedResults.length === 0
+    ) {
       console.log("No match results found, showing match data error");
       setMatchDataError(true);
       return;
@@ -93,9 +97,9 @@ export function SyncPage() {
 
     // Validate that there are actual matches (not just skipped entries)
     const validMatches = savedResults.filter(
-      match => match.status === "matched" || match.status === "manual"
+      (match) => match.status === "matched" || match.status === "manual",
     );
-    
+
     if (validMatches.length === 0) {
       console.log("No valid matches found, showing valid matches error");
       setValidMatchesError(true);
@@ -103,8 +107,10 @@ export function SyncPage() {
     } else {
       setValidMatchesError(false);
     }
-    
-    console.log(`Found ${validMatches.length} valid matches for synchronization`);
+
+    console.log(
+      `Found ${validMatches.length} valid matches for synchronization`,
+    );
   }, [authState.isAuthenticated, token]);
 
   // Sync configuration options
@@ -611,17 +617,22 @@ export function SyncPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.25, duration: 0.3 }}
         >
-          <Card className={`mx-auto w-full max-w-md overflow-hidden text-center ${authError ? "border-amber-200 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-900/10" : ""}`}>
+          <Card
+            className={`mx-auto w-full max-w-md overflow-hidden text-center ${authError ? "border-amber-200 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-900/10" : ""}`}
+          >
             <CardContent className="pt-6 pb-4">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
                 <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
               </div>
-              
+
               {authError && (
                 <>
-                  <h3 className="text-lg font-medium">Authentication Required</h3>
+                  <h3 className="text-lg font-medium">
+                    Authentication Required
+                  </h3>
                   <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                    You need to be authenticated with AniList to synchronize your manga.
+                    You need to be authenticated with AniList to synchronize
+                    your manga.
                   </p>
                   <Button
                     onClick={() => navigate({ to: "/settings" })}
@@ -631,12 +642,13 @@ export function SyncPage() {
                   </Button>
                 </>
               )}
-              
+
               {matchDataError && !authError && (
                 <>
                   <h3 className="text-lg font-medium">Missing Match Data</h3>
                   <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                    No matched manga found. You need to match your manga with AniList entries first.
+                    No matched manga found. You need to match your manga with
+                    AniList entries first.
                   </p>
                   <Button
                     onClick={() => navigate({ to: "/review" })}
@@ -646,12 +658,13 @@ export function SyncPage() {
                   </Button>
                 </>
               )}
-              
+
               {validMatchesError && !authError && !matchDataError && (
                 <>
                   <h3 className="text-lg font-medium">No Valid Matches</h3>
                   <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                    No approved matches found. You need to review and accept manga matches before synchronizing.
+                    No approved matches found. You need to review and accept
+                    manga matches before synchronizing.
                   </p>
                   <Button
                     onClick={() => navigate({ to: "/review" })}

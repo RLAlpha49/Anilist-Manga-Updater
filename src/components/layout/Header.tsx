@@ -48,9 +48,12 @@ export function Header() {
                 >
                   <span className="font-bold">K2A</span>
                 </motion.div>
-                <h1 className="hidden font-mono text-lg font-bold sm:block">
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="overflow-hidden font-mono text-lg font-bold whitespace-nowrap">
+                  <span className="hidden bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent min-[44rem]:inline">
                     Kenmei to AniList
+                  </span>
+                  <span className="inline bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent max-[44rem]:inline min-[44rem]:hidden">
+                    K2A
                   </span>
                 </h1>
               </Link>
@@ -67,11 +70,11 @@ export function Header() {
                               className={navigationMenuTriggerStyle()}
                             >
                               <Home className="h-4 w-4 flex-shrink-0" />
-                              <span className="ml-2 max-md:hidden">Home</span>
+                              <span className="ml-2 max-lg:hidden">Home</span>
                             </NavigationMenuLink>
                           </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="md:hidden">
+                        <TooltipContent side="bottom" className="lg:hidden">
                           Home
                         </TooltipContent>
                       </Tooltip>
@@ -84,11 +87,11 @@ export function Header() {
                               className={navigationMenuTriggerStyle()}
                             >
                               <Download className="h-4 w-4 flex-shrink-0" />
-                              <span className="ml-2 max-md:hidden">Import</span>
+                              <span className="ml-2 max-lg:hidden">Import</span>
                             </NavigationMenuLink>
                           </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="md:hidden">
+                        <TooltipContent side="bottom" className="lg:hidden">
                           Import
                         </TooltipContent>
                       </Tooltip>
@@ -101,11 +104,11 @@ export function Header() {
                               className={navigationMenuTriggerStyle()}
                             >
                               <ClipboardCheck className="h-4 w-4 flex-shrink-0" />
-                              <span className="ml-2 max-md:hidden">Review</span>
+                              <span className="ml-2 max-lg:hidden">Review</span>
                             </NavigationMenuLink>
                           </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="md:hidden">
+                        <TooltipContent side="bottom" className="lg:hidden">
                           Review
                         </TooltipContent>
                       </Tooltip>
@@ -118,11 +121,11 @@ export function Header() {
                               className={navigationMenuTriggerStyle()}
                             >
                               <SyncIcon className="h-4 w-4 flex-shrink-0" />
-                              <span className="ml-2 max-md:hidden">Sync</span>
+                              <span className="ml-2 max-lg:hidden">Sync</span>
                             </NavigationMenuLink>
                           </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="md:hidden">
+                        <TooltipContent side="bottom" className="lg:hidden">
                           Sync
                         </TooltipContent>
                       </Tooltip>
@@ -135,13 +138,13 @@ export function Header() {
                               className={navigationMenuTriggerStyle()}
                             >
                               <SettingsIcon className="h-4 w-4 flex-shrink-0" />
-                              <span className="ml-2 max-md:hidden">
+                              <span className="ml-2 max-lg:hidden">
                                 Settings
                               </span>
                             </NavigationMenuLink>
                           </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="md:hidden">
+                        <TooltipContent side="bottom" className="lg:hidden">
                           Settings
                         </TooltipContent>
                       </Tooltip>

@@ -137,9 +137,11 @@ export function MatchingPage() {
     if (!authState.isAuthenticated || !authState.accessToken) {
       console.log("User not authenticated, showing auth error");
       matchingProcess.setError(
-        "Authentication Required. You need to connect your AniList account to match manga."
+        "Authentication Required. You need to connect your AniList account to match manga.",
       );
-      matchingProcess.setDetailMessage("Please go to Settings to authenticate with AniList.");
+      matchingProcess.setDetailMessage(
+        "Please go to Settings to authenticate with AniList.",
+      );
       return;
     }
 
@@ -830,9 +832,12 @@ export function MatchingPage() {
                   <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
                     <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h3 className="text-lg font-medium">Authentication Required</h3>
+                  <h3 className="text-lg font-medium">
+                    Authentication Required
+                  </h3>
                   <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                    You need to be authenticated with AniList to match your manga.
+                    You need to be authenticated with AniList to match your
+                    manga.
                   </p>
                   <Button
                     onClick={() => navigate({ to: "/settings" })}
@@ -847,7 +852,9 @@ export function MatchingPage() {
                 error={matchingProcess.error}
                 detailedError={matchingProcess.detailedError}
                 onRetry={handleRetry}
-                onClearPendingManga={() => pendingMangaState.savePendingManga([])}
+                onClearPendingManga={() =>
+                  pendingMangaState.savePendingManga([])
+                }
               />
             )}
           </motion.div>
@@ -864,7 +871,8 @@ export function MatchingPage() {
       animate="visible"
     >
       {/* Authentication Error - Display regardless of loading state */}
-      {matchingProcess.error && matchingProcess.error.includes("Authentication Required") ? (
+      {matchingProcess.error &&
+      matchingProcess.error.includes("Authentication Required") ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -1004,7 +1012,10 @@ export function MatchingPage() {
                   `${unprocessedCount} manga from stored pending manga need processing`,
                 );
 
-                if (!needsProcessing && pendingMangaState.pendingManga.length > 0) {
+                if (
+                  !needsProcessing &&
+                  pendingMangaState.pendingManga.length > 0
+                ) {
                   console.log(
                     "All pending manga titles are already in matchResults - clearing pending manga",
                   );
@@ -1051,13 +1062,16 @@ export function MatchingPage() {
                   // Only count manga that actually need processing
                   pendingMangaCount={(() => {
                     const processedTitles = new Set(
-                      matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+                      matchResults.map((r) =>
+                        r.kenmeiManga.title.toLowerCase(),
+                      ),
                     );
 
                     // Check stored pending manga
                     const unprocessedFromPending =
                       pendingMangaState.pendingManga.filter(
-                        (manga) => !processedTitles.has(manga.title.toLowerCase()),
+                        (manga) =>
+                          !processedTitles.has(manga.title.toLowerCase()),
                       ).length;
 
                     // Check all manga
@@ -1075,7 +1089,9 @@ export function MatchingPage() {
 
                     // Get ALL unprocessed manga by comparing the full manga list with processed titles
                     const processedTitles = new Set(
-                      matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+                      matchResults.map((r) =>
+                        r.kenmeiManga.title.toLowerCase(),
+                      ),
                     );
 
                     // Find unprocessed manga by title comparison from the ENTIRE manga list
@@ -1135,7 +1151,9 @@ export function MatchingPage() {
                       onManualSearch={matchHandlers.handleManualSearch}
                       onAcceptMatch={matchHandlers.handleAcceptMatch}
                       onRejectMatch={matchHandlers.handleRejectMatch}
-                      onSelectAlternative={matchHandlers.handleSelectAlternative}
+                      onSelectAlternative={
+                        matchHandlers.handleSelectAlternative
+                      }
                       onResetToPending={matchHandlers.handleResetToPending}
                     />
 
@@ -1205,10 +1223,12 @@ export function MatchingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.3 }}
                 >
-                  <h3 className="mb-2 text-xl font-semibold">No Manga To Match</h3>
+                  <h3 className="mb-2 text-xl font-semibold">
+                    No Manga To Match
+                  </h3>
                   <p className="text-muted-foreground mb-6 text-sm">
-                    No manga data to match. Return to the import page to load your
-                    data.
+                    No manga data to match. Return to the import page to load
+                    your data.
                   </p>
                   <Button
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"

@@ -85,8 +85,8 @@ export default defineConfig({
           // Application core
           return "app-core";
         },
-      }
+      },
     },
     minify: "esbuild",
-  }
+  },
 });
