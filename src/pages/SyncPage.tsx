@@ -40,6 +40,7 @@ import {
 import { exportSyncErrorLog } from "../utils/export-utils";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
+import { motion } from "framer-motion";
 import {
   Collapsible,
   CollapsibleContent,
@@ -63,6 +64,48 @@ export function SyncPage() {
     "preview",
   );
   const { rateLimitState, setRateLimit } = useRateLimit();
+
+  // Authentication and validation states
+  const [authError, setAuthError] = useState(false);
+  const [matchDataError, setMatchDataError] = useState(false);
+  const [validMatchesError, setValidMatchesError] = useState(false);
+
+  // Authentication and data validation check
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!authState.isAuthenticated || !token) {
+      console.log("User not authenticated, showing auth error");
+      setAuthError(true);
+      return;
+    } else {
+      setAuthError(false);
+    }
+
+    // Check if there are match results to sync
+    const savedResults = getSavedMatchResults();
+    if (!savedResults || !Array.isArray(savedResults) || savedResults.length === 0) {
+      console.log("No match results found, showing match data error");
+      setMatchDataError(true);
+      return;
+    } else {
+      setMatchDataError(false);
+    }
+
+    // Validate that there are actual matches (not just skipped entries)
+    const validMatches = savedResults.filter(
+      match => match.status === "matched" || match.status === "manual"
+    );
+    
+    if (validMatches.length === 0) {
+      console.log("No valid matches found, showing valid matches error");
+      setValidMatchesError(true);
+      return;
+    } else {
+      setValidMatchesError(false);
+    }
+    
+    console.log(`Found ${validMatches.length} valid matches for synchronization`);
+  }, [authState.isAuthenticated, token]);
 
   // Sync configuration options
   const [syncConfig, setSyncConfig] = useState<SyncConfig>(getSyncConfig());
@@ -558,6 +601,72 @@ export function SyncPage() {
     // Navigate to the home page
     navigate({ to: "/" });
   };
+
+  // If any error condition is true, show the appropriate error message
+  if (authError || matchDataError || validMatchesError) {
+    return (
+      <div className="container py-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25, duration: 0.3 }}
+        >
+          <Card className={`mx-auto w-full max-w-md overflow-hidden text-center ${authError ? "border-amber-200 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-900/10" : ""}`}>
+            <CardContent className="pt-6 pb-4">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              
+              {authError && (
+                <>
+                  <h3 className="text-lg font-medium">Authentication Required</h3>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                    You need to be authenticated with AniList to synchronize your manga.
+                  </p>
+                  <Button
+                    onClick={() => navigate({ to: "/settings" })}
+                    className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
+                    Go to Settings
+                  </Button>
+                </>
+              )}
+              
+              {matchDataError && !authError && (
+                <>
+                  <h3 className="text-lg font-medium">Missing Match Data</h3>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                    No matched manga found. You need to match your manga with AniList entries first.
+                  </p>
+                  <Button
+                    onClick={() => navigate({ to: "/review" })}
+                    className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
+                    Go to Matching Page
+                  </Button>
+                </>
+              )}
+              
+              {validMatchesError && !authError && !matchDataError && (
+                <>
+                  <h3 className="text-lg font-medium">No Valid Matches</h3>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                    No approved matches found. You need to review and accept manga matches before synchronizing.
+                  </p>
+                  <Button
+                    onClick={() => navigate({ to: "/review" })}
+                    className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
+                    Review Matches
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   // If no manga matches are loaded yet, show loading state
   if (mangaMatches.length === 0) {

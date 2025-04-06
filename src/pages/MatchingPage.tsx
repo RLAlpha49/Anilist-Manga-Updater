@@ -24,6 +24,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle } from "lucide-react";
 
 // Animation variants
 const pageVariants = {
@@ -131,6 +132,16 @@ export function MatchingPage() {
 
     // Mark as initialized immediately to prevent any possibility of re-runs
     hasInitialized.current = true;
+
+    // Check if user is authenticated but don't redirect
+    if (!authState.isAuthenticated || !authState.accessToken) {
+      console.log("User not authenticated, showing auth error");
+      matchingProcess.setError(
+        "Authentication Required. You need to connect your AniList account to match manga."
+      );
+      matchingProcess.setDetailMessage("Please go to Settings to authenticate with AniList.");
+      return;
+    }
 
     console.log("*** INITIALIZATION START ***");
     console.log("Initial states:", {
@@ -813,12 +824,32 @@ export function MatchingPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.25, duration: 0.3 }}
           >
-            <ErrorDisplay
-              error={matchingProcess.error}
-              detailedError={matchingProcess.detailedError}
-              onRetry={handleRetry}
-              onClearPendingManga={() => pendingMangaState.savePendingManga([])}
-            />
+            {matchingProcess.error.includes("Authentication Required") ? (
+              <Card className="mx-auto w-full max-w-lg overflow-hidden border-amber-200 bg-amber-50/30 text-center dark:border-amber-800/30 dark:bg-amber-900/10">
+                <CardContent className="pt-6 pb-4">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                    <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <h3 className="text-lg font-medium">Authentication Required</h3>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                    You need to be authenticated with AniList to match your manga.
+                  </p>
+                  <Button
+                    onClick={() => navigate({ to: "/settings" })}
+                    className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
+                    Go to Settings
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <ErrorDisplay
+                error={matchingProcess.error}
+                detailedError={matchingProcess.detailedError}
+                onRetry={handleRetry}
+                onClearPendingManga={() => pendingMangaState.savePendingManga([])}
+              />
+            )}
           </motion.div>
         )}
       </motion.div>
@@ -832,406 +863,436 @@ export function MatchingPage() {
       initial="hidden"
       animate="visible"
     >
-      <motion.header className="mb-6 space-y-2" variants={headerVariants}>
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <h1 className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
-            Review Your Manga
-          </h1>
-          {matchResults.length > 0 && !matchingProcess.isLoading && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.25 }}
-            >
+      {/* Authentication Error - Display regardless of loading state */}
+      {matchingProcess.error && matchingProcess.error.includes("Authentication Required") ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25, duration: 0.3 }}
+        >
+          <Card className="mx-auto w-full max-w-lg overflow-hidden border-amber-200 bg-amber-50/30 text-center dark:border-amber-800/30 dark:bg-amber-900/10">
+            <CardContent className="pt-6 pb-4">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-lg font-medium">Authentication Required</h3>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                You need to be authenticated with AniList to match your manga.
+              </p>
               <Button
-                onClick={() => setShowRematchOptions(!showRematchOptions)}
-                variant="default"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                onClick={() => navigate({ to: "/settings" })}
+                className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
               >
-                {showRematchOptions
-                  ? "Hide Rematch Options"
-                  : "Fresh Search (Clear Cache)"}
+                Go to Settings
               </Button>
-            </motion.div>
-          )}
-        </div>
-        <p className="text-muted-foreground max-w-2xl">
-          Review the matches found between your Kenmei manga and AniList.
-        </p>
-      </motion.header>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ) : (
+        <>
+          <motion.header className="mb-6 space-y-2" variants={headerVariants}>
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+              <h1 className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
+                Review Your Manga
+              </h1>
+              {matchResults.length > 0 && !matchingProcess.isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.25 }}
+                >
+                  <Button
+                    onClick={() => setShowRematchOptions(!showRematchOptions)}
+                    variant="default"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
+                    {showRematchOptions
+                      ? "Hide Rematch Options"
+                      : "Fresh Search (Clear Cache)"}
+                  </Button>
+                </motion.div>
+              )}
+            </div>
+            <p className="text-muted-foreground max-w-2xl">
+              Review the matches found between your Kenmei manga and AniList.
+            </p>
+          </motion.header>
 
-      {/* Rematch by status options */}
-      <AnimatePresence>
-        {showRematchOptions &&
-          !matchingProcess.isLoading &&
-          matchResults.length > 0 && (
-            <RematchOptions
-              selectedStatuses={selectedStatuses}
-              onChangeSelectedStatuses={setSelectedStatuses}
-              matchResults={matchResults}
-              rematchWarning={rematchWarning}
-              onRematchByStatus={handleRematchByStatus}
-              onCloseOptions={() => setShowRematchOptions(false)}
-            />
-          )}
-      </AnimatePresence>
+          {/* Rematch by status options */}
+          <AnimatePresence>
+            {showRematchOptions &&
+              !matchingProcess.isLoading &&
+              matchResults.length > 0 && (
+                <RematchOptions
+                  selectedStatuses={selectedStatuses}
+                  onChangeSelectedStatuses={setSelectedStatuses}
+                  matchResults={matchResults}
+                  rematchWarning={rematchWarning}
+                  onRematchByStatus={handleRematchByStatus}
+                  onCloseOptions={() => setShowRematchOptions(false)}
+                />
+              )}
+          </AnimatePresence>
 
-      {/* Initialization state - only show if not already loading and we have pending manga */}
-      {matchingProcess.isInitializing &&
-        !matchingProcess.isLoading &&
-        pendingMangaState.pendingManga.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
-          >
-            <Card className="mb-6 border-blue-100 bg-blue-50/50 shadow-md dark:border-blue-900/50 dark:bg-blue-900/20">
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="relative flex h-8 w-8 items-center justify-center">
-                    <div className="absolute h-full w-full animate-ping rounded-full bg-blue-400 opacity-20"></div>
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-blue-700 dark:text-blue-300">
-                      Checking for pending manga to resume...
-                    </p>
-                    <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
-                      Please wait while we analyze your previous session
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+          {/* Initialization state - only show if not already loading and we have pending manga */}
+          {matchingProcess.isInitializing &&
+            !matchingProcess.isLoading &&
+            pendingMangaState.pendingManga.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+              >
+                <Card className="mb-6 border-blue-100 bg-blue-50/50 shadow-md dark:border-blue-900/50 dark:bg-blue-900/20">
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative flex h-8 w-8 items-center justify-center">
+                        <div className="absolute h-full w-full animate-ping rounded-full bg-blue-400 opacity-20"></div>
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-blue-700 dark:text-blue-300">
+                          Checking for pending manga to resume...
+                        </p>
+                        <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
+                          Please wait while we analyze your previous session
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-      {/* Resume message when we have pending manga but aren't already in the loading state */}
-      {(pendingMangaState.pendingManga.length > 0 ||
-        manga.length > matchResults.length) &&
-        !matchingProcess.isLoading &&
-        !matchingProcess.isInitializing &&
-        (() => {
-          console.log(
-            `Checking if ${pendingMangaState.pendingManga.length || manga.length - matchResults.length} pending manga need processing...`,
-          );
-
-          let needsProcessing = false;
-          let unprocessedCount = 0;
-
-          // First check: Pending manga from storage
-          if (pendingMangaState.pendingManga.length > 0) {
-            // Since IDs are undefined, use title-based matching instead
-            const processedTitles = new Set(
-              matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
-            );
-
-            // Check if any of the pending manga aren't already processed by title
-            const pendingTitles = pendingMangaState.pendingManga.map((m) =>
-              m.title.toLowerCase(),
-            );
-            needsProcessing = pendingTitles.some(
-              (title) => !processedTitles.has(title),
-            );
-
-            // Calculate how many manga still need processing
-            unprocessedCount = pendingMangaState.pendingManga.filter(
-              (manga) => !processedTitles.has(manga.title.toLowerCase()),
-            ).length;
-
-            console.log(
-              `Title-based check on stored pending manga: ${needsProcessing ? "Pending manga need processing" : "All pending manga are already processed"}`,
-            );
-            console.log(
-              `${unprocessedCount} manga from stored pending manga need processing`,
-            );
-
-            if (!needsProcessing && pendingMangaState.pendingManga.length > 0) {
+          {/* Resume message when we have pending manga but aren't already in the loading state */}
+          {(pendingMangaState.pendingManga.length > 0 ||
+            manga.length > matchResults.length) &&
+            !matchingProcess.isLoading &&
+            !matchingProcess.isInitializing &&
+            (() => {
               console.log(
-                "All pending manga titles are already in matchResults - clearing pending manga",
+                `Checking if ${pendingMangaState.pendingManga.length || manga.length - matchResults.length} pending manga need processing...`,
               );
-              pendingMangaState.savePendingManga([]);
-            }
-          }
 
-          // Second check: Count difference between all manga and processed results
-          if (manga.length > matchResults.length) {
-            console.log(
-              `${manga.length - matchResults.length} manga still need processing based on count difference`,
-            );
+              let needsProcessing = false;
+              let unprocessedCount = 0;
 
-            // Use title-based matching to find unprocessed manga
-            const processedTitles = new Set(
-              matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
-            );
-
-            const stillNeedProcessing = manga.filter(
-              (m) => !processedTitles.has(m.title.toLowerCase()),
-            ).length;
-
-            console.log(
-              `${stillNeedProcessing} manga actually need processing based on title comparison`,
-            );
-
-            if (stillNeedProcessing > 0) {
-              needsProcessing = true;
-              unprocessedCount = Math.max(
-                unprocessedCount,
-                stillNeedProcessing,
-              );
-            }
-          }
-
-          return needsProcessing;
-        })() && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-          >
-            <ResumeNotification
-              // Only count manga that actually need processing
-              pendingMangaCount={(() => {
+              // First check: Pending manga from storage
+              if (pendingMangaState.pendingManga.length > 0) {
+                // Since IDs are undefined, use title-based matching instead
                 const processedTitles = new Set(
                   matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
                 );
 
-                // Check stored pending manga
-                const unprocessedFromPending =
-                  pendingMangaState.pendingManga.filter(
-                    (manga) => !processedTitles.has(manga.title.toLowerCase()),
-                  ).length;
+                // Check if any of the pending manga aren't already processed by title
+                const pendingTitles = pendingMangaState.pendingManga.map((m) =>
+                  m.title.toLowerCase(),
+                );
+                needsProcessing = pendingTitles.some(
+                  (title) => !processedTitles.has(title),
+                );
 
-                // Check all manga
-                const unprocessedFromAll = manga.filter(
+                // Calculate how many manga still need processing
+                unprocessedCount = pendingMangaState.pendingManga.filter(
+                  (manga) => !processedTitles.has(manga.title.toLowerCase()),
+                ).length;
+
+                console.log(
+                  `Title-based check on stored pending manga: ${needsProcessing ? "Pending manga need processing" : "All pending manga are already processed"}`,
+                );
+                console.log(
+                  `${unprocessedCount} manga from stored pending manga need processing`,
+                );
+
+                if (!needsProcessing && pendingMangaState.pendingManga.length > 0) {
+                  console.log(
+                    "All pending manga titles are already in matchResults - clearing pending manga",
+                  );
+                  pendingMangaState.savePendingManga([]);
+                }
+              }
+
+              // Second check: Count difference between all manga and processed results
+              if (manga.length > matchResults.length) {
+                console.log(
+                  `${manga.length - matchResults.length} manga still need processing based on count difference`,
+                );
+
+                // Use title-based matching to find unprocessed manga
+                const processedTitles = new Set(
+                  matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+                );
+
+                const stillNeedProcessing = manga.filter(
                   (m) => !processedTitles.has(m.title.toLowerCase()),
                 ).length;
 
-                // Return the larger of the two counts
-                return Math.max(unprocessedFromPending, unprocessedFromAll);
-              })()}
-              onResumeMatching={() => {
                 console.log(
-                  "Resume matching clicked - ensuring unprocessed manga are processed",
+                  `${stillNeedProcessing} manga actually need processing based on title comparison`,
                 );
 
-                // Get ALL unprocessed manga by comparing the full manga list with processed titles
-                const processedTitles = new Set(
-                  matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
-                );
-
-                // Find unprocessed manga by title comparison from the ENTIRE manga list
-                const unprocessedManga = manga.filter(
-                  (m) => !processedTitles.has(m.title.toLowerCase()),
-                );
-
-                if (unprocessedManga.length > 0) {
-                  console.log(
-                    `Found ${unprocessedManga.length} unprocessed manga from the full manga list`,
-                  );
-
-                  // ALWAYS update the pendingManga with ALL unprocessed manga before resuming
-                  // This ensures we're processing all 870 manga not just the 21
-                  console.log(
-                    `Setting pendingManga to ${unprocessedManga.length} unprocessed manga before resuming`,
-                  );
-                  pendingMangaState.savePendingManga(unprocessedManga);
-
-                  // Small delay to ensure state is updated before continuing
-                  setTimeout(() => {
-                    // Now call the resume function, which will use the newly updated pendingManga
-                    matchingProcess.handleResumeMatching(
-                      matchResults,
-                      setMatchResults,
-                    );
-                  }, 100);
-                } else {
-                  console.log(
-                    "No unprocessed manga found, trying to resume anyway",
-                  );
-                  matchingProcess.handleResumeMatching(
-                    matchResults,
-                    setMatchResults,
+                if (stillNeedProcessing > 0) {
+                  needsProcessing = true;
+                  unprocessedCount = Math.max(
+                    unprocessedCount,
+                    stillNeedProcessing,
                   );
                 }
-              }}
-              onCancelResume={matchingProcess.handleCancelResume}
-            />
-          </motion.div>
-        )}
+              }
 
-      {/* Main content */}
-      <motion.div className="relative flex-1" variants={contentVariants}>
-        {matchResults.length > 0 ? (
-          <>
-            {/* The main matching panel */}
-            {
+              return needsProcessing;
+            })() && (
               <motion.div
-                className="flex h-full flex-col"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
+              >
+                <ResumeNotification
+                  // Only count manga that actually need processing
+                  pendingMangaCount={(() => {
+                    const processedTitles = new Set(
+                      matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+                    );
+
+                    // Check stored pending manga
+                    const unprocessedFromPending =
+                      pendingMangaState.pendingManga.filter(
+                        (manga) => !processedTitles.has(manga.title.toLowerCase()),
+                      ).length;
+
+                    // Check all manga
+                    const unprocessedFromAll = manga.filter(
+                      (m) => !processedTitles.has(m.title.toLowerCase()),
+                    ).length;
+
+                    // Return the larger of the two counts
+                    return Math.max(unprocessedFromPending, unprocessedFromAll);
+                  })()}
+                  onResumeMatching={() => {
+                    console.log(
+                      "Resume matching clicked - ensuring unprocessed manga are processed",
+                    );
+
+                    // Get ALL unprocessed manga by comparing the full manga list with processed titles
+                    const processedTitles = new Set(
+                      matchResults.map((r) => r.kenmeiManga.title.toLowerCase()),
+                    );
+
+                    // Find unprocessed manga by title comparison from the ENTIRE manga list
+                    const unprocessedManga = manga.filter(
+                      (m) => !processedTitles.has(m.title.toLowerCase()),
+                    );
+
+                    if (unprocessedManga.length > 0) {
+                      console.log(
+                        `Found ${unprocessedManga.length} unprocessed manga from the full manga list`,
+                      );
+
+                      // ALWAYS update the pendingManga with ALL unprocessed manga before resuming
+                      // This ensures we're processing all 870 manga not just the 21
+                      console.log(
+                        `Setting pendingManga to ${unprocessedManga.length} unprocessed manga before resuming`,
+                      );
+                      pendingMangaState.savePendingManga(unprocessedManga);
+
+                      // Small delay to ensure state is updated before continuing
+                      setTimeout(() => {
+                        // Now call the resume function, which will use the newly updated pendingManga
+                        matchingProcess.handleResumeMatching(
+                          matchResults,
+                          setMatchResults,
+                        );
+                      }, 100);
+                    } else {
+                      console.log(
+                        "No unprocessed manga found, trying to resume anyway",
+                      );
+                      matchingProcess.handleResumeMatching(
+                        matchResults,
+                        setMatchResults,
+                      );
+                    }
+                  }}
+                  onCancelResume={matchingProcess.handleCancelResume}
+                />
+              </motion.div>
+            )}
+
+          {/* Main content */}
+          <motion.div className="relative flex-1" variants={contentVariants}>
+            {matchResults.length > 0 ? (
+              <>
+                {/* The main matching panel */}
+                {
+                  <motion.div
+                    className="flex h-full flex-col"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.25, duration: 0.3 }}
+                  >
+                    <MangaMatchingPanel
+                      matches={matchResults}
+                      onManualSearch={matchHandlers.handleManualSearch}
+                      onAcceptMatch={matchHandlers.handleAcceptMatch}
+                      onRejectMatch={matchHandlers.handleRejectMatch}
+                      onSelectAlternative={matchHandlers.handleSelectAlternative}
+                      onResetToPending={matchHandlers.handleResetToPending}
+                    />
+
+                    {/* Action buttons */}
+                    <motion.div
+                      className="mt-6 flex flex-col-reverse justify-end space-y-4 space-y-reverse sm:flex-row sm:space-y-0 sm:space-x-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35, duration: 0.3 }}
+                    >
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          // Clear any pending manga data
+                          pendingMangaState.savePendingManga([]);
+                          navigate({ to: "/import" });
+                        }}
+                      >
+                        Back to Import
+                      </Button>
+                      <Button
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                        onClick={handleProceedToSync}
+                      >
+                        Proceed to Dashboard
+                      </Button>
+                    </motion.div>
+                  </motion.div>
+                }
+              </>
+            ) : (
+              // No results state
+              <motion.div
+                className="bg-background/50 flex h-full min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-12 text-center backdrop-blur-sm dark:border-gray-700"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.25, duration: 0.3 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
               >
-                <MangaMatchingPanel
-                  matches={matchResults}
-                  onManualSearch={matchHandlers.handleManualSearch}
-                  onAcceptMatch={matchHandlers.handleAcceptMatch}
-                  onRejectMatch={matchHandlers.handleRejectMatch}
-                  onSelectAlternative={matchHandlers.handleSelectAlternative}
-                  onResetToPending={matchHandlers.handleResetToPending}
-                />
-
-                {/* Action buttons */}
                 <motion.div
-                  className="mt-6 flex flex-col-reverse justify-end space-y-4 space-y-reverse sm:flex-row sm:space-y-0 sm:space-x-4"
+                  className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    delay: 0.3,
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 20,
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                    />
+                  </svg>
+                </motion.div>
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35, duration: 0.3 }}
+                  transition={{ delay: 0.4, duration: 0.3 }}
                 >
+                  <h3 className="mb-2 text-xl font-semibold">No Manga To Match</h3>
+                  <p className="text-muted-foreground mb-6 text-sm">
+                    No manga data to match. Return to the import page to load your
+                    data.
+                  </p>
                   <Button
-                    variant="outline"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                     onClick={() => {
                       // Clear any pending manga data
                       pendingMangaState.savePendingManga([]);
                       navigate({ to: "/import" });
                     }}
                   >
-                    Back to Import
-                  </Button>
-                  <Button
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                    onClick={handleProceedToSync}
-                  >
-                    Proceed to Dashboard
+                    Go to Import Page
                   </Button>
                 </motion.div>
               </motion.div>
-            }
-          </>
-        ) : (
-          // No results state
-          <motion.div
-            className="bg-background/50 flex h-full min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-12 text-center backdrop-blur-sm dark:border-gray-700"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
-          >
-            <motion.div
-              className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{
-                delay: 0.3,
-                type: "spring",
-                stiffness: 200,
-                damping: 20,
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 text-blue-600 dark:text-blue-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                />
-              </svg>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.3 }}
-            >
-              <h3 className="mb-2 text-xl font-semibold">No Manga To Match</h3>
-              <p className="text-muted-foreground mb-6 text-sm">
-                No manga data to match. Return to the import page to load your
-                data.
-              </p>
-              <Button
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                onClick={() => {
-                  // Clear any pending manga data
-                  pendingMangaState.savePendingManga([]);
-                  navigate({ to: "/import" });
-                }}
-              >
-                Go to Import Page
-              </Button>
-            </motion.div>
+            )}
           </motion.div>
-        )}
-      </motion.div>
 
-      {/* Search Modal */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        searchTarget={searchTarget}
-        accessToken={authState.accessToken || ""}
-        bypassCache={true}
-        onClose={() => {
-          setIsSearchOpen(false);
-          setSearchTarget(undefined);
-          matchingProcess.setBypassCache(false);
-        }}
-        onSelectMatch={matchHandlers.handleSelectSearchMatch}
-      />
+          {/* Search Modal */}
+          <SearchModal
+            isOpen={isSearchOpen}
+            searchTarget={searchTarget}
+            accessToken={authState.accessToken || ""}
+            bypassCache={true}
+            onClose={() => {
+              setIsSearchOpen(false);
+              setSearchTarget(undefined);
+              matchingProcess.setBypassCache(false);
+            }}
+            onSelectMatch={matchHandlers.handleSelectSearchMatch}
+          />
 
-      {/* Cache Clearing Notification */}
-      {matchingProcess.isCacheClearing && (
-        <CacheClearingNotification
-          cacheClearingCount={matchingProcess.cacheClearingCount}
-        />
-      )}
-
-      {/* Error display when we have an error but also have results */}
-      <AnimatePresence>
-        {matchingProcess.error &&
-          matchResults.length > 0 &&
-          !rateLimitState.isRateLimited && (
-            <motion.div
-              className="fixed right-4 bottom-4 max-w-sm rounded-md bg-red-50 p-4 shadow-lg dark:bg-red-900/30"
-              initial={{ opacity: 0, x: 20, y: 20 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-red-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                    {matchingProcess.error}
-                  </p>
-                  <div className="mt-2 flex space-x-2">
-                    <button
-                      onClick={() => matchingProcess.setError(null)}
-                      className="rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+          {/* Cache Clearing Notification */}
+          {matchingProcess.isCacheClearing && (
+            <CacheClearingNotification
+              cacheClearingCount={matchingProcess.cacheClearingCount}
+            />
           )}
-      </AnimatePresence>
+
+          {/* Error display when we have an error but also have results */}
+          <AnimatePresence>
+            {matchingProcess.error &&
+              !matchingProcess.error.includes("Authentication Required") &&
+              matchResults.length > 0 &&
+              !rateLimitState.isRateLimited && (
+                <motion.div
+                  className="fixed right-4 bottom-4 max-w-sm rounded-md bg-red-50 p-4 shadow-lg dark:bg-red-900/30"
+                  initial={{ opacity: 0, x: 20, y: 20 }}
+                  animate={{ opacity: 1, x: 0, y: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-red-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                        {matchingProcess.error}
+                      </p>
+                      <div className="mt-2 flex space-x-2">
+                        <button
+                          onClick={() => matchingProcess.setError(null)}
+                          className="rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+          </AnimatePresence>
+        </>
+      )}
     </motion.div>
   );
 }
