@@ -19,7 +19,12 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { APICredentials } from "../types/auth";
 import { DEFAULT_ANILIST_CONFIG, DEFAULT_AUTH_PORT } from "../config/anilist";
-import { storage } from "../utils/storage";
+import {
+  storage,
+  getSyncConfig,
+  saveSyncConfig,
+  SyncConfig,
+} from "../utils/storage";
 import {
   Card,
   CardContent,
@@ -86,12 +91,16 @@ export function SettingsPage() {
   const [error, setError] = useState<AppError | null>(null);
   const [cacheCleared, setCacheCleared] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [showStatusMessage, setShowStatusMessage] = useState(true);
   const [cachesToClear, setCachesToClear] = useState({
-    search: true,
-    manga: true,
-    review: true,
-    import: true,
-    other: true,
+    auth: false,
+    settings: false,
+    sync: false,
+    import: false,
+    review: false,
+    manga: false,
+    search: false,
+    other: false,
   });
   const [useCustomCredentials, setUseCustomCredentials] = useState(
     authState.credentialSource === "custom",
@@ -100,6 +109,13 @@ export function SettingsPage() {
   const [clientSecret, setClientSecret] = useState("");
   const [redirectUri, setRedirectUri] = useState(
     `http://localhost:${DEFAULT_AUTH_PORT}/callback`,
+  );
+  const [syncConfig, setSyncConfig] = useState<SyncConfig>(getSyncConfig());
+  const [useCustomThreshold, setUseCustomThreshold] = useState<boolean>(
+    typeof syncConfig.autoPauseThreshold === "string" ||
+      ![1, 7, 14, 30, 60, 90, 180, 365].includes(
+        Number(syncConfig.autoPauseThreshold),
+      ),
   );
 
   // Handler for opening external links in the default browser
@@ -179,8 +195,21 @@ export function SettingsPage() {
   useEffect(() => {
     if (authState.isAuthenticated) {
       setError(null);
+
+      // If we have a status message and authentication is complete,
+      // set a timeout to clear the status message
+      if (statusMessage && !isLoading) {
+        const timer = setTimeout(() => {
+          setShowStatusMessage(false);
+        }, 3000); // Auto-dismiss after 3 seconds
+
+        return () => clearTimeout(timer);
+      }
+    } else {
+      // Reset the status message visibility when not authenticated
+      setShowStatusMessage(true);
     }
-  }, [authState.isAuthenticated]);
+  }, [authState.isAuthenticated, statusMessage, isLoading]);
 
   // Add a timeout to detect stuck loading state
   useEffect(() => {
@@ -329,24 +358,14 @@ export function SettingsPage() {
 
       // Define which localStorage keys belong to which cache type
       const cacheKeysByType = {
+        auth: ["authState", "customCredentials", "useCustomCredentials"],
         search: ["anilist_search_cache"],
         manga: ["anilist_manga_cache"],
-        review: [
-          "match_results",
-          "manga_matches",
-          "review_progress",
-          "pending_manga",
-          "matching_progress",
-        ],
+        review: ["match_results", "pending_manga", "matching_progress"],
         import: ["kenmei_data", "import_history", "import_stats"],
-        other: [
-          "title_cache",
-          "format_cache",
-          "alternative_titles_cache",
-          "user_manga_list",
-          "anilist_user_manga",
-          "cache_version",
-        ],
+        sync: ["anilist_sync_history"],
+        settings: ["sync_config", "theme"],
+        other: ["cache_version"],
       };
 
       // Additional keys from STORAGE_KEYS constant
@@ -545,18 +564,19 @@ export function SettingsPage() {
         </motion.div>
       )}
 
-      {statusMessage && !error && (
+      {statusMessage && !error && showStatusMessage && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
+          exit={{ opacity: 0, y: -10 }}
         >
           <Alert className="mb-6" variant="default">
             <ExternalLink className="h-4 w-4" />
             <AlertTitle>Authentication Status</AlertTitle>
             <AlertDescription className="flex items-center justify-between">
               <span>{statusMessage}</span>
-              {isLoading && (
+              {isLoading ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -565,6 +585,16 @@ export function SettingsPage() {
                 >
                   <XCircle className="h-4 w-4" />
                   Cancel
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowStatusMessage(false)}
+                  className="ml-auto flex items-center gap-1.5"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Dismiss
                 </Button>
               )}
             </AlertDescription>
@@ -578,13 +608,20 @@ export function SettingsPage() {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <Tabs defaultValue="account" className="space-y-6">
-          <TabsList className="bg-muted/50 grid w-full grid-cols-2 md:w-auto dark:bg-gray-800/50">
+          <TabsList className="bg-muted/50 grid w-full grid-cols-3 md:w-auto dark:bg-gray-800/50">
             <TabsTrigger
               value="account"
               className="data-[state=active]:bg-background flex items-center gap-1.5 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white dark:data-[state=active]:shadow-sm"
             >
               <UserCircle className="h-4 w-4" />
               Account
+            </TabsTrigger>
+            <TabsTrigger
+              value="sync"
+              className="data-[state=active]:bg-background flex items-center gap-1.5 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white dark:data-[state=active]:shadow-sm"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Sync
             </TabsTrigger>
             <TabsTrigger
               value="data"
@@ -597,7 +634,7 @@ export function SettingsPage() {
 
           <TabsContent value="account" className="space-y-6">
             <motion.div variants={itemVariants} initial="hidden" animate="show">
-              <Card className="overflow-hidden border-none shadow-md">
+              <Card className="bg-muted/10 overflow-hidden border-none shadow-md">
                 <CardHeader className="mr-2 ml-2 rounded-t-lg rounded-b-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10">
                   <CardTitle className="mt-2 flex items-center gap-2">
                     <motion.div
@@ -859,9 +896,278 @@ export function SettingsPage() {
             </motion.div>
           </TabsContent>
 
+          <TabsContent value="sync" className="space-y-6">
+            <motion.div variants={itemVariants} initial="hidden" animate="show">
+              <Card className="bg-muted/10 overflow-hidden border-none shadow-md">
+                <CardHeader className="mr-2 ml-2 rounded-t-lg rounded-b-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+                  <CardTitle className="mt-2 flex items-center gap-2">
+                    <motion.div
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </motion.div>
+                    Sync Preferences
+                  </CardTitle>
+                  <CardDescription className="mb-2">
+                    Configure how your manga collection is synchronized to
+                    AniList.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                  {/* Auto-Pause Settings */}
+                  <motion.div
+                    className="bg-muted/40 rounded-lg border p-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <h3 className="text-sm font-medium">
+                          Auto-Pause Inactive Manga
+                        </h3>
+                        <p className="text-muted-foreground text-xs">
+                          Automatically pause manga that haven&apos;t been
+                          updated recently
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          id="auto-pause"
+                          checked={syncConfig.autoPauseInactive}
+                          onCheckedChange={(checked) => {
+                            const newConfig = {
+                              ...syncConfig,
+                              autoPauseInactive: checked,
+                            };
+                            setSyncConfig(newConfig);
+                            saveSyncConfig(newConfig);
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid gap-1.5">
+                        <label className="text-xs font-medium">
+                          Auto-Pause Threshold
+                        </label>
+                        <select
+                          className="border-input bg-background ring-offset-background focus-visible:ring-ring w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                          value={
+                            useCustomThreshold
+                              ? "custom"
+                              : syncConfig.autoPauseThreshold.toString()
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "custom") {
+                              setUseCustomThreshold(true);
+                            } else {
+                              setUseCustomThreshold(false);
+                              const newConfig = {
+                                ...syncConfig,
+                                autoPauseThreshold: Number(value),
+                              };
+                              setSyncConfig(newConfig);
+                              saveSyncConfig(newConfig);
+                            }
+                          }}
+                          disabled={!syncConfig.autoPauseInactive}
+                        >
+                          <option value="1">1 day</option>
+                          <option value="7">7 days</option>
+                          <option value="14">14 days</option>
+                          <option value="30">30 days</option>
+                          <option value="60">2 months</option>
+                          <option value="90">3 months</option>
+                          <option value="180">6 months</option>
+                          <option value="365">1 year</option>
+                          <option value="custom">Custom...</option>
+                        </select>
+                      </div>
+
+                      {useCustomThreshold && (
+                        <div className="grid gap-1.5">
+                          <label className="text-xs font-medium">
+                            Custom threshold (days)
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Enter days"
+                            value={
+                              syncConfig.customAutoPauseThreshold ||
+                              syncConfig.autoPauseThreshold
+                            }
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              if (!isNaN(value) && value > 0) {
+                                const newConfig = {
+                                  ...syncConfig,
+                                  autoPauseThreshold: value,
+                                  customAutoPauseThreshold: value,
+                                };
+                                setSyncConfig(newConfig);
+                                saveSyncConfig(newConfig);
+                              }
+                            }}
+                            disabled={!syncConfig.autoPauseInactive}
+                          />
+                        </div>
+                      )}
+
+                      <Alert className="bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          Auto-pause applies to manga with status READING.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  </motion.div>
+
+                  {/* Status Priority Settings */}
+                  <motion.div
+                    className="bg-muted/40 rounded-lg border p-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
+                  >
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium">Status Priority</h3>
+                      <p className="text-muted-foreground text-xs">
+                        Configure which status values take priority during
+                        synchronization
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm" htmlFor="preserve-completed">
+                          Preserve completed status
+                        </label>
+                        <Switch
+                          id="preserve-completed"
+                          checked={syncConfig.preserveCompletedStatus}
+                          onCheckedChange={(checked) => {
+                            const newConfig = {
+                              ...syncConfig,
+                              preserveCompletedStatus: checked,
+                            };
+                            setSyncConfig(newConfig);
+                            saveSyncConfig(newConfig);
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label
+                          className="text-sm"
+                          htmlFor="prioritize-anilist-status"
+                        >
+                          Prioritize AniList status
+                        </label>
+                        <Switch
+                          id="prioritize-anilist-status"
+                          checked={syncConfig.prioritizeAniListStatus}
+                          onCheckedChange={(checked) => {
+                            const newConfig = {
+                              ...syncConfig,
+                              prioritizeAniListStatus: checked,
+                            };
+                            setSyncConfig(newConfig);
+                            saveSyncConfig(newConfig);
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label
+                          className="text-sm"
+                          htmlFor="prioritize-anilist-progress"
+                        >
+                          Prioritize AniList progress
+                        </label>
+                        <Switch
+                          id="prioritize-anilist-progress"
+                          checked={syncConfig.prioritizeAniListProgress}
+                          onCheckedChange={(checked) => {
+                            const newConfig = {
+                              ...syncConfig,
+                              prioritizeAniListProgress: checked,
+                            };
+                            setSyncConfig(newConfig);
+                            saveSyncConfig(newConfig);
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label
+                          className="text-sm"
+                          htmlFor="prioritize-anilist-score"
+                        >
+                          Prioritize AniList score
+                        </label>
+                        <Switch
+                          id="prioritize-anilist-score"
+                          checked={syncConfig.prioritizeAniListScore}
+                          onCheckedChange={(checked) => {
+                            const newConfig = {
+                              ...syncConfig,
+                              prioritizeAniListScore: checked,
+                            };
+                            setSyncConfig(newConfig);
+                            saveSyncConfig(newConfig);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Privacy Settings */}
+                  <motion.div
+                    className="bg-muted/40 rounded-lg border p-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <h3 className="text-sm font-medium">
+                          Privacy Settings
+                        </h3>
+                        <p className="text-muted-foreground text-xs">
+                          Control privacy for synchronized entries
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm" htmlFor="set-private">
+                          Set entries as private
+                        </label>
+                        <Switch
+                          id="set-private"
+                          checked={syncConfig.setPrivate}
+                          onCheckedChange={(checked) => {
+                            const newConfig = {
+                              ...syncConfig,
+                              setPrivate: checked,
+                            };
+                            setSyncConfig(newConfig);
+                            saveSyncConfig(newConfig);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </TabsContent>
+
           <TabsContent value="data" className="space-y-6">
             <motion.div variants={itemVariants} initial="hidden" animate="show">
-              <Card className="overflow-hidden border-none shadow-md">
+              <Card className="bg-muted/10 overflow-hidden border-none shadow-md">
                 <CardHeader className="mr-2 ml-2 rounded-t-lg rounded-b-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
                   <CardTitle className="mt-2 flex items-center gap-2">
                     <motion.div
@@ -890,8 +1196,7 @@ export function SettingsPage() {
                         Clear Local Cache
                       </h3>
                       <p className="text-muted-foreground text-xs">
-                        Select which types of cached data to remove. Your
-                        AniList authentication will not be affected.
+                        Select which types of cached data to remove.
                       </p>
                     </div>
 
@@ -903,42 +1208,83 @@ export function SettingsPage() {
                           <input
                             type="checkbox"
                             className="border-primary text-primary h-4 w-4 rounded"
-                            checked={cachesToClear.search}
+                            checked={cachesToClear.auth}
                             onChange={(e) =>
                               setCachesToClear({
                                 ...cachesToClear,
-                                search: e.target.checked,
+                                auth: e.target.checked,
                               })
                             }
                           />
                           <div>
                             <span className="text-sm font-medium">
-                              Search Cache
+                              Auth Cache
                             </span>
                             <p className="text-muted-foreground text-xs">
-                              Search results
+                              Authentication state
                             </p>
                           </div>
                         </label>
-
                         <label className="hover:bg-muted flex items-center gap-2 rounded-md p-2">
                           <input
                             type="checkbox"
                             className="border-primary text-primary h-4 w-4 rounded"
-                            checked={cachesToClear.manga}
+                            checked={cachesToClear.settings}
                             onChange={(e) =>
                               setCachesToClear({
                                 ...cachesToClear,
-                                manga: e.target.checked,
+                                settings: e.target.checked,
                               })
                             }
                           />
                           <div>
                             <span className="text-sm font-medium">
-                              Manga Cache
+                              Settings Cache
                             </span>
                             <p className="text-muted-foreground text-xs">
-                              Manga metadata
+                              Sync preferences
+                            </p>
+                          </div>
+                        </label>
+                        <label className="hover:bg-muted flex items-center gap-2 rounded-md p-2">
+                          <input
+                            type="checkbox"
+                            className="border-primary text-primary h-4 w-4 rounded"
+                            checked={cachesToClear.sync}
+                            onChange={(e) =>
+                              setCachesToClear({
+                                ...cachesToClear,
+                                sync: e.target.checked,
+                              })
+                            }
+                          />
+                          <div>
+                            <span className="text-sm font-medium">
+                              Sync Cache
+                            </span>
+                            <p className="text-muted-foreground text-xs">
+                              Sync history
+                            </p>
+                          </div>
+                        </label>
+                        <label className="hover:bg-muted flex items-center gap-2 rounded-md p-2">
+                          <input
+                            type="checkbox"
+                            className="border-primary text-primary h-4 w-4 rounded"
+                            checked={cachesToClear.import}
+                            onChange={(e) =>
+                              setCachesToClear({
+                                ...cachesToClear,
+                                import: e.target.checked,
+                              })
+                            }
+                          />
+                          <div>
+                            <span className="text-sm font-medium">
+                              Import Cache
+                            </span>
+                            <p className="text-muted-foreground text-xs">
+                              Import history
                             </p>
                           </div>
                         </label>
@@ -966,54 +1312,71 @@ export function SettingsPage() {
                             </p>
                           </div>
                         </label>
-
                         <label className="hover:bg-muted flex items-center gap-2 rounded-md p-2">
                           <input
                             type="checkbox"
                             className="border-primary text-primary h-4 w-4 rounded"
-                            checked={cachesToClear.import}
+                            checked={cachesToClear.manga}
                             onChange={(e) =>
                               setCachesToClear({
                                 ...cachesToClear,
-                                import: e.target.checked,
+                                manga: e.target.checked,
                               })
                             }
                           />
                           <div>
                             <span className="text-sm font-medium">
-                              Import Cache
+                              Manga Cache
                             </span>
                             <p className="text-muted-foreground text-xs">
-                              Import history
+                              Manga metadata
+                            </p>
+                          </div>
+                        </label>
+                        <label className="hover:bg-muted flex items-center gap-2 rounded-md p-2">
+                          <input
+                            type="checkbox"
+                            className="border-primary text-primary h-4 w-4 rounded"
+                            checked={cachesToClear.search}
+                            onChange={(e) =>
+                              setCachesToClear({
+                                ...cachesToClear,
+                                search: e.target.checked,
+                              })
+                            }
+                          />
+                          <div>
+                            <span className="text-sm font-medium">
+                              Search Cache
+                            </span>
+                            <p className="text-muted-foreground text-xs">
+                              Search results
+                            </p>
+                          </div>
+                        </label>
+                        <label className="hover:bg-muted flex items-center gap-2 rounded-md p-2">
+                          <input
+                            type="checkbox"
+                            className="border-primary text-primary h-4 w-4 rounded"
+                            checked={cachesToClear.other}
+                            onChange={(e) =>
+                              setCachesToClear({
+                                ...cachesToClear,
+                                other: e.target.checked,
+                              })
+                            }
+                          />
+                          <div>
+                            <span className="text-sm font-medium">
+                              Other Caches
+                            </span>
+                            <p className="text-muted-foreground text-xs">
+                              Miscellaneous application data
                             </p>
                           </div>
                         </label>
                       </div>
                     </div>
-
-                    <label className="hover:bg-muted flex items-center gap-2 rounded-md p-2">
-                      <input
-                        type="checkbox"
-                        className="border-primary text-primary h-4 w-4 rounded"
-                        checked={cachesToClear.other}
-                        onChange={(e) =>
-                          setCachesToClear({
-                            ...cachesToClear,
-                            other: e.target.checked,
-                          })
-                        }
-                      />
-                      <div>
-                        <span className="text-sm font-medium">
-                          Other Caches
-                        </span>
-                        <p className="text-muted-foreground text-xs">
-                          Miscellaneous application data
-                        </p>
-                      </div>
-                    </label>
-
-                    <Separator />
 
                     <div className="flex justify-between">
                       <Button
@@ -1022,10 +1385,13 @@ export function SettingsPage() {
                         className="h-auto p-0 text-xs text-blue-600 dark:text-blue-400"
                         onClick={() =>
                           setCachesToClear({
-                            search: true,
-                            manga: true,
-                            review: true,
+                            auth: true,
+                            settings: true,
+                            sync: true,
                             import: true,
+                            review: true,
+                            manga: true,
+                            search: true,
                             other: true,
                           })
                         }
@@ -1038,10 +1404,13 @@ export function SettingsPage() {
                         className="h-auto p-0 text-xs text-blue-600 dark:text-blue-400"
                         onClick={() =>
                           setCachesToClear({
-                            search: false,
-                            manga: false,
-                            review: false,
+                            auth: false,
+                            settings: false,
+                            sync: false,
                             import: false,
+                            review: false,
+                            manga: false,
+                            search: false,
                             other: false,
                           })
                         }
@@ -1089,19 +1458,25 @@ export function SettingsPage() {
       </motion.div>
 
       {/* Application Info Section */}
-      <Card className="bg-muted/5 mt-6 border-none shadow-sm">
+      <Card className="bg-muted/10 mt-6 border-none shadow-sm">
         <CardContent className="space-y-4 py-6">
           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div className="flex items-center gap-2">
               <InfoIcon className="text-muted-foreground h-4 w-4" />
               <h3 className="text-sm font-medium">Application Info</h3>
             </div>
-            <div>
+            <div className="flex items-center space-x-2">
               <Badge
                 variant="outline"
                 className="bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
               >
                 Version {getAppVersion() || "1.0.0"}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+              >
+                Stable
               </Badge>
             </div>
           </div>
@@ -1111,7 +1486,65 @@ export function SettingsPage() {
                 <Clock className="text-muted-foreground h-4 w-4" />
                 <p className="text-xs font-medium">Last Synced</p>
               </div>
-              <p className="text-muted-foreground ml-6 text-sm">Never</p>
+              {(() => {
+                try {
+                  const syncHistoryStr = localStorage.getItem(
+                    "anilist_sync_history",
+                  );
+                  if (!syncHistoryStr)
+                    return (
+                      <p className="text-muted-foreground ml-6 text-sm">
+                        Never
+                      </p>
+                    );
+
+                  const syncHistory = JSON.parse(syncHistoryStr);
+                  if (!syncHistory || !syncHistory.length)
+                    return (
+                      <p className="text-muted-foreground ml-6 text-sm">
+                        Never
+                      </p>
+                    );
+
+                  const latestSync = syncHistory[0];
+                  const timestamp = new Date(latestSync.timestamp);
+
+                  // Format the date nicely
+                  const formattedDate = timestamp.toLocaleString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+
+                  return (
+                    <div className="ml-6 space-y-1">
+                      <p className="text-muted-foreground text-sm">
+                        {formattedDate}
+                      </p>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="text-green-600 dark:text-green-400">
+                          ✓ {latestSync.successfulUpdates} successful
+                        </span>
+                        {latestSync.failedUpdates > 0 && (
+                          <span className="text-red-600 dark:text-red-400">
+                            ✗ {latestSync.failedUpdates} failed
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">
+                          ({latestSync.totalEntries} total)
+                        </span>
+                      </div>
+                    </div>
+                  );
+                } catch (e) {
+                  console.error("Error parsing sync history:", e);
+                  return (
+                    <p className="text-muted-foreground ml-6 text-sm">Never</p>
+                  );
+                }
+              })()}
             </div>
             <div className="bg-muted/40 rounded-lg p-3">
               <div className="flex items-center gap-2">
@@ -1149,6 +1582,25 @@ export function SettingsPage() {
                 )}
               </p>
             </div>
+          </div>
+
+          <div className="flex items-center justify-center space-x-3 pt-2">
+            <a
+              href="https://github.com/RLAlpha49/KenmeiToAnilist"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground inline-flex items-center text-xs font-medium transition-colors"
+              onClick={handleOpenExternal(
+                "https://github.com/RLAlpha49/KenmeiToAnilist",
+              )}
+            >
+              <ExternalLink className="mr-1 h-3 w-3" />
+              GitHub
+            </a>
+            <Separator orientation="vertical" className="h-4" />
+            <span className="text-muted-foreground/60 text-xs">
+              Made with ❤️ for manga readers
+            </span>
           </div>
         </CardContent>
       </Card>
