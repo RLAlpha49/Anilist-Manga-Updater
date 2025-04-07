@@ -101,6 +101,27 @@ const featureCards = [
     icon: <CheckCheck className="h-6 w-6" />,
     color: "from-green-500 to-emerald-600",
   },
+  {
+    title: "Auto-Pause Manga",
+    description:
+      "Automatically pause manga that haven't been updated within a customizable time period.",
+    icon: <Clock className="h-6 w-6" />,
+    color: "from-amber-500 to-orange-600",
+  },
+  {
+    title: "Flexible Configuration",
+    description:
+      "Customize how synchronization works with priority settings for status, progress, and scores.",
+    icon: <Settings className="h-6 w-6" />,
+    color: "from-teal-500 to-emerald-600",
+  },
+  {
+    title: "Privacy Control",
+    description:
+      "Control which entries are private on AniList while maintaining your reading history.",
+    icon: <UserCheck className="h-6 w-6" />,
+    color: "from-red-500 to-pink-600",
+  },
 ];
 
 export function HomePage() {
@@ -118,6 +139,29 @@ export function HomePage() {
     lastSync: null,
     syncStatus: "none",
   });
+  const [matchStatus, setMatchStatus] = useState<{
+    pendingMatches: number;
+    skippedMatches: number;
+    totalMatches: number;
+    status: "none" | "pending" | "complete";
+  }>({
+    pendingMatches: 0,
+    skippedMatches: 0,
+    totalMatches: 0,
+    status: "none",
+  });
+
+  // Define interface for match result objects
+  interface MatchResult {
+    status?: string;
+    selectedMatch?: {
+      id: number;
+      title: string;
+      [key: string]: unknown;
+    } | null;
+    needsReview?: boolean;
+    [key: string]: unknown;
+  }
 
   // Load import stats from storage on component mount
   useEffect(() => {
@@ -135,6 +179,57 @@ export function HomePage() {
         planToRead: statusCounts.plan_to_read || 0,
         lastSync: importStats.timestamp || null,
       });
+    }
+
+    // Get match status data
+    try {
+      const matchResultsStr = localStorage.getItem("match_results");
+
+      if (matchResultsStr) {
+        const matchResults = JSON.parse(matchResultsStr);
+        const totalCount = matchResults ? Object.keys(matchResults).length : 0;
+
+        if (totalCount > 0) {
+          // Count pending and skipped matches by iterating through match results
+          let pendingCount = 0;
+          let skippedCount = 0;
+
+          Object.values(matchResults).forEach((result) => {
+            // Type cast the unknown result to our MatchResult interface
+            const matchResult = result as MatchResult;
+
+            // Check if entry is explicitly marked as skipped
+            if (matchResult.status === "skipped") {
+              skippedCount++;
+            }
+            // Check if the entry genuinely needs review
+            else if (
+              matchResult.status === "pending" ||
+              (matchResult.needsReview === true &&
+                !matchResult.selectedMatch) ||
+              (matchResult.status !== "skipped" && !matchResult.selectedMatch)
+            ) {
+              pendingCount++;
+            }
+          });
+
+          setMatchStatus({
+            pendingMatches: pendingCount,
+            skippedMatches: skippedCount,
+            totalMatches: totalCount,
+            status: pendingCount === 0 ? "complete" : "pending",
+          });
+        } else {
+          setMatchStatus({
+            pendingMatches: 0,
+            skippedMatches: 0,
+            totalMatches: 0,
+            status: "none",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error retrieving match status:", error);
     }
   }, []);
 
@@ -234,10 +329,12 @@ export function HomePage() {
         animate="show"
       >
         <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md transition-all hover:shadow-lg dark:from-blue-950/40 dark:to-indigo-950/40">
+          <Card className="overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md transition-all hover:translate-y-[-3px] hover:shadow-lg dark:from-blue-950/40 dark:to-indigo-950/40">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-xl text-blue-700 dark:text-blue-400">
-                <Library className="mr-2 h-5 w-5" />
+                <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-800/50">
+                  <Library className="h-5 w-5" />
+                </div>
                 Imported Items
               </CardTitle>
             </CardHeader>
@@ -246,23 +343,25 @@ export function HomePage() {
                 <p className="mb-2 text-4xl font-bold text-blue-600 dark:text-blue-400">
                   {stats.total}
                 </p>
-                <div className="text-muted-foreground flex items-center text-sm">
+                <div className="text-muted-foreground flex items-center rounded-md bg-blue-50/50 px-2 py-1 text-sm dark:bg-blue-900/20">
                   <Clock className="mr-1 h-3.5 w-3.5 text-blue-500" />
                   {stats.total > 0
                     ? `Last imported: ${formatDate(stats.lastSync)}`
                     : "No items imported yet"}
                 </div>
-                <BarChart2 className="absolute right-0 bottom-0 h-16 w-16 text-blue-200 dark:text-blue-900/50" />
+                <BarChart2 className="absolute right-0 bottom-0 h-16 w-16 text-blue-500 opacity-20 dark:text-blue-900/50" />
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-none bg-gradient-to-br from-purple-50 to-fuchsia-50 shadow-md transition-all hover:shadow-lg dark:from-purple-950/40 dark:to-fuchsia-950/40">
+          <Card className="overflow-hidden border-none bg-gradient-to-br from-purple-50 to-fuchsia-50 shadow-md transition-all hover:translate-y-[-3px] hover:shadow-lg dark:from-purple-950/40 dark:to-fuchsia-950/40">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-xl text-purple-700 dark:text-purple-400">
-                <Activity className="mr-2 h-5 w-5" />
+                <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-800/50">
+                  <Activity className="h-5 w-5" />
+                </div>
                 Reading Status
               </CardTitle>
             </CardHeader>
@@ -274,60 +373,109 @@ export function HomePage() {
                 <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
                   <Badge
                     variant="outline"
-                    className="bg-green-100/50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                    className="bg-green-100/50 text-green-700 shadow-sm dark:bg-green-900/20 dark:text-green-400"
                   >
                     {stats.completed} Completed
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="bg-amber-100/50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                    className="bg-amber-100/50 text-amber-700 shadow-sm dark:bg-amber-900/20 dark:text-amber-400"
                   >
                     {stats.onHold} On Hold
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="bg-blue-100/50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                    className="bg-blue-100/50 text-blue-700 shadow-sm dark:bg-blue-900/20 dark:text-blue-400"
                   >
                     {stats.planToRead} Plan to Read
                   </Badge>
+                  <Badge
+                    variant="outline"
+                    className="bg-red-100/50 text-red-700 shadow-sm dark:bg-red-900/20 dark:text-red-400"
+                  >
+                    {stats.dropped} Dropped
+                  </Badge>
                 </div>
-                <LineChart className="absolute right-0 bottom-0 h-16 w-16 text-purple-200 dark:text-purple-900/50" />
+                <LineChart className="absolute right-0 bottom-0 h-16 w-16 text-purple-500 opacity-20 dark:text-purple-900/50" />
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-none bg-gradient-to-br from-green-50 to-emerald-50 shadow-md transition-all hover:shadow-lg dark:from-green-950/40 dark:to-emerald-950/40">
+          <Card className="overflow-hidden border-none bg-gradient-to-br from-green-50 to-emerald-50 shadow-md transition-all hover:translate-y-[-3px] hover:shadow-lg dark:from-green-950/40 dark:to-emerald-950/40">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-xl text-green-700 dark:text-green-400">
-                <ClipboardCheck className="mr-2 h-5 w-5" />
+                <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-800/50">
+                  <ClipboardCheck className="h-5 w-5" />
+                </div>
                 Match Status
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="relative">
                 <p className="mb-2 text-4xl font-bold text-green-600 dark:text-green-400">
-                  {stats.total > 0 ? "Ready" : "-"}
+                  {matchStatus.status === "none"
+                    ? "-"
+                    : matchStatus.status === "pending"
+                      ? "Ready"
+                      : "Complete"}
                 </p>
-                <div className="text-muted-foreground flex items-center text-sm">
-                  {stats.total > 0 ? (
+                <div className="text-muted-foreground flex flex-row flex-wrap gap-2 text-sm">
+                  {matchStatus.status === "pending" ? (
                     <Badge
                       variant="outline"
-                      className="bg-green-100/50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                      className="bg-amber-100/50 text-amber-700 shadow-sm dark:bg-amber-900/20 dark:text-amber-400"
                     >
-                      Review matches now
+                      <span className="flex items-center gap-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
+                        {matchStatus.pendingMatches} manga need review
+                      </span>
+                    </Badge>
+                  ) : matchStatus.status === "complete" ? (
+                    <Badge
+                      variant="outline"
+                      className="bg-green-100/50 text-green-700 shadow-sm dark:bg-green-900/20 dark:text-green-400"
+                    >
+                      <span className="flex items-center gap-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                        {matchStatus.totalMatches - matchStatus.skippedMatches}{" "}
+                        manga matched
+                      </span>
                     </Badge>
                   ) : (
                     <Badge
                       variant="outline"
-                      className="bg-gray-100/50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
+                      className="bg-gray-100/50 text-gray-700 shadow-sm dark:bg-gray-900/20 dark:text-gray-400"
                     >
-                      Import data first
+                      <span className="flex items-center gap-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-gray-500"></div>
+                        Import data first
+                      </span>
+                    </Badge>
+                  )}
+
+                  {matchStatus.skippedMatches > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-100/50 text-blue-700 shadow-sm dark:bg-blue-900/20 dark:text-blue-400"
+                    >
+                      <span className="flex items-center gap-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                        {matchStatus.skippedMatches} manga skipped
+                      </span>
                     </Badge>
                   )}
                 </div>
-                <RefreshCw className="absolute right-0 bottom-0 h-16 w-16 text-green-200 dark:text-green-900/50" />
+                <RefreshCw
+                  className={`absolute right-0 bottom-0 h-16 w-16 opacity-20 ${
+                    matchStatus.status === "pending"
+                      ? "text-amber-500 dark:text-amber-900/50"
+                      : matchStatus.status === "complete"
+                        ? "text-green-500 dark:text-green-900/50"
+                        : "text-gray-500 dark:text-gray-900/50"
+                  }`}
+                />
               </div>
             </CardContent>
           </Card>
@@ -352,23 +500,28 @@ export function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <Button
                   asChild
                   variant="outline"
-                  className="h-auto justify-start gap-3 border-blue-200 bg-blue-50 px-4 py-3 text-left transition-all hover:border-blue-300 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:hover:border-blue-800 dark:hover:bg-blue-900/40"
+                  className="h-auto w-full min-w-0 justify-start gap-3 border-blue-200 bg-blue-50 px-4 py-3 text-left transition-all hover:border-blue-300 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:hover:border-blue-800 dark:hover:bg-blue-900/40"
                 >
-                  <Link to="/import">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800">
+                  <Link to="/import" className="flex w-full items-start">
+                    <div className="flex h-10 w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-full bg-blue-200 dark:bg-blue-800">
                       <Download className="h-5 w-5 text-blue-700 dark:text-blue-300" />
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <p className="font-medium">Import Data</p>
-                      <p className="text-xs opacity-70">
+                    <div className="mx-3 min-w-0 flex-1 space-y-1 overflow-hidden">
+                      <p className="text-sm leading-tight font-medium whitespace-normal">
+                        Import Data
+                      </p>
+                      <p
+                        className="word-break-normal overflow-hidden text-xs leading-tight text-wrap opacity-70"
+                        style={{ maxWidth: "100%", display: "block" }}
+                      >
                         Upload your Kenmei CSV
                       </p>
                     </div>
-                    <ChevronRight className="text-muted-foreground h-4 w-4" />
+                    <ChevronRight className="text-muted-foreground mt-1.5 h-4 w-4 flex-shrink-0" />
                   </Link>
                 </Button>
 
@@ -376,34 +529,39 @@ export function HomePage() {
                   <Button
                     asChild
                     variant="outline"
-                    className="h-auto justify-start gap-3 border-green-200 bg-green-50 px-4 py-3 text-left transition-all hover:border-green-300 hover:bg-green-100 dark:border-green-900 dark:bg-green-950/30 dark:hover:border-green-800 dark:hover:bg-green-900/40"
+                    className="h-auto w-full min-w-0 justify-start gap-3 border-green-200 bg-green-50 px-4 py-3 text-left transition-all hover:border-green-300 hover:bg-green-100 dark:border-green-900 dark:bg-green-950/30 dark:hover:border-green-800 dark:hover:bg-green-900/40"
                   >
-                    <Link to="/review">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-200 dark:bg-green-800">
+                    <Link to="/review" className="flex w-full items-start">
+                      <div className="flex h-10 w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-full bg-green-200 dark:bg-green-800">
                         <ClipboardCheck className="h-5 w-5 text-green-700 dark:text-green-300" />
                       </div>
-                      <div className="flex-1 space-y-1">
-                        <p className="font-medium">Review Matches</p>
-                        <p className="text-xs opacity-70">
+                      <div className="mx-3 min-w-0 flex-1 space-y-1 overflow-hidden">
+                        <p className="text-sm leading-tight font-medium whitespace-normal">
+                          Review Matches
+                        </p>
+                        <p
+                          className="word-break-normal overflow-hidden text-xs leading-tight text-wrap opacity-70"
+                          style={{ maxWidth: "100%", display: "block" }}
+                        >
                           Check your manga matches
                         </p>
                       </div>
-                      <ChevronRight className="text-muted-foreground h-4 w-4" />
+                      <ChevronRight className="text-muted-foreground mt-1.5 h-4 w-4 flex-shrink-0" />
                     </Link>
                   </Button>
                 ) : (
                   <Button
                     asChild
                     variant="outline"
-                    className={`h-auto justify-start gap-3 px-4 py-3 text-left transition-all ${
+                    className={`h-auto w-full min-w-0 justify-start gap-3 px-4 py-3 text-left transition-all ${
                       authState.isAuthenticated
                         ? "border-green-200 bg-green-50 hover:border-green-300 hover:bg-green-100 dark:border-green-900 dark:bg-green-950/30 dark:hover:border-green-800 dark:hover:bg-green-900/40"
                         : "border-blue-200 bg-blue-50 hover:border-blue-300 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:hover:border-blue-800 dark:hover:bg-blue-900/40"
                     }`}
                   >
-                    <Link to="/settings">
+                    <Link to="/settings" className="flex w-full items-start">
                       <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        className={`flex h-10 w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-full ${
                           authState.isAuthenticated
                             ? "bg-green-200 dark:bg-green-800"
                             : "bg-blue-200 dark:bg-blue-800"
@@ -415,26 +573,77 @@ export function HomePage() {
                           <AlertCircle className="h-5 w-5 text-blue-700 dark:text-blue-300" />
                         )}
                       </div>
-                      <div className="flex-1 space-y-1">
-                        <p className="font-medium">
+                      <div className="mx-3 min-w-0 flex-1 space-y-1 overflow-hidden">
+                        <p className="text-sm leading-tight font-medium whitespace-normal">
                           {authState.isAuthenticated
                             ? "AniList Connected"
                             : "Connect to AniList"}
                         </p>
-                        <p className="text-xs opacity-70">
+                        <p
+                          className="word-break-normal overflow-hidden text-xs leading-tight text-wrap opacity-70"
+                          style={{ maxWidth: "100%", display: "block" }}
+                        >
                           {authState.isAuthenticated
                             ? authState.username || "Authenticated User"
                             : "Setup authentication"}
                         </p>
                       </div>
                       {authState.isAuthenticated ? (
-                        <LogOut className="text-muted-foreground h-4 w-4" />
+                        <LogOut className="text-muted-foreground mt-1.5 h-4 w-4 flex-shrink-0" />
                       ) : (
-                        <ChevronRight className="text-muted-foreground h-4 w-4" />
+                        <ChevronRight className="text-muted-foreground mt-1.5 h-4 w-4 flex-shrink-0" />
                       )}
                     </Link>
                   </Button>
                 )}
+
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-auto w-full min-w-0 justify-start gap-3 border-purple-200 bg-purple-50 px-4 py-3 text-left transition-all hover:border-purple-300 hover:bg-purple-100 dark:border-purple-900 dark:bg-purple-950/30 dark:hover:border-purple-800 dark:hover:bg-purple-900/40"
+                >
+                  <Link to="/sync" className="flex w-full items-start">
+                    <div className="flex h-10 w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-full bg-purple-200 dark:bg-purple-800">
+                      <RefreshCw className="h-5 w-5 text-purple-700 dark:text-purple-300" />
+                    </div>
+                    <div className="mx-3 min-w-0 flex-1 space-y-1 overflow-hidden">
+                      <p className="text-sm leading-tight font-medium whitespace-normal">
+                        Synchronize
+                      </p>
+                      <p
+                        className="word-break-normal overflow-hidden text-xs leading-tight text-wrap opacity-70"
+                        style={{ maxWidth: "100%", display: "block" }}
+                      >
+                        Sync to AniList
+                      </p>
+                    </div>
+                    <ChevronRight className="text-muted-foreground mt-1.5 h-4 w-4 flex-shrink-0" />
+                  </Link>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-auto w-full min-w-0 justify-start gap-3 border-amber-200 bg-amber-50 px-4 py-3 text-left transition-all hover:border-amber-300 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/30 dark:hover:border-amber-800 dark:hover:bg-amber-900/40"
+                >
+                  <Link to="/settings" className="flex w-full items-start">
+                    <div className="flex h-10 w-10 min-w-[2.5rem] flex-shrink-0 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-800">
+                      <Settings className="h-5 w-5 text-amber-700 dark:text-amber-300" />
+                    </div>
+                    <div className="mx-3 min-w-0 flex-1 space-y-1 overflow-hidden">
+                      <p className="text-sm leading-tight font-medium whitespace-normal">
+                        Settings
+                      </p>
+                      <p
+                        className="word-break-normal overflow-hidden text-xs leading-tight text-wrap opacity-70"
+                        style={{ maxWidth: "100%", display: "block" }}
+                      >
+                        Configure application settings
+                      </p>
+                    </div>
+                    <ChevronRight className="text-muted-foreground mt-1.5 h-4 w-4 flex-shrink-0" />
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -444,86 +653,62 @@ export function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
-                <BookOpen className="mr-2 h-5 w-5 text-blue-500" />
-                Getting Started
+                <BarChart2 className="mr-2 h-5 w-5 text-blue-500" />
+                Sync Status
               </CardTitle>
               <CardDescription>
-                Follow these steps to sync your manga collection
+                Information about your synchronization
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <motion.div
-                  className="hover:bg-accent/50 flex items-start gap-4 rounded-lg p-4 transition-all"
-                  whileHover={{ x: 4 }}
-                >
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-sm font-semibold text-white shadow-sm">
-                    1
+                <div className="flex items-center justify-between rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>
+                    <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                      AniList API Status: Online
+                    </span>
                   </div>
-                  <div>
-                    <h3 className="font-medium">
-                      Connect your AniList account
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      Link your account in Settings to enable synchronization
-                    </p>
-                    {authState.isAuthenticated && (
-                      <Badge className="mt-2 bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
-                        Completed
-                      </Badge>
-                    )}
-                  </div>
-                </motion.div>
+                  <Badge
+                    variant="outline"
+                    className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                  >
+                    Ready
+                  </Badge>
+                </div>
 
-                <motion.div
-                  className="hover:bg-accent/50 flex items-start gap-4 rounded-lg p-4 transition-all"
-                  whileHover={{ x: 4 }}
-                >
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-sm font-semibold text-white shadow-sm">
-                    2
+                <div className="rounded-lg border p-4">
+                  <h3 className="mb-2 text-sm font-medium">Sync Statistics</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-blue-500" />
+                      <span className="text-muted-foreground">
+                        Total Manga:
+                      </span>
+                      <span className="font-medium">{stats.total}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-purple-500" />
+                      <span className="text-muted-foreground">Reading:</span>
+                      <span className="font-medium">{stats.reading}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCheck className="h-4 w-4 text-green-500" />
+                      <span className="text-muted-foreground">Completed:</span>
+                      <span className="font-medium">{stats.completed}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-amber-500" />
+                      <span className="text-muted-foreground">On Hold:</span>
+                      <span className="font-medium">{stats.onHold}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <span className="text-muted-foreground">Dropped:</span>
+                      <span className="font-medium">{stats.dropped}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium">Import your Kenmei data</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Upload your CSV export file from Kenmei
-                    </p>
-                    {stats.total > 0 && (
-                      <Badge className="mt-2 bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
-                        Completed
-                      </Badge>
-                    )}
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  className="hover:bg-accent/50 flex items-start gap-4 rounded-lg p-4 transition-all"
-                  whileHover={{ x: 4 }}
-                >
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 text-sm font-semibold text-white shadow-sm">
-                    3
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Review your matches</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Verify your manga matches and make corrections if needed
-                    </p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  className="hover:bg-accent/50 flex items-start gap-4 rounded-lg p-4 transition-all"
-                  whileHover={{ x: 4 }}
-                >
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 text-sm font-semibold text-white shadow-sm">
-                    4
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Synchronize to AniList</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Send your reviewed matches to your AniList account
-                    </p>
-                  </div>
-                </motion.div>
+                </div>
               </div>
             </CardContent>
           </Card>
