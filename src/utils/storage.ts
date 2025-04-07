@@ -14,8 +14,13 @@ declare global {
 export interface KenmeiManga {
   id: string | number;
   title: string;
-  status?: string;
-  // Add other manga properties as needed
+  status: string;
+  score: number;
+  chapters_read: number;
+  volumes_read: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface KenmeiData {
@@ -201,23 +206,29 @@ export const STORAGE_KEYS = {
 // Current cache version - increment this when incompatible changes are made to the data structure
 export const CURRENT_CACHE_VERSION = 1;
 
-// Default sync configuration
-export interface SyncConfig {
+// Define the sync configuration type
+export type SyncConfig = {
   prioritizeAniListStatus: boolean;
   prioritizeAniListProgress: boolean;
   prioritizeAniListScore: boolean;
   preserveCompletedStatus: boolean;
-  incrementalSync: boolean;
   setPrivate: boolean;
-}
+  incrementalSync: boolean;
+  autoPauseInactive: boolean;
+  autoPauseThreshold: number;
+  customAutoPauseThreshold?: number;
+};
 
 export const DEFAULT_SYNC_CONFIG: SyncConfig = {
   prioritizeAniListStatus: false,
   prioritizeAniListProgress: true,
-  prioritizeAniListScore: false,
+  prioritizeAniListScore: true,
   preserveCompletedStatus: true,
-  incrementalSync: true,
+  incrementalSync: false,
   setPrivate: false,
+  autoPauseInactive: false,
+  autoPauseThreshold: 60,
+  customAutoPauseThreshold: 60,
 };
 
 /**

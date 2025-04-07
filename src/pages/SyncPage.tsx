@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "../hooks/useAuth";
 import { useSynchronization } from "../hooks/useSynchronization";
@@ -9,7 +9,7 @@ import {
   MediaListStatus,
 } from "../api/anilist/types";
 import { MangaMatchResult } from "../api/anilist/types";
-import { STATUS_MAPPING } from "../api/kenmei/types";
+import { STATUS_MAPPING, KenmeiStatus } from "../api/kenmei/types";
 import {
   getSavedMatchResults,
   getSyncConfig,
@@ -159,6 +159,46 @@ export function SyncPage() {
 
   // Sync configuration options
   const [syncConfig, setSyncConfig] = useState<SyncConfig>(getSyncConfig());
+  // Track if we're using a custom threshold
+  const [useCustomThreshold, setUseCustomThreshold] = useState<boolean>(
+    ![1, 7, 14, 30, 60, 90, 180, 365].includes(syncConfig.autoPauseThreshold),
+  );
+
+  const getEffectiveStatus = (kenmei: {
+    status: string;
+    updated_at: string;
+  }): MediaListStatus => {
+    // Check if manga should be auto-paused due to inactivity
+    if (
+      syncConfig.autoPauseInactive &&
+      kenmei.status.toLowerCase() !== "completed" &&
+      kenmei.status.toLowerCase() !== "dropped" &&
+      kenmei.updated_at
+    ) {
+      // Calculate how many days since the last update
+      const lastUpdated = new Date(kenmei.updated_at);
+      const daysSinceUpdate = Math.floor(
+        (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      // If using a custom threshold
+      if ((syncConfig.autoPauseThreshold as unknown as string) === "custom") {
+        const customThreshold = syncConfig.customAutoPauseThreshold || 30;
+        if (daysSinceUpdate >= customThreshold) {
+          return "PAUSED";
+        }
+      }
+      // Using a predefined threshold (explicitly cast to number for type safety)
+      else if (daysSinceUpdate >= (syncConfig.autoPauseThreshold as number)) {
+        return "PAUSED";
+      }
+    }
+
+    // Otherwise use the normal status mapping
+    // Use type assertion for safety
+    const status = kenmei.status as KenmeiStatus;
+    return STATUS_MAPPING[status];
+  };
 
   // Toggle handler for sync options
   const handleToggleOption = (option: keyof SyncConfig) => {
@@ -183,7 +223,7 @@ export function SyncPage() {
 
   // Pagination and loading state
   const [visibleItems, setVisibleItems] = useState(20);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   // State to hold user's AniList library
   const [userLibrary, setUserLibrary] = useState<UserMediaList>({});
   const [libraryLoading, setLibraryLoading] = useState(false);
@@ -324,24 +364,6 @@ export function SyncPage() {
     }
   }, [token, mangaMatches, maxRetries, setRateLimit]);
 
-  // Effect for lazy loading intersection observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && mangaMatches.length > visibleItems) {
-          setVisibleItems((prev) => Math.min(prev + 20, mangaMatches.length));
-        }
-      },
-      { rootMargin: "200px" },
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [mangaMatches.length, visibleItems]);
-
   // Reset visible items when changing display mode
   useEffect(() => {
     setVisibleItems(20);
@@ -390,7 +412,7 @@ export function SyncPage() {
             const statusWillChange = userEntry
               ? syncConfig.prioritizeAniListStatus
                 ? false
-                : STATUS_MAPPING[kenmei.status] !== userEntry.status
+                : getEffectiveStatus(kenmei) !== userEntry.status
               : true;
 
             const progressWillChange = userEntry
@@ -461,7 +483,7 @@ export function SyncPage() {
 
         const statusWillChange =
           !syncConfig.prioritizeAniListStatus &&
-          STATUS_MAPPING[kenmei.status] !== userEntry.status;
+          getEffectiveStatus(kenmei) !== userEntry.status;
 
         const progressWillChange = syncConfig.prioritizeAniListProgress
           ? (kenmei.chapters_read || 0) > (userEntry.progress || 0)
@@ -541,42 +563,38 @@ export function SyncPage() {
           return null; // Skip this entry completely
         }
 
-        // For existing entries, check if there are actual changes to be made
-        if (userEntry) {
-          // Calculate if any values will change based on sync configuration
-          const statusWillChange = syncConfig.prioritizeAniListStatus
-            ? false
-            : STATUS_MAPPING[kenmei.status] !== userEntry.status;
+        // Check if manga should be auto-paused due to inactivity
+        let calculatedStatus: MediaListStatus;
 
-          const progressWillChange = syncConfig.prioritizeAniListProgress
-            ? // Will only change if Kenmei has more chapters read than AniList
-              (kenmei.chapters_read || 0) > (userEntry.progress || 0)
-            : (kenmei.chapters_read || 0) !== (userEntry.progress || 0);
+        if (
+          syncConfig.autoPauseInactive &&
+          kenmei.status.toLowerCase() !== "completed" &&
+          kenmei.status.toLowerCase() !== "dropped" &&
+          kenmei.updated_at
+        ) {
+          // Calculate how many days since the last update
+          const lastUpdated = new Date(kenmei.updated_at);
+          const daysSinceUpdate = Math.floor(
+            (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24),
+          );
 
-          const anilistScore = Number(userEntry.score || 0);
-          const kenmeiScore = Number(kenmei.score || 0);
-          const scoreWillChange =
-            syncConfig.prioritizeAniListScore &&
-            userEntry.score &&
-            Number(userEntry.score) > 0
-              ? false
-              : kenmei.score > 0 &&
-                (anilistScore === 0 ||
-                  Math.abs(kenmeiScore - anilistScore) >= 0.5);
-
-          // Check if privacy will change - only if setPrivate is true and current is false
-          const privacyWillChange = syncConfig.setPrivate && !userEntry.private;
-
-          // Skip entries with no changes
-          if (
-            !statusWillChange &&
-            !progressWillChange &&
-            !scoreWillChange &&
-            !privacyWillChange
-          ) {
-            return null; // No changes needed
+          // If manga hasn't been updated for the threshold period, set to PAUSED
+          if (daysSinceUpdate >= syncConfig.autoPauseThreshold) {
+            calculatedStatus = "PAUSED";
+          } else {
+            calculatedStatus = STATUS_MAPPING[kenmei.status];
           }
+        } else {
+          calculatedStatus = STATUS_MAPPING[kenmei.status];
         }
+
+        // Always set the private property regardless of the status
+        // Ensure it's never undefined by providing a fallback value
+        const privateStatus = userEntry
+          ? syncConfig.setPrivate
+            ? true
+            : userEntry.private || false
+          : syncConfig.setPrivate;
 
         // Otherwise create the AniList entry normally
         const entry: AniListMediaEntry = {
@@ -584,7 +602,7 @@ export function SyncPage() {
           status:
             syncConfig.prioritizeAniListStatus && userEntry?.status
               ? (userEntry.status as MediaListStatus)
-              : STATUS_MAPPING[kenmei.status],
+              : calculatedStatus,
           progress:
             syncConfig.prioritizeAniListProgress &&
             userEntry?.progress &&
@@ -593,12 +611,8 @@ export function SyncPage() {
                 ? userEntry.progress
                 : kenmei.chapters_read || 0
               : kenmei.chapters_read || 0,
-          // Respect existing privacy settings, or use the new setting for new entries
-          private: userEntry
-            ? syncConfig.setPrivate
-              ? true
-              : userEntry.private
-            : syncConfig.setPrivate,
+          // IMPORTANT: Always explicitly include private property to avoid it being undefined
+          private: privateStatus,
           score: kenmei.score || 0, // Default value before applying rules
           // Add metadata for the SyncManager to access previous values
           previousValues: userEntry
@@ -627,6 +641,11 @@ export function SyncPage() {
           ) {
             entry.score = userEntry.score || kenmei.score; // Keep the existing score if it exists
           }
+        }
+
+        // Final check to ensure private property is set
+        if (entry.private === undefined) {
+          entry.private = syncConfig.setPrivate || false;
         }
 
         return entry;
@@ -948,7 +967,7 @@ export function SyncPage() {
                             >
                               Set entries as private
                               <span className="text-muted-foreground block text-xs">
-                                When enabled, sets new entries as private.
+                                When enabled, sets entries as private.
                                 Doesn&apos;t change existing private settings.
                               </span>
                             </Label>
@@ -961,6 +980,109 @@ export function SyncPage() {
                             />
                           </div>
                         </div>
+
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <Label
+                              htmlFor="autoPauseInactive"
+                              className="flex-1 text-sm"
+                            >
+                              Auto-pause inactive manga
+                              <span className="text-muted-foreground block text-xs">
+                                When enabled, sets manga as PAUSED if not
+                                updated recently (Can specify the period)
+                              </span>
+                            </Label>
+                            <Switch
+                              id="autoPauseInactive"
+                              checked={syncConfig.autoPauseInactive}
+                              onCheckedChange={() =>
+                                handleToggleOption("autoPauseInactive")
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        {syncConfig.autoPauseInactive && (
+                          <div className="mt-2 border-l-2 border-slate-200 pl-2 dark:border-slate-700">
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor="autoPauseThreshold"
+                                className="text-sm whitespace-nowrap"
+                              >
+                                Pause after
+                              </Label>
+                              {!useCustomThreshold ? (
+                                <select
+                                  id="autoPauseThreshold"
+                                  value={syncConfig.autoPauseThreshold}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "custom") {
+                                      setUseCustomThreshold(true);
+                                    } else {
+                                      setSyncConfig((prev) => {
+                                        const newConfig = {
+                                          ...prev,
+                                          autoPauseThreshold: Number(value),
+                                        };
+                                        saveSyncConfig(newConfig);
+                                        return newConfig;
+                                      });
+                                    }
+                                  }}
+                                  className="border-input bg-background focus-visible:ring-ring h-8 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
+                                >
+                                  <option value="1">1 day</option>
+                                  <option value="7">7 days</option>
+                                  <option value="14">14 days</option>
+                                  <option value="30">30 days</option>
+                                  <option value="60">2 months</option>
+                                  <option value="90">3 months</option>
+                                  <option value="180">6 months</option>
+                                  <option value="365">1 year</option>
+                                  <option value="custom">Custom...</option>
+                                </select>
+                              ) : (
+                                <div className="flex w-full items-center gap-2">
+                                  <input
+                                    id="customAutoPauseThreshold"
+                                    type="number"
+                                    min="1"
+                                    placeholder="Enter days"
+                                    value={syncConfig.autoPauseThreshold.toString()}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value);
+                                      if (!isNaN(value) && value > 0) {
+                                        setSyncConfig((prev) => {
+                                          const newConfig = {
+                                            ...prev,
+                                            autoPauseThreshold: value,
+                                          };
+                                          saveSyncConfig(newConfig);
+                                          return newConfig;
+                                        });
+                                      }
+                                    }}
+                                    className="border-input bg-background focus-visible:ring-ring h-8 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    className="h-8 px-2"
+                                    onClick={() => setUseCustomThreshold(false)}
+                                  >
+                                    Use Presets
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+
+                            <p className="text-muted-foreground mt-1 text-xs">
+                              Manga not updated for this period will be set to
+                              PAUSED
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
@@ -1233,11 +1355,12 @@ export function SyncPage() {
                                 }
 
                                 // Check if any values will change based on sync configuration
-                                const statusWillChange =
-                                  syncConfig.prioritizeAniListStatus
+                                const statusWillChange = userEntry
+                                  ? syncConfig.prioritizeAniListStatus
                                     ? false
-                                    : STATUS_MAPPING[kenmei.status] !==
-                                      userEntry.status;
+                                    : getEffectiveStatus(kenmei) !==
+                                      userEntry.status
+                                  : true;
 
                                 const progressWillChange =
                                   syncConfig.prioritizeAniListProgress
@@ -1802,7 +1925,7 @@ export function SyncPage() {
                                 const statusWillChange = userEntry
                                   ? syncConfig.prioritizeAniListStatus
                                     ? false // If prioritizing AniList status, it won't change
-                                    : STATUS_MAPPING[kenmei.status] !==
+                                    : getEffectiveStatus(kenmei) !==
                                         userEntry.status &&
                                       !(
                                         userEntry.status === "COMPLETED" &&
@@ -2079,11 +2202,7 @@ export function SyncPage() {
                                                   <span
                                                     className={`text-xs font-medium ${statusWillChange ? "text-blue-700 dark:text-blue-300" : ""}`}
                                                   >
-                                                    {
-                                                      STATUS_MAPPING[
-                                                        kenmei.status
-                                                      ]
-                                                    }
+                                                    {getEffectiveStatus(kenmei)}
                                                   </span>
                                                 </div>
                                                 <div className="flex items-center justify-between">
@@ -2153,15 +2272,45 @@ export function SyncPage() {
                               })}
                           </AnimatePresence>
 
-                          {/* Load more reference div */}
-                          {sortedMangaMatches.length > visibleItems && (
-                            <div ref={loadMoreRef} className="py-4 text-center">
-                              <div className="text-primary inline-block h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-                              <p className="text-muted-foreground mt-2 text-sm">
-                                Loading more manga...
-                              </p>
+                          {/* Load more button instead of automatic loading */}
+                          {sortedMangaMatches.length > visibleItems ? (
+                            <div className="py-4 text-center">
+                              <Button
+                                onClick={() => {
+                                  setIsLoadingMore(true);
+                                  const newValue = Math.min(
+                                    visibleItems + 20,
+                                    sortedMangaMatches.length,
+                                  );
+                                  console.log(
+                                    `Loading more items: ${visibleItems} → ${newValue}`,
+                                  );
+
+                                  // Add a small delay to show the loading spinner
+                                  setTimeout(() => {
+                                    setVisibleItems(newValue);
+                                    setIsLoadingMore(false);
+                                  }, 300);
+                                }}
+                                variant="outline"
+                                className="gap-2"
+                                disabled={isLoadingMore}
+                              >
+                                {isLoadingMore && (
+                                  <div className="text-primary inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                                )}
+                                {isLoadingMore
+                                  ? "Loading..."
+                                  : `Load More (${visibleItems} of ${sortedMangaMatches.length})`}
+                              </Button>
                             </div>
-                          )}
+                          ) : sortedMangaMatches.length > 0 ? (
+                            <div className="py-4 text-center">
+                              <span className="text-muted-foreground text-xs">
+                                All items loaded
+                              </span>
+                            </div>
+                          ) : null}
                         </motion.div>
                       ) : (
                         <motion.div
@@ -2187,7 +2336,7 @@ export function SyncPage() {
                                 const statusWillChange = userEntry
                                   ? syncConfig.prioritizeAniListStatus
                                     ? false // If prioritizing AniList status, it won't change
-                                    : STATUS_MAPPING[kenmei.status] !==
+                                    : getEffectiveStatus(kenmei) !==
                                         userEntry.status &&
                                       !(
                                         userEntry.status === "COMPLETED" &&
@@ -2316,7 +2465,7 @@ export function SyncPage() {
                                                 className="border-blue-400 px-1 py-0 text-[10px]"
                                               >
                                                 {userEntry?.status || "None"} →{" "}
-                                                {STATUS_MAPPING[kenmei.status]}
+                                                {getEffectiveStatus(kenmei)}
                                               </Badge>
                                             )}
 
@@ -2398,16 +2547,44 @@ export function SyncPage() {
                               })}
                           </AnimatePresence>
 
-                          {/* Load more reference div */}
-                          {sortedMangaMatches.length > visibleItems && (
-                            <div
-                              ref={loadMoreRef}
-                              className="bg-muted/20 py-3 text-center"
-                            >
-                              <div className="text-primary inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-                              <span className="text-muted-foreground ml-2 text-xs">
-                                Loading more...
-                              </span>
+                          {/* Load more button for compact view */}
+                          {sortedMangaMatches.length > 0 && (
+                            <div className="bg-muted/20 py-3 text-center">
+                              {sortedMangaMatches.length > visibleItems ? (
+                                <Button
+                                  onClick={() => {
+                                    setIsLoadingMore(true);
+                                    const newValue = Math.min(
+                                      visibleItems + 20,
+                                      sortedMangaMatches.length,
+                                    );
+                                    console.log(
+                                      `Loading more items: ${visibleItems} → ${newValue}`,
+                                    );
+
+                                    // Add a small delay to show the loading spinner
+                                    setTimeout(() => {
+                                      setVisibleItems(newValue);
+                                      setIsLoadingMore(false);
+                                    }, 300);
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-2"
+                                  disabled={isLoadingMore}
+                                >
+                                  {isLoadingMore && (
+                                    <div className="text-primary inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                                  )}
+                                  {isLoadingMore
+                                    ? "Loading..."
+                                    : `Load More (${visibleItems} of ${sortedMangaMatches.length})`}
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">
+                                  All items loaded
+                                </span>
+                              )}
                             </div>
                           )}
                         </motion.div>
