@@ -60,13 +60,13 @@ export interface AniListMediaEntry {
   mediaId: number;
   status: MediaListStatus;
   progress: number;
-  private?: boolean;
-  score?: number;
-  // Additional metadata for sync UI
-  previousValues?: {
+  private: boolean;
+  score: number;
+  previousValues: {
     status: string;
     progress: number;
     score: number;
+    private: boolean;
   } | null;
   title?: string;
   coverImage?: string;
@@ -158,6 +158,7 @@ export interface UserMediaEntry {
   status: string;
   progress: number;
   score: number;
+  private: boolean;
   title: {
     romaji: string;
     english: string | null;

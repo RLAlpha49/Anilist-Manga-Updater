@@ -204,18 +204,20 @@ export const CURRENT_CACHE_VERSION = 1;
 // Default sync configuration
 export interface SyncConfig {
   prioritizeAniListStatus: boolean;
-  preserveCompletedStatus: boolean;
   prioritizeAniListProgress: boolean;
   prioritizeAniListScore: boolean;
+  preserveCompletedStatus: boolean;
   incrementalSync: boolean;
+  setPrivate: boolean;
 }
 
 export const DEFAULT_SYNC_CONFIG: SyncConfig = {
   prioritizeAniListStatus: false,
-  preserveCompletedStatus: true,
   prioritizeAniListProgress: true,
   prioritizeAniListScore: false,
+  preserveCompletedStatus: true,
   incrementalSync: true,
+  setPrivate: false,
 };
 
 /**

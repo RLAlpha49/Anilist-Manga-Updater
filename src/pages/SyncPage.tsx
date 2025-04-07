@@ -395,9 +395,8 @@ export function SyncPage() {
 
             const progressWillChange = userEntry
               ? syncConfig.prioritizeAniListProgress
-                ? userEntry.progress && userEntry.progress > 0
-                  ? (kenmei.chapters_read || 0) > userEntry.progress
-                  : (kenmei.chapters_read || 0) > 0
+                ? // Will only change if Kenmei has more chapters read than AniList
+                  (kenmei.chapters_read || 0) > (userEntry.progress || 0)
                 : (kenmei.chapters_read || 0) !== (userEntry.progress || 0)
               : true;
 
@@ -416,7 +415,10 @@ export function SyncPage() {
               : kenmeiScore > 0;
 
             const hasChanges =
-              statusWillChange || progressWillChange || scoreWillChange;
+              statusWillChange ||
+              progressWillChange ||
+              scoreWillChange ||
+              (syncConfig.setPrivate && userEntry && !userEntry.private);
 
             if (filters.changes === "with-changes" && !hasChanges) return false;
             if (filters.changes === "no-changes" && hasChanges) return false;
@@ -473,10 +475,14 @@ export function SyncPage() {
           kenmei.score > 0 &&
           (anilistScore === 0 || Math.abs(kenmeiScore - anilistScore) >= 0.5);
 
+        // Check if privacy will change
+        const privacyWillChange = syncConfig.setPrivate && !userEntry.private;
+
         return (
           (statusWillChange ? 1 : 0) +
           (progressWillChange ? 1 : 0) +
-          (scoreWillChange ? 1 : 0)
+          (scoreWillChange ? 1 : 0) +
+          (privacyWillChange ? 1 : 0)
         );
       };
 
@@ -489,23 +495,21 @@ export function SyncPage() {
             anilistB.title.romaji || kenmeiB.title,
           );
           break;
-
         case "status":
           comparison = kenmeiA.status.localeCompare(kenmeiB.status);
           break;
-
         case "progress":
           comparison =
             (kenmeiA.chapters_read || 0) - (kenmeiB.chapters_read || 0);
           break;
-
         case "score":
           comparison = (kenmeiA.score || 0) - (kenmeiB.score || 0);
           break;
-
         case "changes":
           comparison = getChangeCount(b) - getChangeCount(a);
           break;
+        default:
+          comparison = 0;
       }
 
       // Apply sort direction
@@ -545,9 +549,8 @@ export function SyncPage() {
             : STATUS_MAPPING[kenmei.status] !== userEntry.status;
 
           const progressWillChange = syncConfig.prioritizeAniListProgress
-            ? userEntry.progress && userEntry.progress > 0
-              ? (kenmei.chapters_read || 0) > userEntry.progress
-              : (kenmei.chapters_read || 0) > 0
+            ? // Will only change if Kenmei has more chapters read than AniList
+              (kenmei.chapters_read || 0) > (userEntry.progress || 0)
             : (kenmei.chapters_read || 0) !== (userEntry.progress || 0);
 
           const anilistScore = Number(userEntry.score || 0);
@@ -561,8 +564,16 @@ export function SyncPage() {
                 (anilistScore === 0 ||
                   Math.abs(kenmeiScore - anilistScore) >= 0.5);
 
+          // Check if privacy will change - only if setPrivate is true and current is false
+          const privacyWillChange = syncConfig.setPrivate && !userEntry.private;
+
           // Skip entries with no changes
-          if (!statusWillChange && !progressWillChange && !scoreWillChange) {
+          if (
+            !statusWillChange &&
+            !progressWillChange &&
+            !scoreWillChange &&
+            !privacyWillChange
+          ) {
             return null; // No changes needed
           }
         }
@@ -582,7 +593,12 @@ export function SyncPage() {
                 ? userEntry.progress
                 : kenmei.chapters_read || 0
               : kenmei.chapters_read || 0,
-          private: false,
+          // Respect existing privacy settings, or use the new setting for new entries
+          private: userEntry
+            ? syncConfig.setPrivate
+              ? true
+              : userEntry.private
+            : syncConfig.setPrivate,
           score: kenmei.score || 0, // Default value before applying rules
           // Add metadata for the SyncManager to access previous values
           previousValues: userEntry
@@ -590,6 +606,7 @@ export function SyncPage() {
                 status: userEntry.status,
                 progress: userEntry.progress || 0,
                 score: userEntry.score || 0,
+                private: userEntry.private || false,
               }
             : null,
           title: anilist.title.romaji || kenmei.title,
@@ -922,6 +939,28 @@ export function SyncPage() {
                             />
                           </div>
                         </div>
+
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <Label
+                              htmlFor="setPrivate"
+                              className="flex-1 text-sm"
+                            >
+                              Set entries as private
+                              <span className="text-muted-foreground block text-xs">
+                                When enabled, sets new entries as private.
+                                Doesn&apos;t change existing private settings.
+                              </span>
+                            </Label>
+                            <Switch
+                              id="setPrivate"
+                              checked={syncConfig.setPrivate}
+                              onCheckedChange={() =>
+                                handleToggleOption("setPrivate")
+                              }
+                            />
+                          </div>
+                        </div>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
@@ -1202,11 +1241,9 @@ export function SyncPage() {
 
                                 const progressWillChange =
                                   syncConfig.prioritizeAniListProgress
-                                    ? userEntry.progress &&
-                                      userEntry.progress > 0
-                                      ? (kenmei.chapters_read || 0) >
-                                        userEntry.progress
-                                      : (kenmei.chapters_read || 0) > 0
+                                    ? // Will only change if Kenmei has more chapters read than AniList
+                                      (kenmei.chapters_read || 0) >
+                                      (userEntry.progress || 0)
                                     : (kenmei.chapters_read || 0) !==
                                       (userEntry.progress || 0);
 
@@ -1224,11 +1261,16 @@ export function SyncPage() {
                                         Math.abs(kenmeiScore - anilistScore) >=
                                           0.5);
 
+                                // Check if privacy will change
+                                const privacyWillChange =
+                                  syncConfig.setPrivate && !userEntry.private;
+
                                 // Count entry only if at least one value will change
                                 return (
                                   statusWillChange ||
                                   progressWillChange ||
-                                  scoreWillChange
+                                  scoreWillChange ||
+                                  privacyWillChange
                                 );
                               }).length
                             }
@@ -1770,12 +1812,9 @@ export function SyncPage() {
 
                                 const progressWillChange = userEntry
                                   ? syncConfig.prioritizeAniListProgress
-                                    ? // Only consider AniList progress if it's greater than 0
-                                      userEntry.progress &&
-                                      userEntry.progress > 0
-                                      ? (kenmei.chapters_read || 0) >
-                                        userEntry.progress // Compare only if AniList progress > 0
-                                      : (kenmei.chapters_read || 0) > 0 // Otherwise, just check if Kenmei has progress
+                                    ? // Will only change if Kenmei has more chapters read than AniList
+                                      (kenmei.chapters_read || 0) >
+                                      (userEntry.progress || 0)
                                     : (kenmei.chapters_read || 0) !==
                                       (userEntry.progress || 0)
                                   : true;
@@ -1813,6 +1852,10 @@ export function SyncPage() {
                                   statusWillChange,
                                   progressWillChange,
                                   scoreWillChange,
+                                  userEntry
+                                    ? syncConfig.setPrivate &&
+                                      !userEntry.private
+                                    : syncConfig.setPrivate,
                                 ].filter(Boolean).length;
 
                                 return (
@@ -1876,7 +1919,7 @@ export function SyncPage() {
                                         <div className="flex-1 p-4">
                                           <div className="flex items-start justify-between">
                                             <div>
-                                              <h3 className="line-clamp-2 text-base font-semibold">
+                                              <h3 className="line-clamp-2 max-w-[580px] text-base font-semibold">
                                                 {anilist.title.romaji ||
                                                   kenmei.title}
                                               </h3>
@@ -1909,6 +1952,25 @@ export function SyncPage() {
                                                       Score
                                                     </Badge>
                                                   )}
+
+                                                  {userEntry
+                                                    ? syncConfig.setPrivate &&
+                                                      !userEntry.private && (
+                                                        <Badge
+                                                          variant="outline"
+                                                          className="border-purple-400 px-1.5 py-0 text-xs text-purple-600 dark:text-purple-400"
+                                                        >
+                                                          Privacy
+                                                        </Badge>
+                                                      )
+                                                    : syncConfig.setPrivate && (
+                                                        <Badge
+                                                          variant="outline"
+                                                          className="border-purple-400 px-1.5 py-0 text-xs text-purple-600 dark:text-purple-400"
+                                                        >
+                                                          Privacy
+                                                        </Badge>
+                                                      )}
                                                 </div>
                                               ) : (
                                                 <div className="mt-1">
@@ -1988,6 +2050,18 @@ export function SyncPage() {
                                                         : "None"}
                                                     </span>
                                                   </div>
+                                                  <div className="flex items-center justify-between">
+                                                    <span className="text-muted-foreground text-xs">
+                                                      Private:
+                                                    </span>
+                                                    <span
+                                                      className={`text-xs font-medium ${userEntry ? (syncConfig.setPrivate && !userEntry.private ? "text-muted-foreground line-through" : "") : syncConfig.setPrivate ? "text-muted-foreground line-through" : ""}`}
+                                                    >
+                                                      {userEntry?.private
+                                                        ? "Yes"
+                                                        : "No"}
+                                                    </span>
+                                                  </div>
                                                 </div>
                                               )}
                                             </div>
@@ -2019,7 +2093,19 @@ export function SyncPage() {
                                                   <span
                                                     className={`text-xs font-medium ${progressWillChange ? "text-blue-700 dark:text-blue-300" : ""}`}
                                                   >
-                                                    {kenmei.chapters_read || 0}{" "}
+                                                    {syncConfig.prioritizeAniListProgress
+                                                      ? userEntry?.progress &&
+                                                        userEntry.progress > 0
+                                                        ? (kenmei.chapters_read ||
+                                                            0) >
+                                                          userEntry.progress
+                                                          ? kenmei.chapters_read ||
+                                                            0
+                                                          : userEntry.progress
+                                                        : kenmei.chapters_read ||
+                                                          0
+                                                      : kenmei.chapters_read ||
+                                                        0}{" "}
                                                     ch
                                                     {anilist.chapters
                                                       ? ` / ${anilist.chapters}`
@@ -2036,6 +2122,24 @@ export function SyncPage() {
                                                     {kenmei.score
                                                       ? `${kenmei.score}/10`
                                                       : "None"}
+                                                  </span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-xs text-blue-500 dark:text-blue-400">
+                                                    Private:
+                                                  </span>
+                                                  <span
+                                                    className={`text-xs font-medium ${userEntry ? (syncConfig.setPrivate && !userEntry.private ? "text-blue-700 dark:text-blue-300" : "") : syncConfig.setPrivate ? "text-blue-700 dark:text-blue-300" : ""}`}
+                                                  >
+                                                    {userEntry
+                                                      ? syncConfig.setPrivate
+                                                        ? "Yes"
+                                                        : userEntry.private
+                                                          ? "Yes"
+                                                          : "No"
+                                                      : syncConfig.setPrivate
+                                                        ? "Yes"
+                                                        : "No"}
                                                   </span>
                                                 </div>
                                               </div>
@@ -2093,12 +2197,9 @@ export function SyncPage() {
 
                                 const progressWillChange = userEntry
                                   ? syncConfig.prioritizeAniListProgress
-                                    ? // Only consider AniList progress if it's greater than 0
-                                      userEntry.progress &&
-                                      userEntry.progress > 0
-                                      ? (kenmei.chapters_read || 0) >
-                                        userEntry.progress // Compare only if AniList progress > 0
-                                      : (kenmei.chapters_read || 0) > 0 // Otherwise, just check if Kenmei has progress
+                                    ? // Will only change if Kenmei has more chapters read than AniList
+                                      (kenmei.chapters_read || 0) >
+                                      (userEntry.progress || 0)
                                     : (kenmei.chapters_read || 0) !==
                                       (userEntry.progress || 0)
                                   : true;
@@ -2136,6 +2237,10 @@ export function SyncPage() {
                                   statusWillChange,
                                   progressWillChange,
                                   scoreWillChange,
+                                  userEntry
+                                    ? syncConfig.setPrivate &&
+                                      !userEntry.private
+                                    : syncConfig.setPrivate,
                                 ].filter(Boolean).length;
 
                                 return (
@@ -2221,7 +2326,18 @@ export function SyncPage() {
                                                 className="border-green-400 px-1 py-0 text-[10px]"
                                               >
                                                 {userEntry?.progress || 0} →{" "}
-                                                {kenmei.chapters_read || 0} ch
+                                                {syncConfig.prioritizeAniListProgress
+                                                  ? userEntry?.progress &&
+                                                    userEntry.progress > 0
+                                                    ? (kenmei.chapters_read ||
+                                                        0) > userEntry.progress
+                                                      ? kenmei.chapters_read ||
+                                                        0
+                                                      : userEntry.progress
+                                                    : kenmei.chapters_read || 0
+                                                  : kenmei.chapters_read ||
+                                                    0}{" "}
+                                                ch
                                               </Badge>
                                             )}
 
@@ -2234,6 +2350,27 @@ export function SyncPage() {
                                                 {kenmei.score || 0}/10
                                               </Badge>
                                             )}
+
+                                            {userEntry
+                                              ? syncConfig.setPrivate &&
+                                                !userEntry.private && (
+                                                  <Badge
+                                                    variant="outline"
+                                                    className="border-purple-400 px-1 py-0 text-[10px]"
+                                                  >
+                                                    {userEntry.private
+                                                      ? "Yes"
+                                                      : "No"}
+                                                  </Badge>
+                                                )
+                                              : syncConfig.setPrivate && (
+                                                  <Badge
+                                                    variant="outline"
+                                                    className="border-purple-400 px-1 py-0 text-[10px]"
+                                                  >
+                                                    {userEntry ? "Yes" : "No"}
+                                                  </Badge>
+                                                )}
 
                                             {changeCount === 0 && (
                                               <span className="text-muted-foreground px-1 text-[10px]">

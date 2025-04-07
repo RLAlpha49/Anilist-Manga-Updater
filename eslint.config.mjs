@@ -22,14 +22,14 @@ export default [
       "dist/**",
       ".vite/**",
       "out/**",
-      
+
       // Node modules
       "node_modules/**",
-      
+
       // Configuration files that use CommonJS
       "**/*.config.js",
-      "forge.config.js"
-    ]
+      "forge.config.js",
+    ],
   },
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
