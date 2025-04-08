@@ -1,18 +1,12 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
-import { syncThemeWithLocal } from "@/helpers/theme_helpers";
 
 export default function BaseLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    // Initialize theme when the app starts
-    syncThemeWithLocal();
-  }, []);
-
   return (
     <div className="bg-background text-foreground flex h-screen flex-col">
       <Header />

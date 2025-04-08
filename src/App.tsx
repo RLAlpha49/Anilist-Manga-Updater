@@ -5,15 +5,18 @@ import { RouterProvider } from "@tanstack/react-router";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SonnerProvider } from "./components/ui/sonner-provider";
 import { RateLimitProvider } from "./contexts/RateLimitContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <RateLimitProvider>
-        <RouterProvider router={router} />
-        <SonnerProvider />
-      </RateLimitProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RateLimitProvider>
+          <RouterProvider router={router} />
+          <SonnerProvider />
+        </RateLimitProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
