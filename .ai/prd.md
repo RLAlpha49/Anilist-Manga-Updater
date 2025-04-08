@@ -114,17 +114,7 @@ Potential future improvements like additional tracking services, backup function
   - Create batch update mechanism
   - Implement progress tracking and error handling
 
-- Story 5: UI Enhancement
-  Status: In Progress
-  Requirements:
-
-  - Implement Radix UI components
-  - Add dark/light theme support
-  - Improve application layout and navigation
-  - Add responsive design elements
-  - Implement accessibility features
-
-- Story 6: Testing Framework
+- Story 5: Testing Framework
   Status: In Progress
   Requirements:
 
@@ -135,7 +125,7 @@ Potential future improvements like additional tracking services, backup function
 
 ## Epic 4: Story List
 
-- Story 7: Deployment and Distribution
+- Story 6: Deployment and Distribution
   Status: Planned
   Requirements:
 
@@ -157,7 +147,7 @@ Potential future improvements like additional tracking services, backup function
 | Vite              | Fast development server and bundler                              |
 | TanStack Router   | Type-safe routing library for React                              |
 | TanStack Query    | Data fetching and caching library                                |
-| Radix UI          | Unstyled, accessible component library                           |
+| shadcn/ui         | Component library built on Radix UI primitives                   |
 | Sonner            | Toast notification library                                       |
 | String Similarity | Library for fuzzy string matching                                |
 | Vitest            | Testing framework                                                |
