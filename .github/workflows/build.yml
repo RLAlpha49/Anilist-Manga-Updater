@@ -27,8 +27,8 @@ jobs:
         with:
           name: windows-build
           path: |
-            out/make/squirrel.windows/x64/Spotify-Skip-Tracker-Setup.exe
-            out/make/squirrel.windows/x64/Spotify-Skip-Tracker-Setup.msi
+            out/make/squirrel.windows/x64/Kenmei-to-Anilist-Setup.exe
+            out/make/squirrel.windows/x64/Kenmei-to-Anilist-Setup.msi
 
   build-macos:
     name: Build macOS Artifacts
@@ -50,8 +50,8 @@ jobs:
         with:
           name: macos-build
           path: |
-            out/make/Spotify-Skip-Tracker.dmg
-            out/make/zip/darwin/arm64/Spotify Skip Tracker-darwin-arm64-1.0.0.zip
+            out/make/Kenmei-to-Anilist.dmg
+            out/make/zip/darwin/arm64/Kenmei-to-Anilist-darwin-arm64-3.0.0.zip
 
   build-linux:
     name: Build Linux Artifacts
@@ -73,4 +73,4 @@ jobs:
         with:
           name: linux-build
           path: |
-            out/make/deb/x64/spotify-skip-tracker_1.0.0_amd64.deb
+            out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb

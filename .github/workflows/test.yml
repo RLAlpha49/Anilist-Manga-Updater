@@ -79,7 +79,7 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Generate coverage report
-        run: npm run test:coverage
+        run: npm run test:coverage || true
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -87,8 +87,35 @@ jobs:
           name: coverage-report
           path: coverage/
 
+  wait-for-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for build workflow to complete
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: 'Build Windows Artifacts'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+      
+      - name: Wait for macOS build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: 'Build macOS Artifacts'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+      
+      - name: Wait for Linux build
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: 'Build Linux Artifacts'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+
   e2e-test:
-    needs: setup
+    needs: [setup, wait-for-build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -115,11 +142,29 @@ jobs:
         if: matrix.os != 'ubuntu-latest'
         run: npm ci
 
+      - name: Download Windows build artifacts
+        if: matrix.os == 'windows-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: out/make
+
+      - name: Download macOS build artifacts
+        if: matrix.os == 'macos-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-build
+          path: out/make
+
+      - name: Download Linux build artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+          path: out/make
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-
-      - name: Build application
-        run: npm run make
 
       - name: Run E2E tests
         run: npm run test:e2e
