@@ -28,6 +28,13 @@ export function RateLimitCountdown({
     setInitialDuration(initialRemaining); // Store the initial duration
     console.log("Initial time remaining set to:", initialRemaining);
 
+    // If the initial time is already 0, call onComplete immediately
+    if (initialRemaining === 0) {
+      console.log("Initial time is zero, calling onComplete immediately");
+      onComplete();
+      return () => {}; // No interval to clean up
+    }
+
     // Set up interval to update the countdown
     const interval = setInterval(() => {
       const remaining = calcTimeRemaining();

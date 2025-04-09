@@ -74,7 +74,7 @@ export async function syncThemeWithLocal() {
   }
 }
 
-function updateDocumentTheme(isDarkMode: boolean) {
+export function updateDocumentTheme(isDarkMode: boolean) {
   if (!isDarkMode) {
     document.documentElement.classList.remove("dark");
   } else {

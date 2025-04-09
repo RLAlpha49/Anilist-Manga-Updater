@@ -59,7 +59,7 @@ export interface MatchResult {
 }
 
 // Cache to avoid redundant storage operations
-const storageCache: Record<string, string> = {};
+export const storageCache: Record<string, string> = {};
 
 /**
  * Storage utility to abstract storage operations
@@ -89,15 +89,24 @@ export const storage = {
 
       // Asynchronously update from electron-store if available (won't affect current return)
       if (window.electronStore) {
-        window.electronStore.getItem(key).catch((error) => {
-          // Only log errors in development
-          if (process.env.NODE_ENV === "development") {
-            console.error(
-              `Error retrieving ${key} from electron-store:`,
-              error,
-            );
-          }
-        });
+        window.electronStore
+          .getItem(key)
+          .then((electronValue) => {
+            if (electronValue !== null && electronValue !== value) {
+              // Update localStorage and cache if electron-store has a different value
+              localStorage.setItem(key, electronValue);
+              storageCache[key] = electronValue;
+            }
+          })
+          .catch((error) => {
+            // Only log errors in development
+            if (process.env.NODE_ENV === "development") {
+              console.error(
+                `Error retrieving ${key} from electron-store:`,
+                error,
+              );
+            }
+          });
       }
 
       return value;
@@ -217,6 +226,9 @@ export type SyncConfig = {
   autoPauseInactive: boolean;
   autoPauseThreshold: number;
   customAutoPauseThreshold?: number;
+  updateStatus: boolean;
+  updateProgress: boolean;
+  overwriteExisting: boolean;
 };
 
 export const DEFAULT_SYNC_CONFIG: SyncConfig = {
@@ -229,6 +241,9 @@ export const DEFAULT_SYNC_CONFIG: SyncConfig = {
   autoPauseInactive: false,
   autoPauseThreshold: 60,
   customAutoPauseThreshold: 60,
+  updateStatus: true,
+  updateProgress: true,
+  overwriteExisting: false,
 };
 
 /**

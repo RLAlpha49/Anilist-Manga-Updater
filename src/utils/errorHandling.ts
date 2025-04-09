@@ -145,7 +145,9 @@ export async function fetchWithTimeout(
   } catch (error) {
     // AbortError is caused by our timeout
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("TimeoutError");
+      const timeoutError = new Error("Request timed out");
+      timeoutError.name = "TimeoutError";
+      throw timeoutError;
     }
     throw error;
   } finally {

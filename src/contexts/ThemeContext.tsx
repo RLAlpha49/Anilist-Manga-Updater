@@ -1,9 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { ThemeMode } from "@/types/theme-mode";
 import {
-  setTheme,
   getCurrentTheme,
+  setTheme as setThemeHelper,
   ThemePreferences,
+  updateDocumentTheme,
 } from "@/helpers/theme_helpers";
 
 interface ThemeContextType {
@@ -16,40 +23,38 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemePreferences>({
+  const [theme, setTheme] = useState<ThemePreferences>({
     system: "light",
     local: null,
   });
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  const initializeTheme = useCallback(async () => {
+    try {
+      const currentTheme = await getCurrentTheme();
+      setTheme(currentTheme);
+
+      // Add null check before accessing local property
+      const isDark =
+        (currentTheme?.local || currentTheme?.system || "light") === "dark";
+      setIsDarkMode(isDark);
+      updateDocumentTheme(isDark);
+    } catch (error) {
+      console.error("Failed to initialize theme:", error);
+      // Fallback to light theme
+      setTheme({ system: "light", local: "light" });
+      setIsDarkMode(false);
+      updateDocumentTheme(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const initializeTheme = async () => {
-      try {
-        // Get current theme state
-        const currentTheme = await getCurrentTheme();
-        setThemeState(currentTheme);
-
-        // Set dark mode state based on active theme
-        const activeTheme = currentTheme.local || currentTheme.system;
-        setIsDarkMode(activeTheme === "dark");
-
-        // Apply theme to document
-        if (activeTheme === "dark") {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
-      } catch (error) {
-        console.error("Failed to initialize theme:", error);
-      }
-    };
-
     initializeTheme();
 
     // Set up event listener for theme changes from other components
     const handleThemeChange = async () => {
       const currentTheme = await getCurrentTheme();
-      setThemeState(currentTheme);
+      setTheme(currentTheme);
       setIsDarkMode(currentTheme.local === "dark");
     };
 
@@ -57,16 +62,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => {
       document.removeEventListener("themeToggled", handleThemeChange);
     };
-  }, []);
+  }, [initializeTheme]);
 
   const setThemeMode = async (mode: ThemeMode) => {
-    const newIsDarkMode = await setTheme(mode);
-    setThemeState(await getCurrentTheme());
+    const newIsDarkMode = await setThemeHelper(mode);
+    setTheme(await getCurrentTheme());
     setIsDarkMode(newIsDarkMode);
     return newIsDarkMode;
   };
 
   const toggleTheme = async () => {
+    // If current theme is dark or not set, switch to light, otherwise switch to dark
     const newTheme = theme.local === "dark" ? "light" : "dark";
     return await setThemeMode(newTheme);
   };

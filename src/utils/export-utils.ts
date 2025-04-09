@@ -135,3 +135,59 @@ export function getSyncHistory(): SyncReport[] {
     return [];
   }
 }
+
+/**
+ * Creates and downloads a JSON file with the provided data
+ */
+export function downloadJson<T extends Record<string, unknown>>(
+  data: T,
+  filename = "export.json",
+): void {
+  // Convert to JSON string with pretty formatting
+  const jsonContent = JSON.stringify(data, null, 2);
+
+  // Create blob and URL
+  const blob = new Blob([jsonContent], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  // Create element to trigger download
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+
+  // Trigger download
+  document.body.appendChild(link);
+  link.click();
+
+  // Clean up
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Exports data to a JSON file with the given filename
+ */
+export function exportDataToFile<T extends Record<string, unknown>>(
+  data: T,
+  filename = "export.json",
+): void {
+  // Convert to JSON string with pretty formatting
+  const jsonContent = JSON.stringify(data, null, 2);
+
+  // Create blob and URL
+  const blob = new Blob([jsonContent], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  // Create element to trigger download
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+
+  // Trigger download
+  document.body.appendChild(link);
+  link.click();
+
+  // Clean up
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

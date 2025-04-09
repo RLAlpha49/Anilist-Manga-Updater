@@ -19,6 +19,7 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:all": "vitest run && playwright test",
+    "test:coverage": "vitest run --coverage",
     "update": "ncu --configFilePath config/.ncurc.json -u",
     "docs": "typedoc --options config/typedoc.json"
   },
@@ -49,8 +50,9 @@
     "@types/node": "^22.14.0",
     "@types/node-fetch": "^2.6.12",
     "@types/react": "^19.1.0",
-    "@types/react-dom": "^19.1.1",
+    "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.1.1",
     "babel-plugin-react-compiler": "^19.0.0-beta-e993439-20250405",
     "electron": "35.1.4",
     "electron-devtools-installer": "^4.0.0",

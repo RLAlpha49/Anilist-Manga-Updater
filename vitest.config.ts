@@ -18,9 +18,25 @@ export default defineConfig({
     reporters: ["verbose"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
-      include: ["src/**/*"],
-      exclude: [],
+      reporter: ["text", "json", "html", "lcov"],
+      reportsDirectory: "./coverage",
+      exclude: [
+        "node_modules/**",
+        "dist/**",
+        ".vite/**",
+        "src/tests/**",
+        "src/main/**", // Electron main process code
+        "**/*.d.ts",
+        "**/*.config.*",
+        "**/mocks/**",
+        "**/fixtures/**",
+      ],
+      thresholds: {
+        lines: 70,
+        branches: 70,
+        functions: 70,
+        statements: 70,
+      },
     },
   },
 });

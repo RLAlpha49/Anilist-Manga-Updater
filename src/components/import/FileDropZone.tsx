@@ -55,13 +55,10 @@ export function FileDropZone({ onFileLoaded, onError }: FileDropZoneProps) {
     // Simulate progress for better UX
     const progressInterval = setInterval(() => {
       setLoadingProgress((prev) => {
-        if (prev >= 80) {
-          clearInterval(progressInterval);
-          return 80;
-        }
-        return prev + 10;
+        // Cap the progress at 80% before file is actually processed
+        return prev < 80 ? prev + 10 : 80;
       });
-    }, 100);
+    }, 500);
 
     // Validate file type
     if (!file.name.toLowerCase().endsWith(".csv")) {
