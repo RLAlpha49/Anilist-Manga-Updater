@@ -129,13 +129,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-      - name: Install dependencies
-        run: npm ci
+      - name: Restore cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ needs.setup.outputs.cache-key }}
+      - name: Get build workflow run ID
+        id: get-workflow-run
+        run: |
+          $runId = gh api repos/${{ github.repository }}/actions/workflows/build.yml/runs --jq '.workflow_runs[] | select(.head_branch == "${{ github.ref_name }}") | select(.conclusion == "success") | .id' | Select-Object -First 1
+          echo "run_id=$runId" >> $env:GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download Windows build artifacts
         uses: actions/download-artifact@v4
         with:
           name: windows-build
           path: out/make/squirrel.windows/x64
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get-workflow-run.outputs.run_id }}
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -156,13 +170,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-      - name: Install dependencies
-        run: npm ci
+      - name: Restore cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ needs.setup.outputs.cache-key }}
+      - name: Get build workflow run ID
+        id: get-workflow-run
+        run: |
+          runId=$(gh api repos/${{ github.repository }}/actions/workflows/build.yml/runs --jq '.workflow_runs[] | select(.head_branch == "${{ github.ref_name }}") | select(.conclusion == "success") | .id' | head -n 1)
+          echo "run_id=$runId" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download macOS build artifacts
         uses: actions/download-artifact@v4
         with:
           name: macos-build
           path: out/make
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get-workflow-run.outputs.run_id }}
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -190,11 +218,20 @@ jobs:
             node_modules
             ~/.npm
           key: ${{ needs.setup.outputs.cache-key }}
+      - name: Get build workflow run ID
+        id: get-workflow-run
+        run: |
+          runId=$(gh api repos/${{ github.repository }}/actions/workflows/build.yml/runs --jq '.workflow_runs[] | select(.head_branch == "${{ github.ref_name }}") | select(.conclusion == "success") | .id' | head -n 1)
+          echo "run_id=$runId" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download Linux build artifacts
         uses: actions/download-artifact@v4
         with:
           name: linux-build
           path: out/make/deb/x64
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get-workflow-run.outputs.run_id }}
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
