@@ -97,6 +97,7 @@
     "dotenv": "^16.4.7",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^10.0.1",
+    "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.6.3",
     "lucide-react": "^0.487.0",

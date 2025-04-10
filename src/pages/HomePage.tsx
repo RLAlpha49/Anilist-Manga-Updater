@@ -41,6 +41,7 @@ import {
   CarouselPrevious,
 } from "../components/ui/carousel";
 import { getAppVersion } from "../utils/app-version";
+import Autoplay from "embla-carousel-autoplay";
 
 interface StatsState {
   total: number;
@@ -288,6 +289,13 @@ export function HomePage() {
             align: "start",
             loop: true,
           }}
+          plugins={[
+            Autoplay({
+              delay: 5000,
+              stopOnInteraction: false,
+              stopOnMouseEnter: true,
+            }),
+          ]}
           className="w-full"
         >
           <CarouselContent className="-ml-4">
