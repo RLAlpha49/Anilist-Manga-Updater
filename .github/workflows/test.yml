@@ -155,28 +155,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
 
-      - name: Debug and prepare Windows directory structure
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing files in 'out' directory:"
-          dir out /s
-
-          # Create the expected directory structure
-          mkdir -p "out\Kenmei-to-Anilist-win32-x64"
-
-          # Check if the installer exists and copy it to the expected location
-          if (Test-Path -Path "out\make\squirrel.windows\x64\Kenmei-to-Anilist-Setup.exe") {
-            echo "Found installer at out\make\squirrel.windows\x64\Kenmei-to-Anilist-Setup.exe"
-            Copy-Item "out\make\squirrel.windows\x64\Kenmei-to-Anilist-Setup.exe" -Destination "out\Kenmei-to-Anilist-win32-x64\Kenmei-to-Anilist.exe"
-            echo "Copied to out\Kenmei-to-Anilist-win32-x64\Kenmei-to-Anilist.exe"
-          } else {
-            echo "ERROR: Could not find installer EXE file"
-            dir out\make /s
-          }
-
-          echo "Final directory structure:"
-          dir out\Kenmei-to-Anilist-win32-x64 /s
-
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -223,75 +201,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
 
-      - name: Debug directory structure
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing files in out directory:"
-          find out -type f | sort
-
-          # Create the expected directory structure
-          mkdir -p "out/Kenmei-to-Anilist-darwin-x64"
-
-          # First try to find the DMG file
-          if [ -f "out/Kenmei-to-Anilist.dmg" ]; then
-            echo "Found DMG file at out/Kenmei-to-Anilist.dmg"
-            DMG_PATH="out/Kenmei-to-Anilist.dmg"
-          elif [ -f "out/make/Kenmei-to-Anilist.dmg" ]; then
-            echo "Found DMG file at out/make/Kenmei-to-Anilist.dmg"
-            DMG_PATH="out/make/Kenmei-to-Anilist.dmg"
-          else
-            echo "Could not find DMG file"
-            DMG_PATH=""
-          fi
-
-          # If DMG file found, extract it to expected location
-          if [ -n "$DMG_PATH" ]; then
-            # Create a mount point
-            MOUNT_DIR=$(mktemp -d)
-            echo "Created mount directory: $MOUNT_DIR"
-            
-            # Mount the DMG
-            hdiutil attach "$DMG_PATH" -mountpoint "$MOUNT_DIR" -nobrowse
-            echo "Mounted DMG to $MOUNT_DIR"
-            
-            # List contents
-            echo "DMG contents:"
-            ls -la "$MOUNT_DIR"
-            
-            # Find the .app file
-            APP_NAME=$(find "$MOUNT_DIR" -name "*.app" -maxdepth 1 -print | head -1 | xargs basename)
-            if [ -n "$APP_NAME" ]; then
-              echo "Found app: $APP_NAME"
-              # Copy the app to the expected location
-              cp -R "$MOUNT_DIR/$APP_NAME" "out/Kenmei-to-Anilist-darwin-x64/"
-              echo "Copied app to out/Kenmei-to-Anilist-darwin-x64/"
-            else
-              echo "No .app file found in DMG"
-            fi
-            
-            # Unmount
-            hdiutil detach "$MOUNT_DIR" -force
-            
-          elif [ -f "out/make/zip/darwin/arm64/Kenmei-to-Anilist-darwin-arm64-3.0.0.zip" ]; then
-            echo "Found ZIP file"
-            
-            # Unzip to the expected location
-            unzip -o "out/make/zip/darwin/arm64/Kenmei-to-Anilist-darwin-arm64-3.0.0.zip" -d "out/Kenmei-to-Anilist-darwin-x64/"
-            echo "Extracted ZIP to out/Kenmei-to-Anilist-darwin-x64/"
-          else
-            echo "No DMG or ZIP file found, creating mock structure"
-            
-            # Create a minimal mock structure
-            mkdir -p "out/Kenmei-to-Anilist-darwin-x64/Kenmei-to-Anilist.app/Contents/MacOS"
-            touch "out/Kenmei-to-Anilist-darwin-x64/Kenmei-to-Anilist.app/Contents/MacOS/Kenmei-to-Anilist"
-            chmod +x "out/Kenmei-to-Anilist-darwin-x64/Kenmei-to-Anilist.app/Contents/MacOS/Kenmei-to-Anilist"
-            echo "Created mock app structure"
-          fi
-
-          # Show final structure
-          echo "Final directory structure:"
-          find out/Kenmei-to-Anilist-darwin-x64 -type f | sort
-
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -337,53 +246,6 @@ jobs:
           path: out
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
-
-      - name: Debug and prepare Linux directory structure
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing files in out directory:"
-          find out -type f | sort
-
-          # Create the expected directory structure
-          mkdir -p "out/Kenmei-to-Anilist-linux-x64"
-
-          # Check for DEB file and extract
-          if [ -f "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb" ]; then
-            echo "Found DEB file"
-            
-            # Extract DEB
-            dpkg-deb -x out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb out/extracted-deb
-            
-            # Find executable
-            if [ -f "out/extracted-deb/usr/lib/kenmei-to-anilist/kenmei-to-anilist" ]; then
-              echo "Found executable in DEB"
-              cp "out/extracted-deb/usr/lib/kenmei-to-anilist/kenmei-to-anilist" "out/Kenmei-to-Anilist-linux-x64/"
-              chmod +x "out/Kenmei-to-Anilist-linux-x64/kenmei-to-anilist"
-            else
-              echo "Executable not found in expected location, searching..."
-              EXECUTABLE=$(find out/extracted-deb -type f -executable | grep -v "\.so" | head -1)
-              if [ -n "$EXECUTABLE" ]; then
-                echo "Found executable: $EXECUTABLE"
-                cp "$EXECUTABLE" "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-                chmod +x "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-              else
-                echo "No executable found in DEB, creating mock"
-                echo '#!/bin/bash' > "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-                echo 'echo "Mock Electron App"' >> "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-                chmod +x "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-              fi
-            fi
-          else
-            echo "DEB file not found, creating mock executable"
-            echo '#!/bin/bash' > "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-            echo 'echo "Mock Electron App"' >> "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-            chmod +x "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist"
-          fi
-
-          # Show final structure
-          echo "Final directory structure:"
-          find out/Kenmei-to-Anilist-linux-x64 -type f | sort
-          ls -la out/Kenmei-to-Anilist-linux-x64/
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
