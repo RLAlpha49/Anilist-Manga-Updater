@@ -294,10 +294,34 @@ jobs:
           echo "Executable files after permission update:"
           find out -type f -executable | sort
 
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-0 \
+            libnotify-dev \
+            libgconf-2-4 \
+            libnss3 \
+            libxss1 \
+            libasound2 \
+            libxtst6 \
+            xvfb \
+            libgbm-dev \
+            libxkbcommon-x11-0 \
+            xauth \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libatspi2.0-0
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          npm run test:e2e
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()

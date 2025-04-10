@@ -375,11 +375,56 @@ export async function launchElectronApp(timeout = 60000): Promise<{
   // Launch with try/catch to get more detailed error information
   let electronApp;
   try {
-    electronApp = await electron.launch({
+    // Configure launch options with platform-specific additions
+    const launchOptions = {
       args: appInfo.main ? [appInfo.main] : [],
       executablePath: appInfo.executable,
       timeout,
-    });
+    };
+
+    // On Linux in CI, we need additional args to run headless
+    if (process.platform === "linux") {
+      console.log("Adding Linux-specific electron launch args");
+
+      // Handle spaces in paths - check if we need to escape the path
+      if (appInfo.executable.includes(" ")) {
+        console.log("Path contains spaces, attempting to normalize path");
+        try {
+          const normalizedPath = path.normalize(appInfo.executable);
+          console.log(`Normalized path: ${normalizedPath}`);
+          launchOptions.executablePath = normalizedPath;
+
+          // If the main arg also has spaces, normalize it too
+          if (appInfo.main && appInfo.main.includes(" ")) {
+            const normalizedMainPath = path.normalize(appInfo.main);
+            console.log(`Normalized main path: ${normalizedMainPath}`);
+            launchOptions.args = [normalizedMainPath];
+          }
+        } catch (normErr) {
+          console.error(`Error normalizing paths: ${normErr}`);
+        }
+      }
+
+      launchOptions.args = [
+        ...(launchOptions.args || []),
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-software-rasterizer",
+      ];
+
+      // Add CI environment detection
+      if (process.env.CI) {
+        console.log("Running in CI environment, adding additional args");
+        launchOptions.args.push("--headless");
+      }
+    }
+
+    console.log(
+      `Final launch options: ${JSON.stringify(launchOptions, null, 2)}`,
+    );
+
+    electronApp = await electron.launch(launchOptions);
   } catch (error) {
     console.error(`Failed to launch Electron app: ${error}`);
 
@@ -393,15 +438,27 @@ export async function launchElectronApp(timeout = 60000): Promise<{
 
         // Try launching one more time
         try {
-          electronApp = await electron.launch({
-            args: appInfo.main ? [appInfo.main] : [],
-            executablePath: appInfo.executable,
-            timeout,
-          });
+          electronApp = await electron.launch(launchOptions);
           console.log("Second launch attempt succeeded!");
         } catch (secondError) {
           console.error(`Second launch attempt also failed: ${secondError}`);
-          throw secondError;
+
+          // Last resort: try with minimal configuration
+          console.log("Making one final attempt with minimal configuration");
+          try {
+            const minimalOptions = {
+              executablePath: appInfo.executable,
+              timeout,
+              args: ["--no-sandbox", "--disable-gpu"],
+            };
+            electronApp = await electron.launch(minimalOptions);
+            console.log("Final attempt succeeded!");
+          } catch (finalError) {
+            console.error(
+              `All launch attempts failed. Final error: ${finalError}`,
+            );
+            throw finalError;
+          }
         }
       } catch (chmodErr) {
         console.error(`Failed to change permissions: ${chmodErr}`);
