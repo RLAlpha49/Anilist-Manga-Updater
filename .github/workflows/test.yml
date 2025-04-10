@@ -269,28 +269,25 @@ jobs:
 
       - name: Set executable permissions
         run: |
-          # Make only Electron app executables runnable
-          find out -type f -name "*Kenmei*to*Anilist*" -o -name "*kenmei*to*anilist*" | while read file; do
-            # Skip library files and only target executable names
-            if [[ "$file" != *".so"* ]] && [[ "$file" != *".node"* ]] && [[ "$file" != *".dll"* ]]; then
+          # Make only essential Electron app executables runnable
+          ELECTRON_EXECUTABLES=(
+            "kenmei-to-anilist"
+            "chrome_crashpad_handler"
+            "chrome-sandbox"
+          )
+
+          for executable in "${ELECTRON_EXECUTABLES[@]}"; do
+            find out -type f -name "$executable" | while read file; do
               echo "Making $file executable"
               chmod +x "$file"
-            fi
+            done
           done
 
-          # If there's an app directory, make only the specific executable files runnable
-          find out -type d -name "*-linux-*" | while read dir; do
-            if [ -d "$dir" ]; then
-              echo "Setting permissions for $dir"
-              find "$dir" -type f -not -path "*/\.*" -not -path "*/node_modules/*" -not -path "*/resources/app.asar.unpacked/*" | while read file; do
-                # Only make files without extensions executable (likely binaries)
-                if [[ "$file" != *.* ]] || [[ "$file" == *.sh ]]; then
-                  echo "Making $file executable"
-                  chmod +x "$file"
-                fi
-              done
-            fi
-          done
+          # Making the main app executable if it exists
+          if [ -f "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb" ]; then
+            echo "Making DEB file executable"
+            chmod +x "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb"
+          fi
 
           # List updated executable files
           echo "Executable files after permission update:"
