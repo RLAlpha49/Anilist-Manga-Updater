@@ -32,16 +32,86 @@ export async function launchElectronApp(timeout = 60000): Promise<{
       const possibleAppPaths = [
         "out/Kenmei-to-Anilist-darwin-x64/Kenmei-to-Anilist.app",
         "out/Kenmei-to-Anilist-darwin-arm64/Kenmei-to-Anilist.app",
+        "out/make/Kenmei-to-Anilist.app",
+        "out/Kenmei to Anilist.app",
+        "out/make/zip/darwin/x64/Kenmei-to-Anilist-darwin-x64-3.0.0/Kenmei-to-Anilist.app",
+        "out/make/zip/darwin/arm64/Kenmei-to-Anilist-darwin-arm64-3.0.0/Kenmei-to-Anilist.app",
       ];
 
+      // Try to find any .app bundle in out directory if none of the specific paths work
       for (const appPath of possibleAppPaths) {
         if (fs.existsSync(appPath)) {
           console.log(`Found app at ${appPath}`);
-          appInfo = {
-            executable: `${appPath}/Contents/MacOS/Kenmei-to-Anilist`,
-            main: "",
+          const executable = `${appPath}/Contents/MacOS/Kenmei-to-Anilist`;
+          if (fs.existsSync(executable)) {
+            appInfo = {
+              executable: executable,
+              main: "",
+            };
+            break;
+          } else {
+            console.log(
+              `Found app bundle but executable not at expected path: ${executable}`,
+            );
+            // Try to find any executable in the MacOS directory
+            const macOsDir = `${appPath}/Contents/MacOS`;
+            if (fs.existsSync(macOsDir)) {
+              const files = fs.readdirSync(macOsDir);
+              if (files.length > 0) {
+                const execPath = path.join(macOsDir, files[0]);
+                console.log(`Found potential executable: ${execPath}`);
+                appInfo = {
+                  executable: execPath,
+                  main: "",
+                };
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // Last resort: search for any .app in the out directory
+      if (!appInfo) {
+        console.log("Searching for any .app bundle in out directory");
+        let foundApp = false;
+        if (fs.existsSync("out")) {
+          const findAppBundle = (dir: string) => {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+              const fullPath = path.join(dir, entry.name);
+              if (entry.isDirectory()) {
+                if (entry.name.endsWith(".app")) {
+                  console.log(`Found .app bundle: ${fullPath}`);
+                  // Look for executable in MacOS directory
+                  const macOsDir = path.join(fullPath, "Contents", "MacOS");
+                  if (fs.existsSync(macOsDir)) {
+                    const files = fs.readdirSync(macOsDir);
+                    if (files.length > 0) {
+                      const execPath = path.join(macOsDir, files[0]);
+                      console.log(`Found executable: ${execPath}`);
+                      appInfo = {
+                        executable: execPath,
+                        main: "",
+                      };
+                      foundApp = true;
+                      return;
+                    }
+                  }
+                } else if (!foundApp) {
+                  // Recursively search subdirectories but not too deep
+                  if (fullPath.split(path.sep).length < 10) {
+                    findAppBundle(fullPath);
+                  }
+                }
+              }
+            }
           };
-          break;
+          try {
+            findAppBundle("out");
+          } catch (err) {
+            console.error("Error searching for app bundle:", err);
+          }
         }
       }
     } else if (platform === "win32") {
@@ -49,6 +119,8 @@ export async function launchElectronApp(timeout = 60000): Promise<{
       const possibleAppPaths = [
         "out/Kenmei-to-Anilist-win32-x64/Kenmei-to-Anilist.exe",
         "out/make/squirrel.windows/x64/Kenmei-to-Anilist-Setup.exe",
+        "out/make/squirrel.windows/x64/Kenmei-to-Anilist.exe",
+        "out/Kenmei-to-Anilist.exe",
       ];
 
       for (const appPath of possibleAppPaths) {
@@ -59,6 +131,39 @@ export async function launchElectronApp(timeout = 60000): Promise<{
             main: "",
           };
           break;
+        }
+      }
+
+      // Last resort: search for any .exe in the out directory
+      if (!appInfo) {
+        console.log("Searching for any .exe in out directory");
+        let foundExe = false;
+        if (fs.existsSync("out")) {
+          const findExe = (dir: string) => {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+              const fullPath = path.join(dir, entry.name);
+              if (entry.isFile() && entry.name.endsWith(".exe")) {
+                console.log(`Found exe: ${fullPath}`);
+                appInfo = {
+                  executable: fullPath,
+                  main: "",
+                };
+                foundExe = true;
+                return;
+              } else if (entry.isDirectory() && !foundExe) {
+                // Recursively search subdirectories but not too deep
+                if (fullPath.split(path.sep).length < 10) {
+                  findExe(fullPath);
+                }
+              }
+            }
+          };
+          try {
+            findExe("out");
+          } catch (err) {
+            console.error("Error searching for exe:", err);
+          }
         }
       }
     } else if (platform === "linux") {
@@ -66,11 +171,21 @@ export async function launchElectronApp(timeout = 60000): Promise<{
       const possibleAppPaths = [
         "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist",
         "out/Kenmei-to-Anilist-linux-x64/usr/bin/kenmei-to-anilist",
+        "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb",
+        "out/Kenmei-to-Anilist",
+        "out/kenmei-to-anilist",
       ];
 
       for (const appPath of possibleAppPaths) {
         if (fs.existsSync(appPath)) {
           console.log(`Found app at ${appPath}`);
+          // If it's a .deb file, we can't use it directly
+          if (appPath.endsWith(".deb")) {
+            console.log(
+              "Found .deb file but can't use it directly for E2E tests",
+            );
+            continue;
+          }
           appInfo = {
             executable: appPath,
             main: "",
@@ -78,9 +193,80 @@ export async function launchElectronApp(timeout = 60000): Promise<{
           break;
         }
       }
+
+      // Last resort: search for any executable file in the out directory
+      if (!appInfo) {
+        console.log("Searching for any executable in out directory");
+        let foundExecutable = false;
+        if (fs.existsSync("out")) {
+          const findExecutable = (dir: string) => {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+              const fullPath = path.join(dir, entry.name);
+              if (entry.isFile()) {
+                try {
+                  // Check if file is executable (has execute permission)
+                  const stats = fs.statSync(fullPath);
+                  const isExecutable = !!(stats.mode & 0o111);
+                  if (isExecutable) {
+                    console.log(`Found executable: ${fullPath}`);
+                    appInfo = {
+                      executable: fullPath,
+                      main: "",
+                    };
+                    foundExecutable = true;
+                    return;
+                  }
+                } catch (err) {
+                  // Ignore errors checking file permissions
+                }
+              } else if (entry.isDirectory() && !foundExecutable) {
+                // Recursively search subdirectories but not too deep
+                if (fullPath.split(path.sep).length < 10) {
+                  findExecutable(fullPath);
+                }
+              }
+            }
+          };
+          try {
+            findExecutable("out");
+          } catch (err) {
+            console.error("Error searching for executable:", err);
+          }
+        }
+      }
     }
 
     if (!appInfo) {
+      // Print out directory structure for debugging
+      console.error("Directory structure of out directory:");
+      try {
+        const listDir = (dir: string, indent = "") => {
+          if (!fs.existsSync(dir)) {
+            console.error(`${indent}Directory does not exist: ${dir}`);
+            return;
+          }
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              console.error(`${indent}${entry.name}/`);
+              // Don't go too deep
+              if (indent.length < 12) {
+                listDir(fullPath, indent + "  ");
+              } else {
+                console.error(`${indent}  ...`);
+              }
+            } else {
+              console.error(`${indent}${entry.name}`);
+            }
+          }
+        };
+        listDir("out");
+      } catch (err) {
+        console.error("Error listing directory structure:", err);
+      }
+
       throw new Error(`Could not find app executable for platform ${platform}`);
     }
   }

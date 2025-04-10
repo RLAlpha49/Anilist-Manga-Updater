@@ -201,6 +201,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
 
+      - name: Debug macOS structure
+        run: |
+          echo "Directory contents:"
+          find out -type f | sort
+          echo "Package contents if any:"
+          find out -name "*.app" -type d || echo "No .app bundles found"
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -246,6 +253,15 @@ jobs:
           path: out
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
+
+      - name: Debug Linux structure
+        run: |
+          echo "Directory contents:"
+          find out -type f | sort
+          echo "Directory structure:"
+          find out -type d | sort
+          echo "Check if the actual electron app exists:"
+          find out -type f -executable || echo "No executable files found"
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
