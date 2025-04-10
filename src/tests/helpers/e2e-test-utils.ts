@@ -1,6 +1,8 @@
 import { ElectronApplication, Page } from "@playwright/test";
 import { _electron as electron } from "playwright";
 import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
+import * as fs from "fs";
+import * as path from "path";
 
 /**
  * Launches the Electron app and returns the app and window instances
@@ -33,7 +35,7 @@ export async function launchElectronApp(timeout = 60000): Promise<{
       ];
 
       for (const appPath of possibleAppPaths) {
-        if (require("fs").existsSync(appPath)) {
+        if (fs.existsSync(appPath)) {
           console.log(`Found app at ${appPath}`);
           appInfo = {
             executable: `${appPath}/Contents/MacOS/Kenmei-to-Anilist`,
@@ -50,7 +52,7 @@ export async function launchElectronApp(timeout = 60000): Promise<{
       ];
 
       for (const appPath of possibleAppPaths) {
-        if (require("fs").existsSync(appPath)) {
+        if (fs.existsSync(appPath)) {
           console.log(`Found app at ${appPath}`);
           appInfo = {
             executable: appPath,
@@ -67,7 +69,7 @@ export async function launchElectronApp(timeout = 60000): Promise<{
       ];
 
       for (const appPath of possibleAppPaths) {
-        if (require("fs").existsSync(appPath)) {
+        if (fs.existsSync(appPath)) {
           console.log(`Found app at ${appPath}`);
           appInfo = {
             executable: appPath,
