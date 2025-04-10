@@ -1797,195 +1797,197 @@ export function MangaMatchingPanel({
                                   })
                                 }
                               >
-                                <div className="flex items-center space-x-3">
-                                  <div className="group relative flex-shrink-0">
-                                    {/* Cover image with better fallbacks */}
-                                    {altMatch.manga?.coverImage?.large ||
-                                    altMatch.manga?.coverImage?.medium ? (
-                                      <img
-                                        src={
-                                          altMatch.manga.coverImage.large ||
-                                          altMatch.manga.coverImage.medium
-                                        }
-                                        alt={
-                                          altMatch.manga?.title?.english ||
-                                          altMatch.manga?.title?.romaji ||
-                                          "Alternative manga"
-                                        }
-                                        className="h-32 w-20 rounded border border-gray-200 object-cover shadow-sm transition-all group-hover:scale-[1.02] group-hover:shadow dark:border-gray-700"
-                                        loading="lazy"
-                                      />
-                                    ) : (
-                                      <div className="flex h-32 w-20 items-center justify-center rounded border border-gray-200 bg-gray-100 shadow-sm dark:border-gray-700 dark:bg-gray-700">
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                          No Image
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <p className="text-base font-medium text-gray-900 dark:text-white">
-                                      {altMatch.manga?.title?.english ||
-                                        altMatch.manga?.title?.romaji ||
-                                        "Unknown Manga"}
-                                    </p>
-                                    {/* Show all available titles */}
-                                    <div className="flex flex-col text-sm text-gray-500 dark:text-gray-400">
-                                      {/* English title - if different from main display */}
-                                      {altMatch.manga?.title?.english &&
-                                        altMatch.manga.title.english !==
-                                          altMatch.manga?.title?.romaji && (
-                                          <span>
-                                            English:{" "}
-                                            {altMatch.manga.title.english}
+                                <div className="flex w-full flex-col space-y-2">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="group relative flex-shrink-0">
+                                      {/* Cover image with better fallbacks */}
+                                      {altMatch.manga?.coverImage?.large ||
+                                      altMatch.manga?.coverImage?.medium ? (
+                                        <img
+                                          src={
+                                            altMatch.manga.coverImage.large ||
+                                            altMatch.manga.coverImage.medium
+                                          }
+                                          alt={
+                                            altMatch.manga?.title?.english ||
+                                            altMatch.manga?.title?.romaji ||
+                                            "Alternative manga"
+                                          }
+                                          className="h-32 w-20 rounded border border-gray-200 object-cover shadow-sm transition-all group-hover:scale-[1.02] group-hover:shadow dark:border-gray-700"
+                                          loading="lazy"
+                                        />
+                                      ) : (
+                                        <div className="flex h-32 w-20 items-center justify-center rounded border border-gray-200 bg-gray-100 shadow-sm dark:border-gray-700 dark:bg-gray-700">
+                                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            No Image
                                           </span>
-                                        )}
-
-                                      {/* Romaji title - if different from main display */}
-                                      {altMatch.manga?.title?.romaji &&
-                                        altMatch.manga.title.romaji !==
-                                          altMatch.manga?.title?.english && (
-                                          <span>
-                                            Romaji:{" "}
-                                            {altMatch.manga.title.romaji}
-                                          </span>
-                                        )}
-
-                                      {/* Native title */}
-                                      {altMatch.manga?.title?.native && (
-                                        <span>
-                                          Native: {altMatch.manga.title.native}
-                                        </span>
+                                        </div>
                                       )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-base font-medium text-gray-900 dark:text-white">
+                                        {altMatch.manga?.title?.english ||
+                                          altMatch.manga?.title?.romaji ||
+                                          "Unknown Manga"}
+                                      </p>
+                                      {/* Show all available titles */}
+                                      <div className="flex flex-col text-sm text-gray-500 dark:text-gray-400">
+                                        {/* English title - if different from main display */}
+                                        {altMatch.manga?.title?.english &&
+                                          altMatch.manga.title.english !==
+                                            altMatch.manga?.title?.romaji && (
+                                            <span>
+                                              English:{" "}
+                                              {altMatch.manga.title.english}
+                                            </span>
+                                          )}
 
-                                      {/* Synonyms */}
-                                      {altMatch.manga?.synonyms &&
-                                        altMatch.manga.synonyms.length > 0 && (
+                                        {/* Romaji title - if different from main display */}
+                                        {altMatch.manga?.title?.romaji &&
+                                          altMatch.manga.title.romaji !==
+                                            altMatch.manga?.title?.english && (
+                                            <span>
+                                              Romaji:{" "}
+                                              {altMatch.manga.title.romaji}
+                                            </span>
+                                          )}
+
+                                        {/* Native title */}
+                                        {altMatch.manga?.title?.native && (
                                           <span>
-                                            Synonyms:{" "}
-                                            {altMatch.manga.synonyms.join(", ")}
+                                            Native:{" "}
+                                            {altMatch.manga.title.native}
                                           </span>
                                         )}
+
+                                        {/* Synonyms */}
+                                        {altMatch.manga?.synonyms &&
+                                          altMatch.manga.synonyms.length >
+                                            0 && (
+                                            <span>
+                                              Synonyms:{" "}
+                                              {altMatch.manga.synonyms.join(
+                                                ", ",
+                                              )}
+                                            </span>
+                                          )}
+                                      </div>
+                                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+                                        {/* Format */}
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs font-normal"
+                                        >
+                                          {altMatch.manga?.format || "Unknown"}
+                                        </Badge>
+                                        {/* Status */}
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs font-normal"
+                                        >
+                                          {altMatch.manga?.status || "Unknown"}
+                                        </Badge>
+                                        {/* Chapters */}
+                                        {altMatch.manga?.chapters &&
+                                          Number(altMatch.manga.chapters) >
+                                            0 && (
+                                            <Badge
+                                              variant="outline"
+                                              className="text-xs font-normal"
+                                            >
+                                              {altMatch.manga.chapters} chapters
+                                            </Badge>
+                                          )}
+                                      </div>
                                     </div>
-                                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-                                      {/* Format */}
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs font-normal"
-                                      >
-                                        {altMatch.manga?.format || "Unknown"}
-                                      </Badge>
-                                      {/* Status */}
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs font-normal"
-                                      >
-                                        {altMatch.manga?.status || "Unknown"}
-                                      </Badge>
-                                      {/* Chapters */}
-                                      {altMatch.manga?.chapters &&
-                                        Number(altMatch.manga.chapters) > 0 && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs font-normal"
-                                          >
-                                            {altMatch.manga.chapters} chapters
-                                          </Badge>
+                                    <div className="ml-2 flex flex-col items-end space-y-3">
+                                      {altMatch.confidence !== undefined &&
+                                        renderConfidenceBadge(
+                                          altMatch.confidence,
                                         )}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  {altMatch.confidence !== undefined && (
-                                    <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
-                                      {Math.round(altMatch.confidence)}%
-                                    </div>
-                                  )}
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    className="bg-green-600 text-white hover:bg-green-700"
-                                    onClick={() => {
-                                      // Directly accept the alternative as the match without swapping
-                                      if (onSelectAlternative) {
-                                        onSelectAlternative(
-                                          match,
-                                          index + 1,
-                                          false,
-                                          true,
-                                        );
-                                      }
-                                    }}
-                                    aria-label={`Accept ${
-                                      altMatch.manga?.title?.english ||
-                                      altMatch.manga?.title?.romaji ||
-                                      "Unknown manga"
-                                    } as match (${altMatch.confidence !== undefined ? Math.round(altMatch.confidence) + "%" : "Unknown confidence"})`}
-                                  >
-                                    <Check
-                                      className="mr-1 h-3 w-3"
-                                      aria-hidden="true"
-                                    />
-                                    Accept
-                                  </Button>
-                                  <div className="flex space-x-2">
-                                    <a
-                                      href={`https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                                      aria-label="View on AniList (opens in new tab)"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenExternal(
-                                          `https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`,
-                                        )(e);
-                                      }}
-                                    >
-                                      <ExternalLink
-                                        className="mr-1 h-3 w-3"
-                                        aria-hidden="true"
-                                      />
-                                      AniList
-                                    </a>
-                                    {(() => {
-                                      // Get the title for Kenmei link
-                                      const title =
-                                        altMatch.manga?.title?.english ||
-                                        altMatch.manga?.title?.romaji;
-
-                                      const kenmeiUrl = createKenmeiUrl(title);
-
-                                      return kenmeiUrl ? (
+                                      <div className="flex space-x-2">
                                         <a
-                                          href={kenmeiUrl}
+                                          href={`https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center rounded-md bg-indigo-100 px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:hover:bg-indigo-800/30"
-                                          aria-label="View on Kenmei (opens in new tab)"
+                                          className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                                          aria-label="View on AniList (opens in new tab)"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleOpenExternal(kenmeiUrl)(e);
+                                            handleOpenExternal(
+                                              `https://anilist.co/manga/${altMatch.manga?.id || "unknown"}`,
+                                            )(e);
                                           }}
                                         >
                                           <ExternalLink
                                             className="mr-1 h-3 w-3"
                                             aria-hidden="true"
                                           />
-                                          Kenmei
-                                          <div className="group relative ml-1 inline-block">
-                                            <Info
-                                              className="h-3 w-3 text-indigo-500 dark:text-indigo-400"
-                                              aria-hidden="true"
-                                            />
-                                            <div className="absolute right-0 bottom-full mb-2 hidden w-48 rounded-md border border-indigo-300 bg-indigo-50 px-2 py-1.5 text-xs text-indigo-900 shadow-md group-hover:block dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-100">
-                                              This link is dynamically generated
-                                              and may not work correctly.
-                                            </div>
-                                          </div>
+                                          AniList
                                         </a>
-                                      ) : null;
-                                    })()}
+                                        {(() => {
+                                          // Get the title for Kenmei link
+                                          const title =
+                                            altMatch.manga?.title?.english ||
+                                            altMatch.manga?.title?.romaji;
+
+                                          const kenmeiUrl =
+                                            createKenmeiUrl(title);
+
+                                          return kenmeiUrl ? (
+                                            <a
+                                              href={kenmeiUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center rounded-md bg-indigo-100 px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:hover:bg-indigo-800/30"
+                                              aria-label="View on Kenmei (opens in new tab)"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenExternal(kenmeiUrl)(
+                                                  e,
+                                                );
+                                              }}
+                                            >
+                                              <ExternalLink
+                                                className="mr-1 h-3 w-3"
+                                                aria-hidden="true"
+                                              />
+                                              Kenmei
+                                            </a>
+                                          ) : null;
+                                        })()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Separator className="bg-foreground/20 my-2" />
+                                  <div className="mt-2 flex justify-start">
+                                    <Button
+                                      variant="default"
+                                      size="sm"
+                                      className="bg-green-600 text-white hover:bg-green-700"
+                                      onClick={() => {
+                                        // Directly accept the alternative as the match without swapping
+                                        if (onSelectAlternative) {
+                                          onSelectAlternative(
+                                            match,
+                                            index + 1,
+                                            false,
+                                            true,
+                                          );
+                                        }
+                                      }}
+                                      aria-label={`Accept ${
+                                        altMatch.manga?.title?.english ||
+                                        altMatch.manga?.title?.romaji ||
+                                        "Unknown manga"
+                                      } as match (${altMatch.confidence !== undefined ? Math.round(altMatch.confidence) + "%" : "Unknown confidence"})`}
+                                    >
+                                      <Check
+                                        className="mr-1 h-3 w-3"
+                                        aria-hidden="true"
+                                      />
+                                      Accept Match
+                                    </Button>
                                   </div>
                                 </div>
                               </div>
