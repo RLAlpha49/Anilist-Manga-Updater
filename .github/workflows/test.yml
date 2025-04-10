@@ -208,6 +208,24 @@ jobs:
           echo "Package contents if any:"
           find out -name "*.app" -type d || echo "No .app bundles found"
 
+      - name: Set executable permissions
+        run: |
+          # Find all app bundles and make their executables runnable
+          find out -name "*.app" -type d | while read app; do
+            echo "Setting permissions for $app"
+            chmod -R +x "$app/Contents/MacOS/"
+            ls -la "$app/Contents/MacOS/" || echo "No MacOS directory found"
+          done
+
+          # Also recursively find and make any executable files in the out directory runnable
+          find out -type f -not -path "*/\.*" | while read file; do
+            # Check if file is executable (has execute permission bit or is in MacOS dir)
+            if [[ "$file" == *"/MacOS/"* ]] || [[ "$file" == *".sh" ]] || [[ "$file" != *.* ]]; then
+              echo "Making $file executable"
+              chmod +x "$file"
+            fi
+          done
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -261,6 +279,29 @@ jobs:
           echo "Directory structure:"
           find out -type d | sort
           echo "Check if the actual electron app exists:"
+          find out -type f -executable || echo "No executable files found"
+
+      - name: Set executable permissions
+        run: |
+          # Make all relevant files executable
+          find out -type f -not -path "*/\.*" | while read file; do
+            # Check if file is executable or might be an executable
+            if [[ "$file" == */Kenmei-to-Anilist* ]] || [[ "$file" == */kenmei-to-anilist* ]] || [[ "$file" != *.* ]]; then
+              echo "Making $file executable"
+              chmod +x "$file"
+            fi
+          done
+
+          # If there's an app directory, make all binaries executable
+          find out -type d -name "*-linux-*" | while read dir; do
+            echo "Setting permissions for $dir"
+            find "$dir" -type f -not -path "*/\.*" | while read file; do
+              chmod +x "$file"
+            done
+          done
+
+          # List updated executable files
+          echo "Executable files after permission update:"
           find out -type f -executable || echo "No executable files found"
 
       - name: Install Playwright Browsers
