@@ -52,28 +52,6 @@ export const DEFAULT_PARSE_OPTIONS: KenmeiParseOptions = {
   defaultStatus: "plan_to_read",
 };
 
-export const parseKenmeiExport = (jsonString: string): KenmeiExport => {
-  try {
-    const parsed = JSON.parse(jsonString);
-
-    // Basic validation
-    if (!parsed || typeof parsed !== "object") {
-      throw new Error("Invalid Kenmei export: Not a valid JSON object");
-    }
-
-    if (!parsed.export_date || !parsed.user || !Array.isArray(parsed.manga)) {
-      throw new Error("Invalid Kenmei export: Missing required fields");
-    }
-
-    return parsed as KenmeiExport;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to parse Kenmei export: ${error.message}`);
-    }
-    throw new Error("Failed to parse Kenmei export: Unknown error");
-  }
-};
-
 export interface MangaMatch {
   kenmei: KenmeiManga;
   anilist: {

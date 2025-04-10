@@ -66,14 +66,15 @@ export function Header() {
                     <NavigationMenuItem>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link to="/">
-                            <NavigationMenuLink
-                              className={navigationMenuTriggerStyle()}
-                            >
+                          <NavigationMenuLink
+                            className={navigationMenuTriggerStyle()}
+                            asChild
+                          >
+                            <Link to="/">
                               <Home className="h-4 w-4 flex-shrink-0" />
                               <span className="ml-2 max-lg:hidden">Home</span>
-                            </NavigationMenuLink>
-                          </Link>
+                            </Link>
+                          </NavigationMenuLink>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="lg:hidden">
                           Home
@@ -83,14 +84,15 @@ export function Header() {
                     <NavigationMenuItem>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link to="/import">
-                            <NavigationMenuLink
-                              className={navigationMenuTriggerStyle()}
-                            >
+                          <NavigationMenuLink
+                            className={navigationMenuTriggerStyle()}
+                            asChild
+                          >
+                            <Link to="/import">
                               <Download className="h-4 w-4 flex-shrink-0" />
                               <span className="ml-2 max-lg:hidden">Import</span>
-                            </NavigationMenuLink>
-                          </Link>
+                            </Link>
+                          </NavigationMenuLink>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="lg:hidden">
                           Import
@@ -100,14 +102,15 @@ export function Header() {
                     <NavigationMenuItem>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link to="/review">
-                            <NavigationMenuLink
-                              className={navigationMenuTriggerStyle()}
-                            >
+                          <NavigationMenuLink
+                            className={navigationMenuTriggerStyle()}
+                            asChild
+                          >
+                            <Link to="/review">
                               <ClipboardCheck className="h-4 w-4 flex-shrink-0" />
                               <span className="ml-2 max-lg:hidden">Review</span>
-                            </NavigationMenuLink>
-                          </Link>
+                            </Link>
+                          </NavigationMenuLink>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="lg:hidden">
                           Review
@@ -117,14 +120,15 @@ export function Header() {
                     <NavigationMenuItem>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link to="/sync">
-                            <NavigationMenuLink
-                              className={navigationMenuTriggerStyle()}
-                            >
+                          <NavigationMenuLink
+                            className={navigationMenuTriggerStyle()}
+                            asChild
+                          >
+                            <Link to="/sync">
                               <SyncIcon className="h-4 w-4 flex-shrink-0" />
                               <span className="ml-2 max-lg:hidden">Sync</span>
-                            </NavigationMenuLink>
-                          </Link>
+                            </Link>
+                          </NavigationMenuLink>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="lg:hidden">
                           Sync
@@ -134,16 +138,17 @@ export function Header() {
                     <NavigationMenuItem>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Link to="/settings">
-                            <NavigationMenuLink
-                              className={navigationMenuTriggerStyle()}
-                            >
+                          <NavigationMenuLink
+                            className={navigationMenuTriggerStyle()}
+                            asChild
+                          >
+                            <Link to="/settings">
                               <SettingsIcon className="h-4 w-4 flex-shrink-0" />
                               <span className="ml-2 max-lg:hidden">
                                 Settings
                               </span>
-                            </NavigationMenuLink>
-                          </Link>
+                            </Link>
+                          </NavigationMenuLink>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="lg:hidden">
                           Settings

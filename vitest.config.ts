@@ -25,11 +25,15 @@ export default defineConfig({
         "dist/**",
         ".vite/**",
         "src/tests/**",
-        "src/main/**", // Electron main process code
+        "src/main/**",
+        "src/components/ui/**",
         "**/*.d.ts",
         "**/*.config.*",
         "**/mocks/**",
         "**/fixtures/**",
+        "src/types/**",
+        "**/types.ts",
+        "src/config/**",
       ],
       thresholds: {
         lines: 70,
