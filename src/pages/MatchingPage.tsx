@@ -1141,7 +1141,7 @@ export function MatchingPage() {
                 {/* The main matching panel */}
                 {
                   <motion.div
-                    className="flex h-full flex-col"
+                    className="flex h-full flex-col mb-6"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.25, duration: 0.3 }}
