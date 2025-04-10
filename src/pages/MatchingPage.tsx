@@ -1178,7 +1178,7 @@ export function MatchingPage() {
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                         onClick={handleProceedToSync}
                       >
-                        Proceed to Dashboard
+                        Proceed to Sync
                       </Button>
                     </motion.div>
                   </motion.div>
