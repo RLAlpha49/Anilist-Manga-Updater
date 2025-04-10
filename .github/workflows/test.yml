@@ -269,21 +269,22 @@ jobs:
 
       - name: Set executable permissions
         run: |
-          # Make only essential Electron app executables runnable
-          ELECTRON_EXECUTABLES=(
-            "kenmei-to-anilist"
-            "chrome_crashpad_handler"
-            "chrome-sandbox"
-          )
+          # Make all Electron app executables runnable 
+          find out -type f -name "kenmei-to-anilist" -o -name "chrome_crashpad_handler" -o -name "chrome-sandbox" | xargs -I{} chmod +x {}
 
-          for executable in "${ELECTRON_EXECUTABLES[@]}"; do
-            find out -type f -name "$executable" | while read file; do
-              echo "Making $file executable"
-              chmod +x "$file"
-            done
-          done
+          # Make the main app directory executable files runnable - this is critical
+          if [ -d "out/Kenmei to Anilist-linux-x64" ]; then
+            echo "Making all files in main app directory executable"
+            find "out/Kenmei to Anilist-linux-x64" -type f -exec chmod +x {} \;
+          fi
 
-          # Making the main app executable if it exists
+          # For any unpacked .asar files
+          if [ -d "out/Kenmei to Anilist-linux-x64/resources/app.asar.unpacked" ]; then
+            echo "Making unpacked asar binaries executable"
+            find "out/Kenmei to Anilist-linux-x64/resources/app.asar.unpacked" -type f -not -path "*/node_modules/*" -exec chmod +x {} \;
+          fi
+
+          # Making the DEB file executable if it exists
           if [ -f "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb" ]; then
             echo "Making DEB file executable"
             chmod +x "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb"
@@ -291,7 +292,7 @@ jobs:
 
           # List updated executable files
           echo "Executable files after permission update:"
-          find out -type f -executable || echo "No executable files found"
+          find out -type f -executable | sort
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps

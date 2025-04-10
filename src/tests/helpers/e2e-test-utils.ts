@@ -170,27 +170,65 @@ export async function launchElectronApp(timeout = 60000): Promise<{
       // Linux fallback
       const possibleAppPaths = [
         "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist",
+        "out/Kenmei to Anilist-linux-x64/Kenmei to Anilist",
+        "out/Kenmei-to-Anilist-linux-x64/kenmei-to-anilist",
+        "out/Kenmei to Anilist-linux-x64/kenmei-to-anilist",
         "out/Kenmei-to-Anilist-linux-x64/usr/bin/kenmei-to-anilist",
         "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb",
         "out/Kenmei-to-Anilist",
         "out/kenmei-to-anilist",
       ];
 
+      // Try to find the app executable with more detailed logging
       for (const appPath of possibleAppPaths) {
-        if (fs.existsSync(appPath)) {
-          console.log(`Found app at ${appPath}`);
-          // If it's a .deb file, we can't use it directly
-          if (appPath.endsWith(".deb")) {
-            console.log(
-              "Found .deb file but can't use it directly for E2E tests",
-            );
-            continue;
+        try {
+          console.log(`Checking if ${appPath} exists...`);
+          if (fs.existsSync(appPath)) {
+            console.log(`Found app at ${appPath}`);
+            // If it's a .deb file, we can't use it directly
+            if (appPath.endsWith(".deb")) {
+              console.log(
+                "Found .deb file but can't use it directly for E2E tests",
+              );
+              continue;
+            }
+
+            // Verify the file is executable
+            try {
+              const stats = fs.statSync(appPath);
+              const isExecutable = !!(stats.mode & 0o111);
+              console.log(`${appPath} executable permission: ${isExecutable}`);
+
+              if (!isExecutable) {
+                console.log(
+                  `${appPath} exists but is not executable, attempting to make it executable`,
+                );
+                try {
+                  // Try to make the file executable
+                  fs.chmodSync(appPath, 0o755);
+                  console.log(`Changed permissions for ${appPath}`);
+                } catch (chmodErr) {
+                  console.error(
+                    `Failed to make ${appPath} executable:`,
+                    chmodErr,
+                  );
+                }
+              }
+            } catch (statErr) {
+              console.error(
+                `Failed to check permissions for ${appPath}:`,
+                statErr,
+              );
+            }
+
+            appInfo = {
+              executable: appPath,
+              main: "",
+            };
+            break;
           }
-          appInfo = {
-            executable: appPath,
-            main: "",
-          };
-          break;
+        } catch (err) {
+          console.error(`Error checking ${appPath}:`, err);
         }
       }
 
@@ -200,34 +238,73 @@ export async function launchElectronApp(timeout = 60000): Promise<{
         let foundExecutable = false;
         if (fs.existsSync("out")) {
           const findExecutable = (dir: string) => {
-            const entries = fs.readdirSync(dir, { withFileTypes: true });
-            for (const entry of entries) {
-              const fullPath = path.join(dir, entry.name);
-              if (entry.isFile()) {
+            try {
+              const entries = fs.readdirSync(dir, { withFileTypes: true });
+              for (const entry of entries) {
                 try {
-                  // Check if file is executable (has execute permission)
-                  const stats = fs.statSync(fullPath);
-                  const isExecutable = !!(stats.mode & 0o111);
-                  if (isExecutable) {
-                    console.log(`Found executable: ${fullPath}`);
-                    appInfo = {
-                      executable: fullPath,
-                      main: "",
-                    };
-                    foundExecutable = true;
-                    return;
+                  const fullPath = path.join(dir, entry.name);
+                  if (entry.isFile()) {
+                    try {
+                      // Check if file is executable (has execute permission)
+                      const stats = fs.statSync(fullPath);
+                      const isExecutable = !!(stats.mode & 0o111);
+                      // Also check if it looks like an electron binary
+                      const isLikelyElectron =
+                        entry.name.toLowerCase().includes("electron") ||
+                        entry.name.toLowerCase().includes("kenmei") ||
+                        entry.name.toLowerCase().includes("anilist");
+
+                      if (isExecutable || isLikelyElectron) {
+                        console.log(
+                          `Found potential executable: ${fullPath} (executable: ${isExecutable}, likely electron: ${isLikelyElectron})`,
+                        );
+
+                        // If it's not executable but looks like our app, try to make it executable
+                        if (!isExecutable && isLikelyElectron) {
+                          try {
+                            fs.chmodSync(fullPath, 0o755);
+                            console.log(`Made ${fullPath} executable`);
+                          } catch (chmodErr) {
+                            console.error(
+                              `Failed to make ${fullPath} executable:`,
+                              chmodErr,
+                            );
+                          }
+                        }
+
+                        appInfo = {
+                          executable: fullPath,
+                          main: "",
+                        };
+                        foundExecutable = true;
+                        return;
+                      }
+                    } catch (err) {
+                      // Ignore errors checking file permissions
+                      console.error(
+                        `Error checking permissions for ${fullPath}:`,
+                        err,
+                      );
+                    }
+                  } else if (entry.isDirectory() && !foundExecutable) {
+                    // Recursively search subdirectories but not too deep
+                    if (fullPath.split(path.sep).length < 10) {
+                      findExecutable(fullPath);
+                      if (foundExecutable) return;
+                    }
                   }
-                } catch (err) {
-                  // Ignore errors checking file permissions
-                }
-              } else if (entry.isDirectory() && !foundExecutable) {
-                // Recursively search subdirectories but not too deep
-                if (fullPath.split(path.sep).length < 10) {
-                  findExecutable(fullPath);
+                } catch (entryErr) {
+                  console.error(
+                    `Error processing entry ${entry.name}:`,
+                    entryErr,
+                  );
                 }
               }
+            } catch (readErr) {
+              console.error(`Error reading directory ${dir}:`, readErr);
             }
           };
+
           try {
             findExecutable("out");
           } catch (err) {
@@ -272,11 +349,68 @@ export async function launchElectronApp(timeout = 60000): Promise<{
   }
 
   // Launch Electron app
-  const electronApp = await electron.launch({
-    args: appInfo.main ? [appInfo.main] : [],
-    executablePath: appInfo.executable,
-    timeout,
-  });
+  console.log(`Attempting to launch Electron app with:
+  - executablePath: ${appInfo.executable}
+  - args: ${appInfo.main ? [appInfo.main] : []}
+  - timeout: ${timeout}
+  `);
+
+  // Additional verification before launch
+  try {
+    const executableExists = fs.existsSync(appInfo.executable);
+    console.log(`Executable exists check: ${executableExists}`);
+
+    if (executableExists) {
+      const stats = fs.statSync(appInfo.executable);
+      console.log(`Executable stats:
+      - size: ${stats.size} bytes
+      - permissions: ${stats.mode.toString(8)}
+      - is executable: ${!!(stats.mode & 0o111)}
+      `);
+    }
+  } catch (err) {
+    console.error(`Error verifying executable before launch:`, err);
+  }
+
+  // Launch with try/catch to get more detailed error information
+  let electronApp;
+  try {
+    electronApp = await electron.launch({
+      args: appInfo.main ? [appInfo.main] : [],
+      executablePath: appInfo.executable,
+      timeout,
+    });
+  } catch (error) {
+    console.error(`Failed to launch Electron app: ${error}`);
+
+    if (process.platform === "linux") {
+      console.log(
+        "Trying to make the executable executable one more time before failing",
+      );
+      try {
+        fs.chmodSync(appInfo.executable, 0o755);
+        console.log(`Changed permissions for ${appInfo.executable} to 755`);
+
+        // Try launching one more time
+        try {
+          electronApp = await electron.launch({
+            args: appInfo.main ? [appInfo.main] : [],
+            executablePath: appInfo.executable,
+            timeout,
+          });
+          console.log("Second launch attempt succeeded!");
+        } catch (secondError) {
+          console.error(`Second launch attempt also failed: ${secondError}`);
+          throw secondError;
+        }
+      } catch (chmodErr) {
+        console.error(`Failed to change permissions: ${chmodErr}`);
+        throw error;
+      }
+    } else {
+      throw error;
+    }
+  }
 
   // Get the first window
   const page = await electronApp.firstWindow();
