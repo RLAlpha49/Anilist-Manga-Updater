@@ -173,6 +173,16 @@ export async function launchElectronApp(timeout = 60000): Promise<{
         "out/Kenmei to Anilist-linux-x64/Kenmei to Anilist",
         "out/Kenmei-to-Anilist-linux-x64/kenmei-to-anilist",
         "out/Kenmei to Anilist-linux-x64/kenmei-to-anilist",
+        // Add electron executable paths
+        "out/Kenmei to Anilist-linux-x64/electron",
+        "out/Kenmei-to-Anilist-linux-x64/electron",
+        // Try different capitalization
+        "out/Kenmei to Anilist-linux-x64/Kenmei-to-Anilist",
+        "out/Kenmei-to-Anilist-linux-x64/Kenmei to Anilist",
+        // Try looking at main.js directly
+        "out/Kenmei to Anilist-linux-x64/resources/app/.vite/build/main.js",
+        "out/Kenmei-to-Anilist-linux-x64/resources/app/.vite/build/main.js",
+        // More fallbacks
         "out/Kenmei-to-Anilist-linux-x64/usr/bin/kenmei-to-anilist",
         "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb",
         "out/Kenmei-to-Anilist",
@@ -436,9 +446,21 @@ export async function launchElectronApp(timeout = 60000): Promise<{
         fs.chmodSync(appInfo.executable, 0o755);
         console.log(`Changed permissions for ${appInfo.executable} to 755`);
 
+        // Create launch options again for retry
+        const retryLaunchOptions = {
+          args: [
+            ...(appInfo.main ? [appInfo.main] : []),
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+          ],
+          executablePath: appInfo.executable,
+          timeout,
+        };
+
         // Try launching one more time
         try {
-          electronApp = await electron.launch(launchOptions);
+          electronApp = await electron.launch(retryLaunchOptions);
           console.log("Second launch attempt succeeded!");
         } catch (secondError) {
           console.error(`Second launch attempt also failed: ${secondError}`);
