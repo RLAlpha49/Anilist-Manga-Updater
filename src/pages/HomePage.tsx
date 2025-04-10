@@ -305,7 +305,7 @@ export function HomePage() {
                 className="pl-4 md:basis-1/2 lg:basis-1/3"
               >
                 <div className="p-1">
-                  <Card className="overflow-hidden border-none shadow-md">
+                  <Card className="bg-muted/10 overflow-hidden border-none shadow-md">
                     <div className={`h-2 bg-gradient-to-r ${feature.color}`} />
                     <CardContent className="p-6">
                       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300">
