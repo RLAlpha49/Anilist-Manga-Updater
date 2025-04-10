@@ -151,9 +151,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-build
-          path: out/make/squirrel.windows/x64
+          path: out
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
+
+      - name: Debug and prepare Windows directory structure
+        run: |
+          dir out /s
+          if (Test-Path -Path "out\make\squirrel.windows\x64\Kenmei-to-Anilist-Setup.exe") {
+            # Create the expected structure for Electron tests
+            New-Item -ItemType Directory -Path "out\Kenmei-to-Anilist-win32-x64" -Force
+            Copy-Item "out\make\squirrel.windows\x64\Kenmei-to-Anilist-Setup.exe" -Destination "out\Kenmei-to-Anilist-win32-x64"
+          }
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -196,9 +205,23 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: macos-build
-          path: out/make
+          path: out
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
+
+      - name: Debug directory structure
+        run: |
+          find out -type f | sort
+          mkdir -p out/Kenmei-to-Anilist-darwin-x64
+          if [ -f "out/make/Kenmei-to-Anilist.dmg" ]; then
+            # Extract the DMG to the expected location
+            hdiutil attach out/make/Kenmei-to-Anilist.dmg
+            cp -R /Volumes/Kenmei-to-Anilist/Kenmei-to-Anilist.app out/Kenmei-to-Anilist-darwin-x64/
+            hdiutil detach /Volumes/Kenmei-to-Anilist
+          elif [ -f "out/make/zip/darwin/arm64/Kenmei-to-Anilist-darwin-arm64-3.0.0.zip" ]; then
+            # Extract the ZIP to the expected location
+            unzip out/make/zip/darwin/arm64/Kenmei-to-Anilist-darwin-arm64-3.0.0.zip -d out/Kenmei-to-Anilist-darwin-x64/
+          fi
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
@@ -241,9 +264,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-build
-          path: out/make/deb/x64
+          path: out
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get-workflow-run.outputs.run_id }}
+
+      - name: Debug and prepare Linux directory structure
+        run: |
+          find out -type f | sort
+          mkdir -p out/Kenmei-to-Anilist-linux-x64
+          if [ -f "out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb" ]; then
+            # Extract the DEB to the expected location
+            dpkg-deb -x out/make/deb/x64/kenmei-to-anilist_3.0.0_amd64.deb out/Kenmei-to-Anilist-linux-x64/
+          fi
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests
