@@ -9,13 +9,83 @@ export async function launchElectronApp(timeout = 60000): Promise<{
   electronApp: ElectronApplication;
   page: Page;
 }> {
-  // Find the latest build of your application
-  const latestBuild = findLatestBuild();
-  const appInfo = parseElectronApp(latestBuild);
+  let appInfo;
+  let latestBuild;
+
+  try {
+    // Find the latest build of your application
+    latestBuild = findLatestBuild();
+    console.log("Found build directory:", latestBuild);
+    appInfo = parseElectronApp(latestBuild);
+  } catch (error) {
+    console.error("Error finding latest build:", error);
+
+    // Fallback mechanism based on platform
+    const platform = process.platform;
+    console.log("Attempting fallback for platform:", platform);
+
+    // Create a manual appInfo object
+    if (platform === "darwin") {
+      // macOS fallback
+      const possibleAppPaths = [
+        "out/Kenmei-to-Anilist-darwin-x64/Kenmei-to-Anilist.app",
+        "out/Kenmei-to-Anilist-darwin-arm64/Kenmei-to-Anilist.app",
+      ];
+
+      for (const appPath of possibleAppPaths) {
+        if (require("fs").existsSync(appPath)) {
+          console.log(`Found app at ${appPath}`);
+          appInfo = {
+            executable: `${appPath}/Contents/MacOS/Kenmei-to-Anilist`,
+            main: "",
+          };
+          break;
+        }
+      }
+    } else if (platform === "win32") {
+      // Windows fallback
+      const possibleAppPaths = [
+        "out/Kenmei-to-Anilist-win32-x64/Kenmei-to-Anilist.exe",
+        "out/make/squirrel.windows/x64/Kenmei-to-Anilist-Setup.exe",
+      ];
+
+      for (const appPath of possibleAppPaths) {
+        if (require("fs").existsSync(appPath)) {
+          console.log(`Found app at ${appPath}`);
+          appInfo = {
+            executable: appPath,
+            main: "",
+          };
+          break;
+        }
+      }
+    } else if (platform === "linux") {
+      // Linux fallback
+      const possibleAppPaths = [
+        "out/Kenmei-to-Anilist-linux-x64/Kenmei-to-Anilist",
+        "out/Kenmei-to-Anilist-linux-x64/usr/bin/kenmei-to-anilist",
+      ];
+
+      for (const appPath of possibleAppPaths) {
+        if (require("fs").existsSync(appPath)) {
+          console.log(`Found app at ${appPath}`);
+          appInfo = {
+            executable: appPath,
+            main: "",
+          };
+          break;
+        }
+      }
+    }
+
+    if (!appInfo) {
+      throw new Error(`Could not find app executable for platform ${platform}`);
+    }
+  }
 
   // Launch Electron app
   const electronApp = await electron.launch({
-    args: [appInfo.main],
+    args: appInfo.main ? [appInfo.main] : [],
     executablePath: appInfo.executable,
     timeout,
   });
